@@ -37,16 +37,18 @@ classdef ExperimentsData < handle
     %   *Added function organizeTableData(data) to check the consistence of
     %       the given data stream and add additional information like units
     %       and description. Data conversion from table to timetable
-    %   2019-08-15 Hiestermann
+    % 2019-08-15 Hiestermann
     %   *Added deformation deviation to getAnalyticsDataforGUI
-    %   2019-08-30 Hiestermann
+    % 2019-08-30 Hiestermann
     %   *Added mean filter to getAllPressureRelative; window of 20 for
     %   fluid pressure, window of 50 for confining pressure and pressure of hydraulic
     %   cylinder 
-    %   2019-09-03 Hiestermann
+    % 2019-09-03 Hiestermann
     %   *Added median filter to getAllTemperature; 
     %   *Added median filter to getDeformationRelative
-    
+    % 2019-09-06 Biebricher
+    %   *Added filterTableData() as a function to filter the data once
+    %       globaly. All other function adapted [open].
     
     
     properties (SetAccess = immutable)
@@ -89,7 +91,7 @@ classdef ExperimentsData < handle
             data = obj.organizeTableData(data);
             
             %Filter all data
-            obj.filteredData = filterTableData(data);
+            obj.filteredData = obj.filterTableData(data);
             
             %Saving variables in actual object
             obj.experimentNo = experimentNo; 
@@ -252,18 +254,133 @@ classdef ExperimentsData < handle
             
         end
         
-        function filteredData = filterTableData(obj, data)
+        function dataTable = filterTableData(obj, data)
         %This function is used to filter all the data
-        
-            %Check if all columns are present and add units and description
+            
+            %Prepare input for return, changed in data like filtering are
+            %going to update the data in dataTable
+            dataTable = data;
+            
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %PRESSURE
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             try
+                dat = data.sigma2_3_p_abs;
+                dat = fillmissing(dat, 'nearest');
+                dat = lowpass(dat, 0.01);
+                dataTable.sigma2_3_p_abs = dat;
                 
+                dat = data.sigma2_3_p_rel;
+                dat = fillmissing(dat, 'nearest');
+                dat = lowpass(dat, 0.01);
+                dataTable.sigma2_3_p_abs = dat;
+
             catch E
-                error([class(obj), ' - ', '']);
-                throw (E);
+                warning([class(obj), ' - ', 'Error while filtering sigma2_3_p_abs/sigma2_3_p_rel']);
             end
             
-            filteredData = data;
+            try
+                dat = data.room_p_abs;
+                dat = fillmissing(dat, 'nearest');
+                dat = movmedian(dat, 50);
+                dataTable.room_p_abs = dat;
+
+            catch E
+                warning([class(obj), ' - ', 'Error while filtering room_p_abs']);
+            end
+            
+            try
+                dat = data.hydrCylinder_p_abs;
+                dat = fillmissing(dat, 'nearest');
+                dat = lowpass(dat, 0.05);
+                dataTable.hydrCylinder_p_abs = dat;
+                
+                dat = data.hydrCylinder_p_rel;
+                dat = fillmissing(dat, 'nearest');
+                dat = lowpass(dat, 0.05);
+                dataTable.hydrCylinder_p_rel = dat;
+
+            catch E
+                warning([class(obj), ' - ', 'Error while filtering hydrCylinder_p_abs/hydrCylinder_p_rel']);
+            end
+            
+            try
+                dat = data.fluid_p_abs;
+                dat = fillmissing(dat, 'nearest');
+                dat =  movmedian(dat, 50);
+                dataTable.fluid_p_abs = dat;
+                
+                dat = data.fluid_p_rel;
+                dat = fillmissing(dat, 'nearest');
+                dat = movmedian(dat, 50);
+                dataTable.fluid_p_rel = dat;
+
+            catch E
+                warning([class(obj), ' - ', 'Error while filtering fluid_p_abs/fluid_p_rel']);
+            end
+            
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %TEMPERATURES
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %PT100 Temperatures as filtered by movmedian
+            try
+                dat = data.fluid_in_t;
+                dat = filloutliers(dat, 'nearest', 'movmedian', 180);
+                dat = fillmissing(dat, 'nearest');
+                dat = movmedian(dat, 600);
+                dataTable.fluid_in_t = dat;
+
+            catch E
+                warning([class(obj), ' - ', 'Error while filtering fluid_in_t']);
+            end
+            
+            try
+                dat = data.fluid_out_t;
+                dat = filloutliers(dat, 'nearest', 'movmedian', 180);
+                dat = fillmissing(dat, 'nearest');
+                dat = movmedian(dat, 600);
+                dataTable.fluid_out_t = dat;
+
+            catch E
+                warning([class(obj), ' - ', 'Error while filtering fluid_out_t']);
+            end
+            
+            try
+                dat = data.room_t;
+                dat = filloutliers(dat, 'nearest', 'movmedian', 180);
+                dat = fillmissing(dat, 'nearest');
+                dat = movmedian(dat, 600);
+                dataTable.room_t = dat;
+
+            catch E
+                warning([class(obj), ' - ', 'Error while filtering room_t']);
+            end
+            
+            
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %DEFORMATION
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %Filtering of deformation must be used carefully, as we have a
+            %changed deformation meassurement system
+            try
+                dat = fillmissing(data.deformation_1_s_abs, 'nearest');
+                dat = lowpass(dat, 0.01);
+                dataTable.deformation_1_s_abs = dat;
+                
+                dataTable.deformation_1_s_rel = dat + (data.deformation_1_s_abs - data.deformation_1_s_rel);
+            catch E
+                warning([class(obj), ' - ', 'Error while filtering deformation_1_s_abs']);
+            end
+            
+            try
+                dat = fillmissing(data.deformation_2_s_abs, 'nearest');
+                dat = lowpass(dat, 0.01);
+                dataTable.deformation_2_s_abs = dat;   
+                
+                dataTable.deformation_2_s_rel = dat + (data.deformation_2_s_abs - data.deformation_2_s_rel);
+            catch E
+                warning([class(obj), ' - ', 'Error while filtering deformation_2_s_abs']);
+            end
             
         end
         
