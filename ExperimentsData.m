@@ -37,14 +37,23 @@ classdef ExperimentsData < handle
     %   *Added function organizeTableData(data) to check the consistence of
     %       the given data stream and add additional information like units
     %       and description. Data conversion from table to timetable
-    % 2019-08-15 Hiestermann
+    %   2019-08-15 Hiestermann
     %   *Added deformation deviation to getAnalyticsDataforGUI
+    %   2019-08-30 Hiestermann
+    %   *Added mean filter to getAllPressureRelative; window of 20 for
+    %   fluid pressure, window of 50 for confining pressure and pressure of hydraulic
+    %   cylinder 
+    %   2019-09-03 Hiestermann
+    %   *Added median filter to getAllTemperature; 
+    %   *Added median filter to getDeformationRelative
+    
     
     
     properties (SetAccess = immutable)
         experimentNo; %Experiment number of the data
         rows;
         dataTable; %Dataset as timetable
+        filteredData;
     end
     
     methods
@@ -78,6 +87,9 @@ classdef ExperimentsData < handle
             %Organize all data in the table: adding units and desciptions
             %Convert from table to timetable
             data = obj.organizeTableData(data);
+            
+            %Filter all data
+            obj.filteredData = filterTableData(data);
             
             %Saving variables in actual object
             obj.experimentNo = experimentNo; 
@@ -231,38 +243,27 @@ classdef ExperimentsData < handle
                 %deformation related meassurements are stepwise
                 %volume in pumps is stepwise
                 %weight on scale is stepwise
-                
                 dataTable.Properties.VariableContinuity = {'unset', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'step', 'step', 'step',  'step',  'step',  'step',  'step',  'step',  'step', 'continuous', 'step', 'continuous', 'step', 'continuous', 'step', 'continuous'};
-%                 dataTable.Properties.VariableContinuity{'timestamp'} = 'unset';
-%                 dataTable.Properties.VariableContinuity{'room_t'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'room_p_abs'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'fluid_in_t'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'fluid_out_t'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'fluid_p_abs'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'fluid_p_rel'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'hydrCylinder_p_abs'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'hydrCylinder_p_rel'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'sigma2_3_p_abs'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'sigma2_3_p_rel'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'deformation_1_U'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'deformation_1_s_abs'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'deformation_1_s_taravalue'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'deformation_2_U'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'deformation_2_s_abs'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'deformation_2_s_rel'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'deformation_2_s_taravalue'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'pump_1_V'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'pump_1_p'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'pump_2_V'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'pump_2_p'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'pump_3_V'} = 'step';
-%                 dataTable.Properties.VariableContinuity{'pump_3_p'} = 'continuous';
-%                 dataTable.Properties.VariableContinuity{'weight'} = 'step';
                 
             catch E
                 error([class(obj), ' - ', 'Can not convert data to timetable and/or claculate time difference']);
                 throw (E);
             end
+            
+        end
+        
+        function filteredData = filterTableData(obj, data)
+        %This function is used to filter all the data
+        
+            %Check if all columns are present and add units and description
+            try
+                
+            catch E
+                error([class(obj), ' - ', '']);
+                throw (E);
+            end
+            
+            filteredData = data;
             
         end
         
@@ -307,13 +308,14 @@ classdef ExperimentsData < handle
         function dataTable = getRoomTemperature(obj)
         %Returns a timetable with the following columns: time, runtime, timestamp, time_diff, room_t
             dataTable = obj.dataTable(:,{'runtime','room_t'});
+            dataTable.room_t=obj.getAllTemperatures.room_t;
         end
         
         
         function dataTable = getAllTemperatures(obj)
         %Returns a timetable containing all temperature data. Missing
         %temperature datasets will be filled by linear interpolation
-        %between the next neighboors.
+        %between the next neighboor.
             colNames = ''; %Variable for output-message containing column Names
             dataTable = obj.dataTable(:,1);
             
@@ -329,6 +331,12 @@ classdef ExperimentsData < handle
             %Filling missing data
             dataTable = fillmissing(dataTable, 'linear');
             
+            %eliminate noise
+            dataTable.room_t=movmedian(dataTable.room_t,150);
+            dataTable.fluid_out_t=movmedian(dataTable.fluid_out_t,150);
+            dataTable.fluid_in_t=movmedian(dataTable.fluid_in_t,150);
+            
+            
             disp(strcat(class(obj), {' - '},  {'Found the following temperature related columns: '}, colNames));
         end
         
@@ -337,6 +345,9 @@ classdef ExperimentsData < handle
         %Returns a timetable containing all relative pressure data: time, runtime
         %time_diff, timestamp, fluid_p_rel, hydrCylinder_p_rel, sigma2_3_p_rel
             dataTable = obj.dataTable(:,{'runtime','fluid_p_rel','hydrCylinder_p_rel','sigma2_3_p_rel'});
+            dataTable.fluid_p_rel=movmean(dataTable.fluid_p_rel,20);
+            dataTable.hydrCylinder_p_rel=movmean(dataTable.hydrCylinder_p_rel,50);
+            dataTable.sigma2_3_p_rel=movmean(dataTable.sigma2_3_p_rel,50);
         end
         
         
@@ -351,32 +362,64 @@ classdef ExperimentsData < handle
         %Returns a timetable containing deformation data of the specimen: time, runtime
         %time_diff, timestamp, deformation_1_s_rel, deformation_2_s_rel, deformation_mean
             dataTable = obj.dataTable(:,{'runtime','deformation_1_s_rel','deformation_2_s_rel',});
+            %eliminate noise
+            %median filter rounds the corners at jumps
+            dataTable.deformation_1_s_rel=movmedian(dataTable.deformation_1_s_rel,50);
+            dataTable.deformation_2_s_rel=movmedian(dataTable.deformation_2_s_rel,50);
+
+            %this loop takes too long
             
-            %Smoothing the deformation data with movmean in a window of 50
-            %dataTable.deformation_1_s_rel_original = dataTable.deformation_1_s_rel;
-            %dataTable.deformation_2_s_rel_original = dataTable.deformation_2_s_rel;
-            
-            %dataTable.deformation_1_s_rel = smoothdata(dataTable.deformation_1_s_rel, 'movmean',50);
-            %dataTable.deformation_2_s_rel = smoothdata(dataTable.deformation_2_s_rel, 'movmean',50);
+%             deformationDifference=[0;diff(dataTable.deformation_1_s_rel)];
+%             deformationJumpPoints = find(deformationDifference>0.02); %find jumps in deformation curve
+%             deformationJumpPoints=[1; deformationJumpPoints]; %add starting index 1
+%             TF = isempty(deformationJumpPoints);
+%             
+%                 %Splitting up
+%                 if TF==0
+%                     %split datatable where weight drops below zero
+%                     deformation_splitted = cell(numel(deformationJumpPoints)-1, 1); %create cell array in which to store the split tables
+%                     
+%                     for k=2:numel(deformationJumpPoints)
+%                         deformation_splitted{k-1}=dataTable(deformationJumpPoints(k-1):deformationJumpPoints(k)-1,:);
+%                     end
+%                 
+%                     deformation_splitted{k,1}=dataTable(deformationJumpPoints(end):end,:); %add end section of table
+% 
+%                 else
+% %              create single cell array if deformation is linear
+%                     deformation_splitted=cell(1,1);
+%                     deformation_splitted{1,1}=dataTable;
+%                     
+%                 end
+%                 
+%                 %eliminate noise
+%                 for j=1:numel(deformation_splitted)
+%                     deformation_splitted{j,1}.deformation_1_s_rel=movmedian(deformation_splitted{j,1}.deformation_1_s_rel,50);
+%                     deformation_splitted{j,1}.deformation_2_s_rel=movmedian(deformation_splitted{j,1}.deformation_2_s_rel,50);
+%                 end
+%         dataTable = cat(1,deformation_splitted{:});
+%             
             
             %Calculating the mean deformation influenced by deformatoin
             %sensor 1 and 2. NaN entrys will be ignored.
-            dataTable.deformation_mean = mean([dataTable.deformation_1_s_rel, dataTable.deformation_2_s_rel], 2,'omitnan');
-            
+            dataTable.deformation_mean = mean(obj.dataTable{:,{'deformation_1_s_rel','deformation_2_s_rel'}},2,'omitnan');
+            dataTable.deformation_mean=movmean(dataTable.deformation_mean,50);
         end
         
         
         function dataTable = getConfiningPressure(obj)
         %Returns a timetable containing confing pressure data: time, runtime
         %time_diff, timestamp, sigma2_3_p_abs, sigma2_3_p_rel
-            dataTable = obj.dataTable(:,{'runtime','sigma2_3_p_abs','sigma2_3_p_rel'});
+            dataTable = obj.dataTable(:,{'runtime','sigma2_3_p_abs'});
+            dataTable.sigma2_3_p_rel=obj.getAllPressureRelative.sigma2_3_p_rel;
         end
         
         
         function dataTable = getConfiningPressureRelative(obj)
         %Returns a timetable containing confing pressure data: time, runtime
         %time_diff, timestamp, sigma2_3_p_rel
-            dataTable = obj.dataTable(:,{'runtime','sigma2_3_p_rel'});
+            dataTable = obj.dataTable(:,{'runtime'});
+            dataTable.sigma2_3_p_rel=obj.getAllPressureRelative.sigma2_3_p_rel;
         end
         
         function dataTable = getBassinPumpData(obj)
@@ -401,7 +444,8 @@ classdef ExperimentsData < handle
         function dataTable = getFlowData(obj)
         %Returns a timetable containing all flow data relevant data: time, runtime
         %time_diff, timestamp, weight, fluid_p_rel, fluid_out_t,
-            dataTable = obj.dataTable(:,{'runtime','weight','fluid_p_rel','fluid_out_t'});
+            dataTable = obj.dataTable(:,{'runtime','weight','fluid_out_t'});
+            dataTable.fluid_p_rel=obj.getAllPressureRelative.fluid_p_rel;
             
 
         end
@@ -544,7 +588,6 @@ classdef ExperimentsData < handle
             dataTable.deformation_mean = obj.getDeformationRelative.deformation_mean;
             dataTable.delta_deformation_1=obj.getDeformationRelative.deformation_1_s_rel-dataTable.deformation_mean;
             dataTable.delta_deformation_2=obj.getDeformationRelative.deformation_2_s_rel-dataTable.deformation_mean;
-            
             dataTable.hydrCylinder_p_rel = obj.getAllPressureRelative.hydrCylinder_p_rel;
             dataTable.sigma2_3_p_rel = obj.getAllPressureRelative.sigma2_3_p_rel;
             dataTable.pump_sum = obj.getBassinPumpData.pump_sum_V;

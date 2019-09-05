@@ -47,7 +47,7 @@ db_specimendata = db.getSpecimenData(experiment_no, db_metadata.specimenId);
 db_data = db.getExperimentData(experiment_no);
 
 %%
-permeabilityTable=db_data.getPermeability(db_specimendata.height,db_specimendata.diameter,5);
+permeabilityTable=db_data.getPermeability(db_specimendata.height,db_specimendata.diameter,0.5);
 
 plot(permeabilityTable.runtime,permeabilityTable.permeability)
 
