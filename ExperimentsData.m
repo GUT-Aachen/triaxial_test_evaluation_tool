@@ -51,58 +51,24 @@ classdef ExperimentsData < handle
     %       globaly. All other function adapted.
     %   *Added showDebugPlotSingle() as function to plot all datasets
     %       modified by filterTableData()
-    %   *Deprectaed function getConfiningPressureRelative(). Use
+    %   *Deprecated function getConfiningPressureRelative(). Use
     %       getConfiningPressure().
+    %   *Fixed issues with VariableUnits and VariableDescription
+    %   *Changed access to 'private' for organizeTableData() and
+    %       filterTableData().
+    %   *Changed access to private for dataTables
+    
+    properties (SetAccess = immutable, GetAccess = private)
+        originalData; %Dataset as timetable
+        filteredData; %Filtered dataset as timetable
+    end
     
     properties (SetAccess = immutable)
         experimentNo; %Experiment number of the data
-        rows;
-        dataTable; %Dataset as timetable
-        filteredData;
+        rows;         %Number of entries on originalData/filteredData
     end
     
-    methods
-        function obj = ExperimentsData(experimentNo, data)
-            %Input parameters are the experiment number and a table
-            %containing all experiments data. The handed over data is a
-            %class of table, will be converted into a timetable and saved
-            %in this object.
-            
-            %Inputdata consistence checks
-                %Check if there are two variables handed over
-                if (nargin ~= 2)
-                    error('Not enough input arguments. Two input parameters have to be handed over: experimentNo as Integer and data as timetable.')
-                end
-
-                %Check if the variable experimentNo is numeric
-                if ~isnumeric(experimentNo)
-                    error(['Input "experimentNo" must consider a numeric-variable. Handed variable is class of: ',class(experimentNo)])
-                end
-
-                %Check if the variable data is a table
-                if ~istable(data)
-                    error(['Input "data" must consider a timetable-variable. Handed variable is class of: ',class(data)])
-                end
-
-                %Check if the data table is empty
-                if height(data) == 0
-                    error('Data table for the experiment is empty')
-                end
-            
-            %Organize all data in the table: adding units and desciptions
-            %Convert from table to timetable
-            data = obj.organizeTableData(data);
-            
-            %Filter all data
-            obj.filteredData = obj.filterTableData(data);
-            
-            %Saving variables in actual object
-            obj.experimentNo = experimentNo; 
-            obj.dataTable = data;
-            obj.rows = width(data);
-            
-        end
-        
+    methods (Access = private)
         function dataTable = organizeTableData(obj, data)
         %This function is used to have specific names for each column, even
         %if the names in the database and therefore in the incomming data
@@ -220,7 +186,6 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableDescriptions {'weight'} = 'Weight of the water meassured on the scale';
             catch E
                 error([class(obj), ' - ', 'The given dataset is missing a column or properties can not be added. Please control the given data to be complete.']);
-                throw (E);
             end
             
             %Recast time-String to datetime, calculate time dependend
@@ -233,11 +198,6 @@ classdef ExperimentsData < handle
                 dataTable.runtime = seconds(data{:,2}-data{1:1,2}); %working with timestamp
                 dataTable.Properties.VariableUnits{'runtime'} = 's';
                 dataTable.Properties.VariableDescriptions{'runtime'} = 'Runtime in seconds since experiment start';
-                
-                %Calculate the delta between timestamp i and i+1.
-%                 dataTable.time_diff = [0;diff(dataTable.runtime)]; %Add a new column to table data
-%                 dataTable.Properties.VariableUnits{'time_diff'} = 's';
-%                 dataTable.Properties.VariableDescriptions{'time_diff'} = 'Time difference between two following rows in the dataset';
                 
                 %Convert table to timetable
                 dataTable = table2timetable(dataTable);
@@ -252,10 +212,10 @@ classdef ExperimentsData < handle
                 
             catch E
                 error([class(obj), ' - ', 'Can not convert data to timetable and/or claculate time difference']);
-                throw (E);
             end
             
         end
+        
         
         function dataTable = filterTableData(obj, data)
         %This function is used to filter most of the data
@@ -278,7 +238,7 @@ classdef ExperimentsData < handle
                 dat = lowpass(dat, 0.01);
                 dataTable.sigma2_3_p_rel = round(dat, 2);
 
-            catch E
+            catch
                 warning([class(obj), ' - ', 'Error while filtering sigma2_3_p_abs/sigma2_3_p_rel']);
             end
             
@@ -288,7 +248,7 @@ classdef ExperimentsData < handle
                 dat = movmedian(dat, 50);
                 dataTable.room_p_abs = round(dat, 3);
 
-            catch E
+            catch
                 warning([class(obj), ' - ', 'Error while filtering room_p_abs']);
             end
             
@@ -303,7 +263,7 @@ classdef ExperimentsData < handle
                 dat = lowpass(dat, 0.05);
                 dataTable.hydrCylinder_p_rel = round(dat, 1);
 
-            catch E
+            catch
                 warning([class(obj), ' - ', 'Error while filtering hydrCylinder_p_abs/hydrCylinder_p_rel']);
             end
             
@@ -318,7 +278,7 @@ classdef ExperimentsData < handle
                 dat = movmedian(dat, 50);
                 dataTable.fluid_p_rel = round(dat, 3);
 
-            catch E
+            catch
                 warning([class(obj), ' - ', 'Error while filtering fluid_p_abs/fluid_p_rel']);
             end
             
@@ -333,7 +293,7 @@ classdef ExperimentsData < handle
                 dat = movmedian(dat, 600);
                 dataTable.fluid_in_t = round(dat, 1);
 
-            catch E
+            catch
                 warning([class(obj), ' - ', 'Error while filtering fluid_in_t']);
             end
             
@@ -344,7 +304,7 @@ classdef ExperimentsData < handle
                 dat = movmedian(dat, 600);
                 dataTable.fluid_out_t = round(dat, 1);
 
-            catch E
+            catch
                 warning([class(obj), ' - ', 'Error while filtering fluid_out_t']);
             end
             
@@ -355,7 +315,7 @@ classdef ExperimentsData < handle
                 dat = movmedian(dat, 600);
                 dataTable.room_t = round(dat, 1);
 
-            catch E
+            catch
                 warning([class(obj), ' - ', 'Error while filtering room_t']);
             end
             
@@ -370,7 +330,7 @@ classdef ExperimentsData < handle
                 dataTable.deformation_1_s_abs = round(dat, 2);
                 
                 dataTable.deformation_1_s_rel = round(dat - min(dat), 2);
-            catch E
+            catch
                 warning([class(obj), ' - ', 'Error while filtering deformation_1_s_abs/deformation_1_s_rel']);
             end
             
@@ -379,55 +339,110 @@ classdef ExperimentsData < handle
                 dataTable.deformation_2_s_abs = round(dat, 2);   
                 
                 dataTable.deformation_2_s_rel = round(dat - min(dat), 2);
-            catch E
+            catch
                 warning([class(obj), ' - ', 'Error while filtering deformation_2_s_abs/deformation_2_s_rel']);
             end
             
         end
         
+        function dataTable = createTable(obj)
+            dataTable = obj.filteredData(:,{'runtime'}); 
+        end
+        
+    end
+    
+    methods
+        function obj = ExperimentsData(experimentNo, data)
+            %Input parameters are the experiment number and a table
+            %containing all experiments data. The handed over data is a
+            %class of table, will be converted into a timetable and saved
+            %in this object.
+            
+            %Inputdata consistence checks
+                %Check if there are two variables handed over
+                if (nargin ~= 2)
+                    error('Not enough input arguments. Two input parameters have to be handed over: experimentNo as Integer and data as timetable.')
+                end
+
+                %Check if the variable experimentNo is numeric
+                if ~isnumeric(experimentNo)
+                    error(['Input "experimentNo" must consider a numeric-variable. Handed variable is class of: ',class(experimentNo)])
+                end
+
+                %Check if the variable data is a table
+                if ~istable(data)
+                    error(['Input "data" must consider a timetable-variable. Handed variable is class of: ',class(data)])
+                end
+
+                %Check if the data table is empty
+                if height(data) == 0
+                    error('Data table for the experiment is empty')
+                end
+            
+            %Organize all data in the table: adding units and desciptions
+            %Convert from table to timetable
+            data = obj.organizeTableData(data);
+            
+            %Filter all data
+            obj.filteredData = obj.filterTableData(data);
+            
+            %Saving variables in actual object
+            obj.experimentNo = experimentNo; 
+            obj.originalData = data;
+            obj.rows = height(data);
+            
+        end
+        
         function fig = showDebugPlotSingle(obj, columnName)
         %Function to plot a single rows data as original and filtered data
-            
-            if (columnName == "all")
-                
-                fig = [];
-                variables=obj.dataTable.Properties.VariableNames;
-                
-                for k=1:length(variables)
-                    
-                    x1 = obj.dataTable.runtime;
+        %When columnName parameter is 'all' then all filtered columns will
+        %be shown in a seperate figure. Otherwise the given columnName will
+        %be shown.
+            try
+                if (columnName == "all")
+
+                    fig = [];
+                    variables=obj.originalData.Properties.VariableNames;
+
+                    for k=1:length(variables)
+
+                        x1 = obj.originalData.runtime;
+                        x2 = x1;
+
+                        y1 = obj.originalData.(k);
+                        y2 = obj.filteredData.(k);
+
+                        y1 = fillmissing(y1, 'nearest');
+                        y2 = fillmissing(y2, 'nearest');
+
+                        if (not(isequal(y1, y2)) && not(sum(isnan(y1)) == length(y1)))
+
+                            fig_temp = figure;
+                            plot(x1,y1,':' ,x2,y2);
+                            title(variables(k), 'Interpreter', 'none');
+                            legend('Original', 'Filtered');
+
+                            fig = [fig, fig_temp];
+                        end
+                    end
+
+                else
+
+                    x1 = obj.originalData.runtime;
                     x2 = x1;
 
-                    y1 = obj.dataTable.(k);
-                    y2 = obj.filteredData.(k);
-                    
-                    y1 = fillmissing(y1, 'nearest');
-                    y2 = fillmissing(y2, 'nearest');
-                    
-                    if (not(isequal(y1, y2)) && not(sum(isnan(y1)) == length(y1)))
-                    
-                        fig_temp = figure;
-                        plot(x1,y1,':' ,x2,y2);
-                        title(variables(k), 'Interpreter', 'none');
-                        legend('Original', 'Filtered');
-                        
-                        fig = [fig, fig_temp];
-                    end
+                    y1 = obj.originalData.(columnName);
+                    y2 = obj.filteredData.(columnName);
+
+                    fig = figure;
+                    plot(x1,y1,x2,y2);
+                    title(columnName, 'Interpreter', 'none');
+                    legend('Original', 'Filtered');
+
                 end
                 
-            else
-                
-                x1 = obj.dataTable.runtime;
-                x2 = x1;
-
-                y1 = obj.dataTable.(columnName);
-                y2 = obj.filteredData.(columnName);
-
-                fig = figure;
-                plot(x1,y1,x2,y2);
-                title(columnName, 'Interpreter', 'none');
-                legend('Original', 'Filtered');
-                
+            catch E
+                throw(E);
             end
             
         end
@@ -435,10 +450,12 @@ classdef ExperimentsData < handle
         function plot = showDebugPlot(obj)
         %Function to plot all data in dataTable within a stacked plot, to
         %get a short overview over all existing data
-            plot = stackedplot(obj.dataTable,'-x');
+            plot = stackedplot(obj.originalData,'-x');
         end
-        
-        function density = waterDensity(obj, temp)
+    end
+    
+    methods (Static)
+        function density = waterDensity(temp)
         %Function to calculate the density of water at a specific temperature.
         %Input parameters:
         %   temp : temperature in °C
@@ -447,7 +464,7 @@ classdef ExperimentsData < handle
         %Water density is herefore approximated by a parabolic function:
         %999.972-7E-3(T-4)^2
         
-            if (nargin ~= 2)
+            if (nargin ~= 1)
                 error('Not enough input arguments. One input parameter needed in °C as numeric or float.')
             end
 
@@ -459,8 +476,11 @@ classdef ExperimentsData < handle
             density = 999.972-(temp-4).^2*0.007;
             
         end
-        
+    end
+
 %% GETTER
+    methods
+
         function rows = get.rows(obj)
             rows = obj.rows;
         end
@@ -470,13 +490,14 @@ classdef ExperimentsData < handle
             experimentNo = obj.experimentNo;
         end
         
-        function dataTable = createTable(obj)
-            dataTable = obj.filteredData(:,{'runtime'}); 
+        function data = getFilteredDataTable(obj)
+            warning('This kind of access is possible but not recommended. Please use getter methods/functions to access data in this table!');
+            data = obj.filteredData; %make timetable
         end
         
-        
-        function data = get.filteredData(obj)
-            data = obj.filteredData; %make timetable
+        function data = getOriginalDataTable(obj)
+            warning('This kind of access is possible but not recommended. Please use getter methods/functions to access data in this table!');
+            data = obj.originalData; %make timetable
         end
         
         
@@ -509,7 +530,7 @@ classdef ExperimentsData < handle
         
         function dataTable = getAllPressureRelative(obj)
         %Returns a timetable containing all relative pressure data: time, runtime
-        %time_diff, timestamp, fluid_p_rel, hydrCylinder_p_rel, sigma2_3_p_rel
+        %fluid_p_rel, hydrCylinder_p_rel, sigma2_3_p_rel
             dataTable = obj.createTable();
             dataTable = [dataTable obj.filteredData(:,{'fluid_p_rel', 'hydrCylinder_p_rel', 'sigma2_3_p_rel'})];
         end
@@ -517,7 +538,7 @@ classdef ExperimentsData < handle
         
         function dataTable = getAllPressureAbsolute(obj)
         %Returns a timetable containing all absolute pressure data: time, runtime
-        %time_diff, timestamp, fluid_p_abs, hydrCylinder_p_abs, sigma2_3_p_abs
+        %fluid_p_abs, hydrCylinder_p_abs, sigma2_3_p_abs
             dataTable = obj.createTable();
             dataTable = [dataTable obj.filteredData(:,{'room_p_abs', 'fluid_p_abs', 'hydrCylinder_p_abs', 'sigma2_3_p_abs'})];
         end
@@ -525,28 +546,29 @@ classdef ExperimentsData < handle
         
         function dataTable = getDeformationRelative(obj)
         %Returns a timetable containing deformation data of the specimen: time, runtime
-        %time_diff, timestamp, deformation_1_s_rel, deformation_2_s_rel, deformation_mean
-            dataTable = obj.createTable();
-            dataTable = [dataTable obj.filteredData(:,{'deformation_1_s_rel','deformation_2_s_rel',})];    
+        %deformation_1_s_rel, deformation_2_s_rel, deformation_mean
+            dataTable = [obj.createTable() obj.filteredData(:,{'deformation_1_s_rel','deformation_2_s_rel',})];    
 
             %Calculating the mean deformation influenced by deformatoin
             %sensor 1 and 2. NaN entrys will be ignored.
-            dataTable.deformation_mean = dataTable.deformation_1_s_rel;
             dataTable.deformation_mean = mean([dataTable.deformation_1_s_rel, dataTable.deformation_2_s_rel], 2, 'omitnan');
+            dataTable.Properties.VariableUnits{'deformation_mean'} = 'mm';
+            dataTable.Properties.VariableDescriptions {'deformation_mean'} = 'Mean relative deformation from sensor 1 and 2, zeroed at the beginning of the experiment';
         end
         
         
         function dataTable = getConfiningPressure(obj)
-        %Returns a timetable containing confing pressure data: time, runtime
-        %time_diff, timestamp, sigma2_3_p_abs, sigma2_3_p_rel
-            dataTable = obj.createTable();
+        %Returns a timetable containing confing pressure data: time, runtime, sigma2_3_p_rel
+            dataTable = obj.createTable();  
             dataTable.sigma2_3_p_rel = obj.getAllPressureRelative.sigma2_3_p_rel;
+            dataTable.Properties.VariableUnits{'sigma2_3_p_rel'} = obj.getAllPressureRelative.Properties.VariableUnits{'sigma2_3_p_rel'};
+            dataTable.Properties.VariableDescriptions{'sigma2_3_p_rel'} = obj.getAllPressureRelative.Properties.VariableDescriptions{'sigma2_3_p_rel'};
         end
         
         
         function dataTable = getConfiningPressureRelative(obj)
-        %Returns a timetable containing confing pressure data: time, runtime
-        %time_diff, timestamp, sigma2_3_p_rel
+        %DEPRECATED!!
+        %Returns a timetable containing confing pressure data: time, runtime, sigma2_3_p_rel
             warning('Function getConfiningPressureRelative() deprecated. Use getConfiningPressure()')
         
             dataTable = obj.getConfiningPressure();
@@ -554,8 +576,7 @@ classdef ExperimentsData < handle
         
         function dataTable = getBassinPumpData(obj)
         %Returns a timetable containing confing pressure data: time, runtime
-        %time_diff, timestamp, pump_1_p, pump_2_p, pump_3_p, pump_mean_p, pump_1_V,
-        %pump_2_V, pump_3_V, pump_sum_V
+        %pump_1_p, pump_2_p, pump_3_p, pump_mean_p, pump_1_V, pump_2_V, pump_3_V, pump_sum_V
         %
         %IMPORTANT:
         %The mean pump pressure has to be used with caution. When the
@@ -566,36 +587,54 @@ classdef ExperimentsData < handle
             %Calculating the mean pump pressure and volume influenced by
             %all three pumps. Ignoring NaN entrys.
             dataTable.pump_mean_p = mean([dataTable.pump_1_p, dataTable.pump_2_p, dataTable.pump_3_p],2,'omitnan');
+            dataTable.Properties.VariableUnits{'pump_mean_p'} = dataTable.Properties.VariableUnits{'pump_1_p'};
+            dataTable.Properties.VariableDescriptions{'pump_mean_p'} = 'Mean pressure measured internally in all pumps (relative value)';
+            
             dataTable.pump_sum_V = sum([dataTable.pump_1_V, dataTable.pump_2_V, dataTable.pump_3_V],2,'omitnan');
+            dataTable.Properties.VariableUnits{'pump_sum_V'} = dataTable.Properties.VariableUnits{'pump_1_V'};
+            dataTable.Properties.VariableDescriptions{'pump_sum_V'} = 'Sum of present liquid in all pumps.';
         end
         
         
         
         function dataTable = getFlowData(obj)
         %Returns a timetable containing all flow data relevant data: time, runtime
-        %time_diff, timestamp, weight, fluid_p_rel, fluid_out_t,
+        %weight, fluid_p_rel, fluid_out_t,
             dataTable = [obj.createTable() obj.filteredData(:,{'weight'})];
-            dataTable.fluid_out_t = obj.getAllTemperatures.fluid_out_t;
-            dataTable.fluid_p_rel = obj.getAllPressureRelative.fluid_p_rel;
             
-
+            tempData = obj.getAllTemperatures;
+            dataTable.fluid_out_t = tempData.fluid_out_t;
+            dataTable.Properties.VariableUnits{'fluid_out_t'} = tempData.Properties.VariableUnits{'fluid_out_t'};
+            dataTable.Properties.VariableDescriptions{'fluid_out_t'} = tempData.Properties.VariableDescriptions{'fluid_out_t'};
+            
+            tempData= obj.getAllPressureRelative;
+            dataTable.fluid_p_rel = tempData.fluid_p_rel;
+            dataTable.Properties.VariableUnits{'fluid_p_rel'} = tempData.Properties.VariableUnits{'fluid_p_rel'};
+            dataTable.Properties.VariableDescriptions{'fluid_p_rel'} = tempData.Properties.VariableDescriptions{'fluid_p_rel'};
         end
         
         function dataTable=getCalculationTable(obj)
+        %DEPRECATED!!
         %Helperfunction to collect all relevant data for permeability
         %calculation. Calculates the density
         %Returns a timetable containing all flow data relevant data: time, runtime
-        %time_diff, timestamp, weight, fluid_p_rel, fluid_out_t,
-        %deformation_mean and density
+        %weight, fluid_p_rel, fluid_out_t, deformation_mean and density
             warning('Function getCalculationTable is deprecated. Load the data directly without helper function!');
             
             dataTable = obj.getFlowData;
-            dataTable.deformation_mean = obj.getDeformationRelative.deformation_mean;
+            
+            tempData = obj.getDeformationRelative();
+            dataTable.deformation_mean = tempData.deformation_mean;
+            dataTable.Properties.VariableUnits{'deformation_mean'} = tempData.Properties.VariableUnits{'deformation_mean'};
+            dataTable.Properties.VariableDescriptions{'deformation_mean'} = tempData.Properties.VariableDescriptions{'deformation_mean'};
+            
             dataTable.density = obj.waterDensity(dataTable.fluid_out_t);
+            dataTable.Properties.VariableUnits{'density'} = 'kg/m³';
+            dataTable.Properties.VariableDescriptions{'density'} = 'Watedensity depening on the fluid temperature on the weight (fluid_out_t)';
         end 
 
         
-        function permeability = getPermeability(obj,length, diameter,timestep)                   
+        function permeability = getPermeability(obj, length, diameter, timestep)                   
             %Input parameters:
             %   length : height of specimen in cm
             %   diameter: diameter of specimen in cm
@@ -609,9 +648,11 @@ classdef ExperimentsData < handle
                 warning('Set timestep to default: 5 minutes');
                 timestep = 5;
             end
+            
             if nargin < 3
                 error('Not enough input arguments. specimen length; specimen diameter; timestep (optional)');
             end
+            
             if ~isnumeric(length) || ~isnumeric(diameter) || ~isnumeric(timestep) || diameter <= 0 || length <= 0 || timestep <= 0
                 error('Input parameters length, diameter and timestep have to be numeric and bigger zero!');
             end
@@ -675,7 +716,6 @@ classdef ExperimentsData < handle
                     
                     g = 9.81; %Gravity m/s² or N/kg
                     
-%                     tempTable.weight_diff = filloutliers(tempTable.weight_diff,'linear','mean'); %Additional outlier detection
                     tempTable.h = (tempTable.fluid_p_rel .* 100000) ./ (tempTable.density .* g); %Pressure difference h between inflow and outflow in m
                     tempTable.WaterFlowVolume = (tempTable.weight_diff ./ tempTable.density); %water flow volume Q in m³
                     
@@ -694,13 +734,14 @@ classdef ExperimentsData < handle
             dataTable = cat(1,dataTable_Splitted{:});
             
             %Create output timetable-variable
-            permeability = dataTable(:,{,'runtime', 'weight_diff'});
+            permeability = dataTable(:,{'runtime', 'weight_diff'});
             permeability.permeability = dataTable.k_t;
             permeability.perm_alpha = dataTable.alpha;
                           
         end 
         
         function dataTable = getAnalytics(obj)
+        %DEPRECATED!!
             warning('Function getCalculationTable is deprecated. Use getAnalyticsDataForGUI() instead!');
             dataTable = obj.getAnalyticsDataForGUI();
         end
