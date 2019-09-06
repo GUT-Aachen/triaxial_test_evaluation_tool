@@ -11,8 +11,6 @@ classdef ExperimentsData < handle
     %It is possible to get specific experiment data instead of the whole
     %table.
     %
-    %OUTSTANDING: Getter for different parts of the table, avg e.g.
-    %
     % 2019-05-16 Biebricher
     %   * Bugfix getFlowData(): Changed fluid_t to fluid_out_t
     % 2019-05-14 Biebricher
