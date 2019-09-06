@@ -13,6 +13,8 @@ classdef MeridDB < handle
 %2019-08-12 Biebricher
 %   * Function 'getExperiment()' output changed. Start and Endtime are part
 %       of the output now.
+%2019-09-06 Biebricher
+%   * Integrate handle class imports
     
     properties (Constant = true)
         %credentials and server data
@@ -99,7 +101,7 @@ classdef MeridDB < handle
         end
         
         %%
-        function result = getExperiments(obj)
+        function result = getExperiments(obj)           
         %Method to get information about all existing experiments in the
         %database.
             obj.db_connection_raw = obj.openConnection(obj.db_table_raw);
@@ -199,6 +201,7 @@ classdef MeridDB < handle
         
         function result = getExperimentData(obj, experimentNo)
         %Function to get experiment data from database
+            import ExperimentsData.*
             
             %Check if the given experiment exists
             if (obj.experimentExists(experimentNo) == 0)
@@ -255,6 +258,7 @@ classdef MeridDB < handle
         
         function result = getMetaData(obj, experimentNo)
         %Function to get experiment data from database
+            import ExperimentsMetaData.*
             
             %Check if the given experiment exists
             if (obj.experimentExists(experimentNo) == 0)
@@ -306,31 +310,32 @@ classdef MeridDB < handle
         
         function result = getSpecimenData(obj, experimentNo, specimenId)
         %Function to get specimen and rock data from database
+            import ExperimentsSpecimenData.*
             
-        %Open connection to database
-        db_connection = obj.openConnection(obj.db_table_raw);
+            %Open connection to database
+            db_connection = obj.openConnection(obj.db_table_raw);
 
-        %Create specimenData object
-        specimenData = ExperimentsSpecimenData(experimentNo);  
+            %Create specimenData object
+            specimenData = ExperimentsSpecimenData(experimentNo);  
 
-        try
-            db_proc = 'Fetch_Specimen_Data';
-            db_result = runstoredprocedure(db_connection,db_proc,{specimenId});
-            disp([class(obj), ': ', 'Preparing finisched']);
+            try
+                db_proc = 'Fetch_Specimen_Data';
+                db_result = runstoredprocedure(db_connection,db_proc,{specimenId});
+                disp([class(obj), ': ', 'Preparing finisched']);
 
-            db_query = strcat('SELECT * FROM joinspecimendata');
-            db_result = select(db_connection,db_query);
+                db_query = strcat('SELECT * FROM joinspecimendata');
+                db_result = select(db_connection,db_query);
 
-            specimenData.setDataAsTable(db_result);
-            
-        catch E
-            warning('setting specimen data without success: %s\n', E.message);
-        end
+                specimenData.setDataAsTable(db_result);
 
-        result = specimenData;
+            catch E
+                warning('setting specimen data without success: %s\n', E.message);
+            end
 
-        %Close connection to database
-        obj.closeConnection(db_connection);
+            result = specimenData;
+
+            %Close connection to database
+            obj.closeConnection(db_connection);
 
         end
         
