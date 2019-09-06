@@ -48,8 +48,11 @@ classdef ExperimentsData < handle
     %   *Added median filter to getDeformationRelative
     % 2019-09-06 Biebricher
     %   *Added filterTableData() as a function to filter the data once
-    %       globaly. All other function adapted [open].
-    
+    %       globaly. All other function adapted.
+    %   *Added showDebugPlotSingle() as function to plot all datasets
+    %       modified by filterTableData()
+    %   *Deprectaed function getConfiningPressureRelative(). Use
+    %       getConfiningPressure().
     
     properties (SetAccess = immutable)
         experimentNo; %Experiment number of the data
@@ -255,7 +258,7 @@ classdef ExperimentsData < handle
         end
         
         function dataTable = filterTableData(obj, data)
-        %This function is used to filter all the data
+        %This function is used to filter most of the data
             
             %Prepare input for return, changed in data like filtering are
             %going to update the data in dataTable
@@ -268,12 +271,12 @@ classdef ExperimentsData < handle
                 dat = data.sigma2_3_p_abs;
                 dat = fillmissing(dat, 'nearest');
                 dat = lowpass(dat, 0.01);
-                dataTable.sigma2_3_p_abs = dat;
+                dataTable.sigma2_3_p_abs = round(dat, 2);
                 
                 dat = data.sigma2_3_p_rel;
                 dat = fillmissing(dat, 'nearest');
                 dat = lowpass(dat, 0.01);
-                dataTable.sigma2_3_p_abs = dat;
+                dataTable.sigma2_3_p_rel = round(dat, 2);
 
             catch E
                 warning([class(obj), ' - ', 'Error while filtering sigma2_3_p_abs/sigma2_3_p_rel']);
@@ -283,7 +286,7 @@ classdef ExperimentsData < handle
                 dat = data.room_p_abs;
                 dat = fillmissing(dat, 'nearest');
                 dat = movmedian(dat, 50);
-                dataTable.room_p_abs = dat;
+                dataTable.room_p_abs = round(dat, 3);
 
             catch E
                 warning([class(obj), ' - ', 'Error while filtering room_p_abs']);
@@ -293,12 +296,12 @@ classdef ExperimentsData < handle
                 dat = data.hydrCylinder_p_abs;
                 dat = fillmissing(dat, 'nearest');
                 dat = lowpass(dat, 0.05);
-                dataTable.hydrCylinder_p_abs = dat;
+                dataTable.hydrCylinder_p_abs = round(dat, 1);
                 
                 dat = data.hydrCylinder_p_rel;
                 dat = fillmissing(dat, 'nearest');
                 dat = lowpass(dat, 0.05);
-                dataTable.hydrCylinder_p_rel = dat;
+                dataTable.hydrCylinder_p_rel = round(dat, 1);
 
             catch E
                 warning([class(obj), ' - ', 'Error while filtering hydrCylinder_p_abs/hydrCylinder_p_rel']);
@@ -308,12 +311,12 @@ classdef ExperimentsData < handle
                 dat = data.fluid_p_abs;
                 dat = fillmissing(dat, 'nearest');
                 dat =  movmedian(dat, 50);
-                dataTable.fluid_p_abs = dat;
+                dataTable.fluid_p_abs = round(dat, 3);
                 
                 dat = data.fluid_p_rel;
                 dat = fillmissing(dat, 'nearest');
                 dat = movmedian(dat, 50);
-                dataTable.fluid_p_rel = dat;
+                dataTable.fluid_p_rel = round(dat, 3);
 
             catch E
                 warning([class(obj), ' - ', 'Error while filtering fluid_p_abs/fluid_p_rel']);
@@ -328,7 +331,7 @@ classdef ExperimentsData < handle
                 dat = filloutliers(dat, 'nearest', 'movmedian', 180);
                 dat = fillmissing(dat, 'nearest');
                 dat = movmedian(dat, 600);
-                dataTable.fluid_in_t = dat;
+                dataTable.fluid_in_t = round(dat, 1);
 
             catch E
                 warning([class(obj), ' - ', 'Error while filtering fluid_in_t']);
@@ -339,7 +342,7 @@ classdef ExperimentsData < handle
                 dat = filloutliers(dat, 'nearest', 'movmedian', 180);
                 dat = fillmissing(dat, 'nearest');
                 dat = movmedian(dat, 600);
-                dataTable.fluid_out_t = dat;
+                dataTable.fluid_out_t = round(dat, 1);
 
             catch E
                 warning([class(obj), ' - ', 'Error while filtering fluid_out_t']);
@@ -350,7 +353,7 @@ classdef ExperimentsData < handle
                 dat = filloutliers(dat, 'nearest', 'movmedian', 180);
                 dat = fillmissing(dat, 'nearest');
                 dat = movmedian(dat, 600);
-                dataTable.room_t = dat;
+                dataTable.room_t = round(dat, 1);
 
             catch E
                 warning([class(obj), ' - ', 'Error while filtering room_t']);
@@ -363,25 +366,76 @@ classdef ExperimentsData < handle
             %Filtering of deformation must be used carefully, as we have a
             %changed deformation meassurement system
             try
-                dat = fillmissing(data.deformation_1_s_abs, 'nearest');
-                dat = lowpass(dat, 0.01);
-                dataTable.deformation_1_s_abs = dat;
+                dat = movmedian(data.deformation_1_s_abs, 30);
+                dataTable.deformation_1_s_abs = round(dat, 2);
                 
-                dataTable.deformation_1_s_rel = dat + (data.deformation_1_s_abs - data.deformation_1_s_rel);
+                dataTable.deformation_1_s_rel = round(dat - min(dat), 2);
             catch E
-                warning([class(obj), ' - ', 'Error while filtering deformation_1_s_abs']);
+                warning([class(obj), ' - ', 'Error while filtering deformation_1_s_abs/deformation_1_s_rel']);
             end
             
             try
-                dat = fillmissing(data.deformation_2_s_abs, 'nearest');
-                dat = lowpass(dat, 0.01);
-                dataTable.deformation_2_s_abs = dat;   
+                dat = movmedian(data.deformation_2_s_abs, 30);
+                dataTable.deformation_2_s_abs = round(dat, 2);   
                 
-                dataTable.deformation_2_s_rel = dat + (data.deformation_2_s_abs - data.deformation_2_s_rel);
+                dataTable.deformation_2_s_rel = round(dat - min(dat), 2);
             catch E
-                warning([class(obj), ' - ', 'Error while filtering deformation_2_s_abs']);
+                warning([class(obj), ' - ', 'Error while filtering deformation_2_s_abs/deformation_2_s_rel']);
             end
             
+        end
+        
+        function fig = showDebugPlotSingle(obj, columnName)
+        %Function to plot a single rows data as original and filtered data
+            
+            if (columnName == "all")
+                
+                fig = [];
+                variables=obj.dataTable.Properties.VariableNames;
+                
+                for k=1:length(variables)
+                    
+                    x1 = obj.dataTable.runtime;
+                    x2 = x1;
+
+                    y1 = obj.dataTable.(k);
+                    y2 = obj.filteredData.(k);
+                    
+                    y1 = fillmissing(y1, 'nearest');
+                    y2 = fillmissing(y2, 'nearest');
+                    
+                    if (not(isequal(y1, y2)) && not(sum(isnan(y1)) == length(y1)))
+                    
+                        fig_temp = figure;
+                        plot(x1,y1,':' ,x2,y2);
+                        title(variables(k), 'Interpreter', 'none');
+                        legend('Original', 'Filtered');
+                        
+                        fig = [fig, fig_temp];
+                    end
+                end
+                
+            else
+                
+                x1 = obj.dataTable.runtime;
+                x2 = x1;
+
+                y1 = obj.dataTable.(columnName);
+                y2 = obj.filteredData.(columnName);
+
+                fig = figure;
+                plot(x1,y1,x2,y2);
+                title(columnName, 'Interpreter', 'none');
+                legend('Original', 'Filtered');
+                
+            end
+            
+        end
+        
+        function plot = showDebugPlot(obj)
+        %Function to plot all data in dataTable within a stacked plot, to
+        %get a short overview over all existing data
+            plot = stackedplot(obj.dataTable,'-x');
         end
         
         function density = waterDensity(obj, temp)
@@ -416,16 +470,20 @@ classdef ExperimentsData < handle
             experimentNo = obj.experimentNo;
         end
         
+        function dataTable = createTable(obj)
+            dataTable = obj.filteredData(:,{'runtime'}); 
+        end
         
-        function data = get.dataTable(obj)
-            data = obj.dataTable; %make timetable
+        
+        function data = get.filteredData(obj)
+            data = obj.filteredData; %make timetable
         end
         
         
         function dataTable = getRoomTemperature(obj)
-        %Returns a timetable with the following columns: time, runtime, timestamp, time_diff, room_t
-            dataTable = obj.dataTable(:,{'runtime','room_t'});
-            dataTable.room_t=obj.getAllTemperatures.room_t;
+        %Returns a timetable with the following columns: runtime, timestamp, time_diff, room_t
+            dataTable = obj.createTable();
+            dataTable.room_t =obj.getAllTemperatures.room_t;
         end
         
         
@@ -434,25 +492,16 @@ classdef ExperimentsData < handle
         %temperature datasets will be filled by linear interpolation
         %between the next neighboor.
             colNames = ''; %Variable for output-message containing column Names
-            dataTable = obj.dataTable(:,1);
+            dataTable = obj.createTable;
             
             %Searching for all variables containing temperature data (°C)
-            for i=1:width(obj.dataTable)
-                if (strcmp(char(obj.dataTable(:,i).Properties.VariableUnits),'°C'))
-                    colNames = strcat(colNames, obj.dataTable(:,i).Properties.VariableNames,{'; '});
-                    dataTable = [dataTable obj.dataTable(:,i)];
+            for i=1:width(obj.filteredData)
+                if (strcmp(char(obj.filteredData(:,i).Properties.VariableUnits),'°C'))
+                    colNames = strcat(colNames, obj.filteredData(:,i).Properties.VariableNames,{'; '});
+                    dataTable = [dataTable obj.filteredData(:,i)];
                 end
                 
             end
-            
-            %Filling missing data
-            dataTable = fillmissing(dataTable, 'linear');
-            
-            %eliminate noise
-            dataTable.room_t=movmedian(dataTable.room_t,150);
-            dataTable.fluid_out_t=movmedian(dataTable.fluid_out_t,150);
-            dataTable.fluid_in_t=movmedian(dataTable.fluid_in_t,150);
-            
             
             disp(strcat(class(obj), {' - '},  {'Found the following temperature related columns: '}, colNames));
         end
@@ -461,82 +510,46 @@ classdef ExperimentsData < handle
         function dataTable = getAllPressureRelative(obj)
         %Returns a timetable containing all relative pressure data: time, runtime
         %time_diff, timestamp, fluid_p_rel, hydrCylinder_p_rel, sigma2_3_p_rel
-            dataTable = obj.dataTable(:,{'runtime','fluid_p_rel','hydrCylinder_p_rel','sigma2_3_p_rel'});
-            dataTable.fluid_p_rel=movmean(dataTable.fluid_p_rel,20);
-            dataTable.hydrCylinder_p_rel=movmean(dataTable.hydrCylinder_p_rel,50);
-            dataTable.sigma2_3_p_rel=movmean(dataTable.sigma2_3_p_rel,50);
+            dataTable = obj.createTable();
+            dataTable = [dataTable obj.filteredData(:,{'fluid_p_rel', 'hydrCylinder_p_rel', 'sigma2_3_p_rel'})];
         end
         
         
         function dataTable = getAllPressureAbsolute(obj)
         %Returns a timetable containing all absolute pressure data: time, runtime
         %time_diff, timestamp, fluid_p_abs, hydrCylinder_p_abs, sigma2_3_p_abs
-            dataTable = obj.dataTable(:,{'runtime','fluid_p_abs','hydrCylinder_p_abs','sigma2_3_p_abs'});
+            dataTable = obj.createTable();
+            dataTable = [dataTable obj.filteredData(:,{'room_p_abs', 'fluid_p_abs', 'hydrCylinder_p_abs', 'sigma2_3_p_abs'})];
         end
         
         
         function dataTable = getDeformationRelative(obj)
         %Returns a timetable containing deformation data of the specimen: time, runtime
         %time_diff, timestamp, deformation_1_s_rel, deformation_2_s_rel, deformation_mean
-            dataTable = obj.dataTable(:,{'runtime','deformation_1_s_rel','deformation_2_s_rel',});
-            %eliminate noise
-            %median filter rounds the corners at jumps
-            dataTable.deformation_1_s_rel=movmedian(dataTable.deformation_1_s_rel,50);
-            dataTable.deformation_2_s_rel=movmedian(dataTable.deformation_2_s_rel,50);
+            dataTable = obj.createTable();
+            dataTable = [dataTable obj.filteredData(:,{'deformation_1_s_rel','deformation_2_s_rel',})];    
 
-            %this loop takes too long
-            
-%             deformationDifference=[0;diff(dataTable.deformation_1_s_rel)];
-%             deformationJumpPoints = find(deformationDifference>0.02); %find jumps in deformation curve
-%             deformationJumpPoints=[1; deformationJumpPoints]; %add starting index 1
-%             TF = isempty(deformationJumpPoints);
-%             
-%                 %Splitting up
-%                 if TF==0
-%                     %split datatable where weight drops below zero
-%                     deformation_splitted = cell(numel(deformationJumpPoints)-1, 1); %create cell array in which to store the split tables
-%                     
-%                     for k=2:numel(deformationJumpPoints)
-%                         deformation_splitted{k-1}=dataTable(deformationJumpPoints(k-1):deformationJumpPoints(k)-1,:);
-%                     end
-%                 
-%                     deformation_splitted{k,1}=dataTable(deformationJumpPoints(end):end,:); %add end section of table
-% 
-%                 else
-% %              create single cell array if deformation is linear
-%                     deformation_splitted=cell(1,1);
-%                     deformation_splitted{1,1}=dataTable;
-%                     
-%                 end
-%                 
-%                 %eliminate noise
-%                 for j=1:numel(deformation_splitted)
-%                     deformation_splitted{j,1}.deformation_1_s_rel=movmedian(deformation_splitted{j,1}.deformation_1_s_rel,50);
-%                     deformation_splitted{j,1}.deformation_2_s_rel=movmedian(deformation_splitted{j,1}.deformation_2_s_rel,50);
-%                 end
-%         dataTable = cat(1,deformation_splitted{:});
-%             
-            
             %Calculating the mean deformation influenced by deformatoin
             %sensor 1 and 2. NaN entrys will be ignored.
-            dataTable.deformation_mean = mean(obj.dataTable{:,{'deformation_1_s_rel','deformation_2_s_rel'}},2,'omitnan');
-            dataTable.deformation_mean=movmean(dataTable.deformation_mean,50);
+            dataTable.deformation_mean = dataTable.deformation_1_s_rel;
+            dataTable.deformation_mean = mean([dataTable.deformation_1_s_rel, dataTable.deformation_2_s_rel], 2, 'omitnan');
         end
         
         
         function dataTable = getConfiningPressure(obj)
         %Returns a timetable containing confing pressure data: time, runtime
         %time_diff, timestamp, sigma2_3_p_abs, sigma2_3_p_rel
-            dataTable = obj.dataTable(:,{'runtime','sigma2_3_p_abs'});
-            dataTable.sigma2_3_p_rel=obj.getAllPressureRelative.sigma2_3_p_rel;
+            dataTable = obj.createTable();
+            dataTable.sigma2_3_p_rel = obj.getAllPressureRelative.sigma2_3_p_rel;
         end
         
         
         function dataTable = getConfiningPressureRelative(obj)
         %Returns a timetable containing confing pressure data: time, runtime
         %time_diff, timestamp, sigma2_3_p_rel
-            dataTable = obj.dataTable(:,{'runtime'});
-            dataTable.sigma2_3_p_rel=obj.getAllPressureRelative.sigma2_3_p_rel;
+            warning('Function getConfiningPressureRelative() deprecated. Use getConfiningPressure()')
+        
+            dataTable = obj.getConfiningPressure();
         end
         
         function dataTable = getBassinPumpData(obj)
@@ -548,12 +561,12 @@ classdef ExperimentsData < handle
         %The mean pump pressure has to be used with caution. When the
         %volume of a pump is empty, and it has to be refilled, there will
         %be a pressure loss!
-            dataTable = obj.dataTable(:,{'runtime','pump_1_p','pump_1_V','pump_2_p','pump_2_V','pump_3_p','pump_3_V'});
+            dataTable = [obj.createTable() obj.filteredData(:,{'pump_1_p','pump_1_V','pump_2_p','pump_2_V','pump_3_p','pump_3_V'})];
             
             %Calculating the mean pump pressure and volume influenced by
             %all three pumps. Ignoring NaN entrys.
-            dataTable.pump_mean_p = mean(obj.dataTable{:,{'pump_1_p','pump_2_p','pump_3_p'}},2,'omitnan');
-            dataTable.pump_sum_V = sum(obj.dataTable{:,{'pump_1_V','pump_2_V','pump_3_V'}},2,'omitnan');
+            dataTable.pump_mean_p = mean([dataTable.pump_1_p, dataTable.pump_2_p, dataTable.pump_3_p],2,'omitnan');
+            dataTable.pump_sum_V = sum([dataTable.pump_1_V, dataTable.pump_2_V, dataTable.pump_3_V],2,'omitnan');
         end
         
         
@@ -561,8 +574,9 @@ classdef ExperimentsData < handle
         function dataTable = getFlowData(obj)
         %Returns a timetable containing all flow data relevant data: time, runtime
         %time_diff, timestamp, weight, fluid_p_rel, fluid_out_t,
-            dataTable = obj.dataTable(:,{'runtime','weight','fluid_out_t'});
-            dataTable.fluid_p_rel=obj.getAllPressureRelative.fluid_p_rel;
+            dataTable = [obj.createTable() obj.filteredData(:,{'weight'})];
+            dataTable.fluid_out_t = obj.getAllTemperatures.fluid_out_t;
+            dataTable.fluid_p_rel = obj.getAllPressureRelative.fluid_p_rel;
             
 
         end
@@ -608,7 +622,7 @@ classdef ExperimentsData < handle
             dataTable.density = obj.waterDensity(dataTable.fluid_out_t);
             
             %Set length from cm to m
-            length = length/100;
+            length = length / 100;
             
             %Retime the dataTable to given timestep
             start = dataTable.time(1);
@@ -620,12 +634,12 @@ classdef ExperimentsData < handle
             dataTable.time_diff = [0;diff(dataTable.runtime)]; %Calculate time difference between to entrys
                                    
             %Add deltaL (variable) and A (constant)
-            dataTable.deltaL = length-(dataTable.deformation_mean./1000);
-            A=((diameter/100)/2)^2*pi; %crosssection
+            dataTable.deltaL = length - (dataTable.deformation_mean./1000);
+            A = ((diameter/100)/2)^2*pi; %crosssection
             
             %Checking data for outliers
-            dataTable.fluid_p_rel=filloutliers(dataTable.fluid_p_rel,'linear','mean');
-            dataTable.weight_diff=filloutliers(dataTable.weight_diff,'linear','movmean',[0 240]);
+            dataTable.fluid_p_rel = filloutliers(dataTable.fluid_p_rel, 'linear', 'mean');
+            dataTable.weight_diff = filloutliers(dataTable.weight_diff, 'linear', 'movmean', [0 240]);
             dataTable.weight_diff = round(dataTable.weight_diff,3); %round to avoid spikes
            
             %Handling emptying the scale for the flow measurement
@@ -642,21 +656,21 @@ classdef ExperimentsData < handle
                     dataTable_Splitted = cell(numel(weightDropPoints)-1, 1); %create cell array in which to store the split tables
                     
                     for k=2:numel(weightDropPoints)
-                        dataTable_Splitted{k-1}=dataTable(weightDropPoints(k-1):weightDropPoints(k)-1,:);
+                        dataTable_Splitted{k-1} = dataTable(weightDropPoints(k-1):weightDropPoints(k)-1,:);
                     end
                 
-                    dataTable_Splitted{k,1}=dataTable(weightDropPoints(end):end,:); %add end section of table
+                    dataTable_Splitted{k,1} = dataTable(weightDropPoints(end):end,:); %add end section of table
 
                 else
                     %create single cell array if weight does not drop below zero
-                    dataTable_Splitted=cell(1,1);
-                    dataTable_Splitted{1,1}=dataTable;
+                    dataTable_Splitted = cell(1,1);
+                    dataTable_Splitted{1,1} = dataTable;
                     
                 end
                 
                 %Calculating the permeability for each of the splitted data
                 %tables
-                for j=1:numel(dataTable_Splitted)
+                for j = 1:numel(dataTable_Splitted)
                     tempTable = dataTable_Splitted{j,1}; %Save data in temporarily table
                     
                     g = 9.81; %Gravity m/s² or N/kg
@@ -680,7 +694,7 @@ classdef ExperimentsData < handle
             dataTable = cat(1,dataTable_Splitted{:});
             
             %Create output timetable-variable
-            permeability = dataTable(:,{'runtime','weight_diff'});
+            permeability = dataTable(:,{,'runtime', 'weight_diff'});
             permeability.permeability = dataTable.k_t;
             permeability.perm_alpha = dataTable.alpha;
                           
@@ -703,8 +717,8 @@ classdef ExperimentsData < handle
             %get table and add neccessary variables    
             dataTable = obj.getFlowData;
             dataTable.deformation_mean = obj.getDeformationRelative.deformation_mean;
-            dataTable.delta_deformation_1=obj.getDeformationRelative.deformation_1_s_rel-dataTable.deformation_mean;
-            dataTable.delta_deformation_2=obj.getDeformationRelative.deformation_2_s_rel-dataTable.deformation_mean;
+            dataTable.delta_deformation_1 = obj.getDeformationRelative.deformation_1_s_rel - dataTable.deformation_mean;
+            dataTable.delta_deformation_2 = obj.getDeformationRelative.deformation_2_s_rel - dataTable.deformation_mean;
             dataTable.hydrCylinder_p_rel = obj.getAllPressureRelative.hydrCylinder_p_rel;
             dataTable.sigma2_3_p_rel = obj.getAllPressureRelative.sigma2_3_p_rel;
             dataTable.pump_sum = obj.getBassinPumpData.pump_sum_V;
@@ -714,7 +728,8 @@ classdef ExperimentsData < handle
             dataTable.weight = fillmissing(dataTable.weight, 'previous');
             
             dataTable.density = obj.waterDensity(dataTable.fluid_out_t);
-            dataTable.weight_diff = [0; diff(dataTable.weight)];
+            %%%%%%%%%%%
+            dataTable.weight_diff = [0; diff(dataTable.weight)]; %Is this correct???
             
             
             %It is possible to synchronize two timetables even if the data
@@ -723,13 +738,7 @@ classdef ExperimentsData < handle
             %dataTable = synchronize(dataTable,permeability,);
                 
         end 
-        
-        function plot = showDebugPlot(obj)
-        %Function to plot all data in dataTable within a stacked plot, to
-        %get a short overview over all existing data
-            plot = stackedplot(obj.dataTable,'-x');
-        end
-    
+
     end
 end 
  
