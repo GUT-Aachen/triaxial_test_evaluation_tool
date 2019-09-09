@@ -55,6 +55,8 @@ classdef ExperimentsData < handle
     %   *Changed access to 'private' for organizeTableData() and
     %       filterTableData().
     %   *Changed access to private for dataTables
+    % 2019-09-09 Biebricher
+    %   * getPermeability() added check if diameter or length are NaN
     
     properties (SetAccess = immutable, GetAccess = private)
         originalData; %Dataset as timetable
@@ -651,7 +653,7 @@ classdef ExperimentsData < handle
                 error('Not enough input arguments. specimen length; specimen diameter; timestep (optional)');
             end
             
-            if ~isnumeric(length) || ~isnumeric(diameter) || ~isnumeric(timestep) || diameter <= 0 || length <= 0 || timestep <= 0
+            if ~isnumeric(length) || ~isnumeric(diameter) || ~isnumeric(timestep) || diameter <= 0 || length <= 0 || timestep <= 0 || isnan(diameter) || isnan(length)
                 error('Input parameters length, diameter and timestep have to be numeric and bigger zero!');
             end
             
@@ -677,7 +679,8 @@ classdef ExperimentsData < handle
             A = ((diameter/100)/2)^2*pi; %crosssection
             
             %Checking data for outliers
-            dataTable.fluid_p_rel = filloutliers(dataTable.fluid_p_rel, 'linear', 'mean');
+            %dataTable.fluid_p_rel = filloutliers(dataTable.fluid_p_rel,
+            %'linear', 'mean'); % no longer needes. Is done in creator
             dataTable.weight_diff = filloutliers(dataTable.weight_diff, 'linear', 'movmean', [0 240]);
             dataTable.weight_diff = round(dataTable.weight_diff,3); %round to avoid spikes
            
