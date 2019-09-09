@@ -50,3 +50,5 @@ db_data = db.getExperimentData(experiment_no);
 
 %%
 permeabilityTable=db_data.getPermeability(db_specimendata.height,db_specimendata.diameter,0.5);
+
+%%
