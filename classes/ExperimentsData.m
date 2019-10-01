@@ -57,8 +57,12 @@ classdef ExperimentsData < handle
     %   *Changed access to private for dataTables
     % 2019-09-09 Biebricher
     %   * getPermeability() added check if diameter or length are NaN
+    % 2019-09-30 Biebricher
+    %   * getPermeability() add debug mode: output all parameters
+    %   * getPermeability() prohibit negative weight differences and
+    %                       replace by 0
     
-    properties (SetAccess = immutable, GetAccess = private)
+    properties (SetAccess = immutable)%, GetAccess = private)
         originalData; %Dataset as timetable
         filteredData; %Filtered dataset as timetable
     end
@@ -634,11 +638,12 @@ classdef ExperimentsData < handle
         end 
 
         
-        function permeability = getPermeability(obj, length, diameter, timestep)                   
+        function permeability = getPermeability(obj, length, diameter, timestep, debug)                   
             %Input parameters:
             %   length : height of specimen in cm
             %   diameter: diameter of specimen in cm
             %   timestep: timestep between to calculation point of perm
+            %   debug: all influencing parameters for permeability calculation
             %This function calculates the permeability and returns a
             %timetable containing the permeability and runtime. 
             %Fluid_p_rel and weight_diff outliers are detected using the mean method. Alpha is included.
@@ -647,6 +652,15 @@ classdef ExperimentsData < handle
             if nargin == 3
                 warning('Set timestep to default: 5 minutes');
                 timestep = 5;
+                debug = false;
+            end
+            
+            if nargin == 4
+                debug = false;
+            end
+            
+            if nargin == 5
+                warning('Debug mode in getPermeability: all parameters as output');
             end
             
             if nargin < 3
@@ -671,7 +685,7 @@ classdef ExperimentsData < handle
             dataTable = retime(dataTable,time,'linear');
             
             %Calculating differences
-            dataTable.weight_diff = [0;diff(dataTable.weight)]; %Calculate weight difference between to entrys
+            dataTable.weight_diff = [0;max(0, diff(dataTable.weight))]; %Calculate weight difference between to entrys, no negative values are allows: max(0,value)
             dataTable.time_diff = [0;diff(dataTable.runtime)]; %Calculate time difference between to entrys
                                    
             %Add deltaL (variable) and A (constant)
@@ -735,7 +749,11 @@ classdef ExperimentsData < handle
             dataTable = cat(1,dataTable_Splitted{:});
             
             %Create output timetable-variable
-            permeability = dataTable(:,{'runtime', 'weight_diff'});
+            if debug
+                permeability = dataTable;
+            else
+                permeability = dataTable(:,{'runtime', 'weight_diff'});
+            end
             permeability.permeability = dataTable.k_t;
             permeability.perm_alpha = dataTable.alpha;
                           
