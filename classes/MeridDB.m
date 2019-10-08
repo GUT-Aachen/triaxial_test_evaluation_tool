@@ -15,6 +15,13 @@ classdef MeridDB < handle
 %       of the output now.
 %2019-09-06 Biebricher
 %   * Integrate handle class imports
+%2019-10-08 Biebricher
+%   * Function 'getExperimentData()' error handlers for input parameters
+%       added.
+%   * Function 'getExperimentData()' new input parameter added
+%       (forcedUpdate) and handed over to function 'prepareExperimentData()'.
+%       Default value is 'false'.
+%   * Function 'getExperimentData()' castl no_rows as double.
     
     properties (Constant = true)
         %credentials and server data
@@ -152,13 +159,13 @@ classdef MeridDB < handle
             obj.closeConnection(obj.db_connection_raw);
         end
         
-        function result = prepareExperimentData(obj, experimentNo, forced)
+        function result = prepareExperimentData(obj, experimentNo, updateForced)
         %Method to call the procedure in the database to fetch the data
         %from all data-tables. This procedure takes time and just needs to
         %be done if the experimentNo changes or it is forced.
             
             if (nargin == 2)
-                forced = false;
+                updateForced = false;
             end
             
             %Open the connection to the database
@@ -166,7 +173,7 @@ classdef MeridDB < handle
             
             %A database comparison must only be carried out if an update
             %is not forced anyway.
-            if (forced == false)
+            if (updateForced == false)
                 %Check if the procedure needs to be called. Is the experimentNo
                 %in the first element in the data table the same?
                 
@@ -182,10 +189,10 @@ classdef MeridDB < handle
             end
             
             %Start the procedure if needd
-            if (forced || updateNeeded)
+            if (updateForced || updateNeeded)
                 disp([class(obj), ': ', 'Preparing to start to fetch all kind of data into one table']);
 
-                if (forced) disp([class(obj), ': ', 'Database update is forced']); end
+                if (updateForced) disp([class(obj), ': ', 'Database update is forced']); end
 
                 db_proc = 'Fetch_Data_InnerJoin';
                 db_result = runstoredprocedure(db_connection,db_proc,{experimentNo});
@@ -199,17 +206,31 @@ classdef MeridDB < handle
             obj.closeConnection(db_connection);
         end
         
-        function result = getExperimentData(obj, experimentNo)
+        function result = getExperimentData(obj, experimentNo, updateForced)
         %Function to get experiment data from database
             import ExperimentsData.*
             
+            %Check for correct input parameters
+            if nargin == 2
+                disp([class(obj), ': ','Set updateForced to default: false']);
+                updateForced = false;
+            end
+            
+            if updateForced
+                warning([class(obj), ': ', 'Update if the database will be forced. This costs an additional amount of time!']);
+            end
+            
+            if ~isnumeric(experimentNo)
+                error([class(obj), ': ', 'The given experiment number is not numeric! Check if quotation marks used accidently.']);
+            end
+            
             %Check if the given experiment exists
             if (obj.experimentExists(experimentNo) == 0)
-                result = 0;
+                error([class(obj), ': ','Selected experiment number (', int2str(experimentNo), ') does not exist']);
             else               
                 %Preparing of the dataset takes time and needs to be done
                 %everytime the experiment number changes
-                obj.prepareExperimentData(experimentNo, false);
+                obj.prepareExperimentData(experimentNo, updateForced);
                 
                 %Open connection to database
                 db_connection = obj.openConnection(obj.db_table_inSync);
@@ -219,11 +240,14 @@ classdef MeridDB < handle
                 db_result = select(db_connection,db_query);
                 
                 select_limit = 50000; %maximum number of rows within one select query
-                no_rows = db_result{1,1}; %total number of rows
+                no_rows = double(db_result{1,1}); %total number of rows; cast as double for later calculation
                 
                 %Calculate the steps. Sometimes there is a problem when there
                 %are too few lines. For this reason, you must check whether
-                %the number of steps required is at least 1. 
+                %the number of steps required is at least 1. Besides
+                %no_rows has to be casted as non integer. Otherwise the
+                %division will be automatically round mathematically correct
+                %and ceil() is useless.
                 steps = ceil(no_rows/select_limit);
                 if (steps == 0)
                     steps = 1;
