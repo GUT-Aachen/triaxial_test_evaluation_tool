@@ -61,6 +61,12 @@ classdef ExperimentsData < handle
     %   * getPermeability() add debug mode: output all parameters
     %   * getPermeability() prohibit negative weight differences and
     %                       replace by 0
+    % 2019-10-21
+    %   * all variables in camel case
+    %   * organizeTableData() fixed to work with timetable as input
+    %       (instead of table). Check if a row exists, otherwise creating
+    %       the row and filling with NaN. Not used datasets like timestamp
+    %       deleted.
     
     properties (SetAccess = immutable)%, GetAccess = private)
         originalData; %Dataset as timetable
@@ -81,113 +87,235 @@ classdef ExperimentsData < handle
         
             %Check if all columns are present and add units and description
             try
-                dataTable = table(data.time);
-                dataTable.Properties.VariableNames = {'time'};
-                dataTable.Properties.VariableDescriptions{'time'} = 'Datetime in the format: yyyy-MM-dd HH:mm:ss.S';
+                %Initializing the timetable
+                dataTable = timetable(data.time);
+                dataTable.Properties.DimensionNames{1} = 'datetime';  
+                dataTable.datetime.Format = ('yyyy-MM-dd HH:mm:ss.SSS');
                 
-                dataTable.timestamp = data.timestamp;
-                dataTable.Properties.VariableUnits{'timestamp'} = 's';
-                dataTable.Properties.VariableDescriptions{'timestamp'} = 'Unix timestamp';
-
-                dataTable.room_t = data.room_t;
+                %room_t: room temperatur
+                if ismember('room_t', data.Properties.VariableNames)
+                    dataTable.room_t = data.room_t;
+                else
+                    dataTable.room_t = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Room temperature (room_t) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'room_t'} = '°C';
                 dataTable.Properties.VariableDescriptions{'room_t'} = 'Ambient air temperature';
-
-                dataTable.room_p_abs = data.room_p_abs;
+                
+                %room_p_abs: air pressure
+                if ismember('room_p_abs', data.Properties.VariableNames)
+                    dataTable.room_p_abs = data.room_p_abs;
+                else
+                    dataTable.room_p_abs = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Air pressure (room_p_abs) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'room_p_abs'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'room_p_abs'} = 'Atmospheric pressure';
 
-                dataTable.fluid_in_t = data.fluid_in_t;
+                %fluid_in_t: inflow fluid temperature
+                if ismember('fluid_in_t', data.Properties.VariableNames)
+                    dataTable.fluid_in_t = data.fluid_in_t;
+                else
+                    dataTable.fluid_in_t = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Fluid inflow temperatur (fluid_in_t) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'fluid_in_t'} = '°C';
                 dataTable.Properties.VariableDescriptions {'fluid_in_t'} = 'Temperature of the fluid before flowing the specimen.';
 
-                dataTable.fluid_out_t = data.fluid_out_t;
+                %fluid_out_t: outflow fluid temperature
+                if ismember('fluid_out_t', data.Properties.VariableNames)
+                    dataTable.fluid_out_t = data.fluid_out_t;
+                else
+                    dataTable.fluid_out_t = NaN(size(data,1),1);
+                end
+                
+                if sum(isnan(dataTable.fluid_out_t)) == size(data,1)
+                    warning([class(obj), ' - ', 'Fluid outflow temperatur (fluid_out_t) data missing. Added column filled with NaN. Permeabilitycalculation will be imprecisely.']);;
+                end
                 dataTable.Properties.VariableUnits{'fluid_out_t'} = '°C';
                 dataTable.Properties.VariableDescriptions {'fluid_out_t'} = 'Temperature of the fluid after flowing through, meassured on the scale.';
 
-                dataTable.fluid_p_abs = data.fluid_p_abs;
+                %fluid_p_abs: abslute fluid pressure
+                if ismember('fluid_p_abs', data.Properties.VariableNames)
+                    dataTable.fluid_p_abs = data.fluid_p_abs;
+                else
+                    dataTable.fluid_p_abs = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Fluid flow absolute pressure (fluid_p_abs) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'fluid_p_abs'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'fluid_p_abs'} = 'Inflow pressure specimen (absolute value)';
 
-                dataTable.fluid_p_rel = data.fluid_p_rel;
+                %fluid_p_rel: relative fluid pressure
+                if ismember('fluid_p_rel', data.Properties.VariableNames)
+                    dataTable.fluid_p_rel = data.fluid_p_rel;
+                else
+                    dataTable.fluid_p_rel = NaN(size(data,1),1);
+                end
+                
+                if sum(isnan(dataTable.fluid_p_rel)) == size(data,1)
+                    warning([class(obj), ' - ', 'Fluid flow relative pressure (fluid_p_rel) data missing. Permeability calculation not possible!']);
+                end
                 dataTable.Properties.VariableUnits{'fluid_p_rel'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'fluid_p_rel'} = 'Inflow pressure specimen (relative value)';
-
-                dataTable.hydrCylinder_p_abs = data.hydrCylinder_p_abs;
+                
+                %hydrCylinder_p_abs: absolute hydraulic cylinder pressure
+                if ismember('hydrCylinder_p_abs', data.Properties.VariableNames)
+                    dataTable.hydrCylinder_p_abs = data.hydrCylinder_p_abs;
+                else
+                    dataTable.hydrCylinder_p_abs = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Hydraulic cynlinder absolute pressure (hydrCylinder_p_abs) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'hydrCylinder_p_abs'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'hydrCylinder_p_abs'} = 'Operating pressure of the hydraulic cylinder (absolue value)';
 
-                dataTable.hydrCylinder_p_rel = data.hydrCylinder_p_rel;
+                %hydrCylinder_p_rel: relative hydraulic cylinder pressure
+                if ismember('hydrCylinder_p_rel', data.Properties.VariableNames)
+                    dataTable.hydrCylinder_p_rel = data.hydrCylinder_p_rel;
+                else
+                    dataTable.hydrCylinder_p_rel = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Hydraulic cynlinder relative pressure (hydrCylinder_p_rel) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'hydrCylinder_p_rel'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'hydrCylinder_p_rel'} = 'Operating pressure of the hydraulic cylinder (relative value)';
-
-                dataTable.sigma2_3_p_abs = data.sigma2_3_p_abs;
+                
+                %sigma2_3_p_abs: absolute confining pressure
+                if ismember('sigma2_3_p_abs_1', data.Properties.VariableNames)
+                    dataTable.sigma2_3_p_abs = data.sigma2_3_p_abs_1;
+                else
+                    dataTable.sigma2_3_p_abs = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Confining absolute pressure (sigma2_3_p_abs) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'sigma2_3_p_abs'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'sigma2_3_p_abs'} = 'Confining pressure in the bassin. Meassured at the inflow pipe (absolute value)';
 
-                dataTable.sigma2_3_p_rel = data.sigma2_3_p_rel;
+                %sigma2_3_p_rel: relative confining pressure
+                if ismember('sigma2_3_p_rel_1', data.Properties.VariableNames)
+                    dataTable.sigma2_3_p_rel = data.sigma2_3_p_rel_1;
+                else
+                    dataTable.sigma2_3_p_rel = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Confining relative pressure (sigma2_3_p_rel) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'sigma2_3_p_rel'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'sigma2_3_p_rel'} = 'Confining pressure in the bassin. Meassured at the inflow pipe (relative value)';
-
-                dataTable.deformation_1_U = data.deformation_1_U;
-                dataTable.Properties.VariableUnits{'deformation_1_U'} = 'V';
-                dataTable.Properties.VariableDescriptions {'deformation_1_U'} = 'Voltage of the first deformation sensor';
-
-                dataTable.deformation_1_s_abs = data.deformation_1_s_abs;
+                
+                %deformation_1_s_abs: absolute deformation sensor 1
+                if ismember('deformation_1_s_abs', data.Properties.VariableNames)
+                    dataTable.deformation_1_s_abs = data.deformation_1_s_abs;
+                else
+                    dataTable.deformation_1_s_abs = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Absolute deformation sensor 1 (deformation_1_s_abs) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'deformation_1_s_abs'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'deformation_1_s_abs'} = 'Absolute deformation derived from the voltage';
-
-                dataTable.deformation_1_s_rel = data.deformation_1_s_rel;
+                
+                %deformation_1_s_rel: relative deformation sensor 1
+                if ismember('deformation_1_s_rel', data.Properties.VariableNames)
+                    dataTable.deformation_1_s_rel = data.deformation_1_s_rel;
+                else
+                    dataTable.deformation_1_s_rel = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Relative deformation sensor 1 (deformation_1_s_rel) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'deformation_1_s_rel'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'deformation_1_s_rel'} = 'Relative deformation, zeroed at the beginning of the experiment';
-
-                dataTable.deformation_1_s_taravalue = data.deformation_1_s_taravalue;
-                dataTable.Properties.VariableUnits{'deformation_1_s_taravalue'} = 'mm';
-                dataTable.Properties.VariableDescriptions {'deformation_1_s_taravalue'} = 'Difference between absolute and relative derformation meassurement';
-
-                dataTable.deformation_2_U = data.deformation_2_U;
-                dataTable.Properties.VariableUnits{'deformation_2_U'} = 'V';
-                dataTable.Properties.VariableDescriptions {'deformation_2_U'} = 'Voltage of the second deformation sensor';
-
-                dataTable.deformation_2_s_abs = data.deformation_2_s_abs;
+                                
+                %deformation_1_s_abs: absolute deformation sensor 2
+                if ismember('deformation_2_s_abs', data.Properties.VariableNames)
+                    dataTable.deformation_2_s_abs = data.deformation_2_s_abs;
+                else
+                    dataTable.deformation_2_s_abs = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Absolute deformation sensor 2 (deformation_2_s_abs) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'deformation_2_s_abs'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'deformation_2_s_abs'} = 'Absolute deformation derived from the voltage';
-
-                dataTable.deformation_2_s_rel = data.deformation_2_s_rel;
+                
+                %deformation_1_s_rel: relative deformation sensor 2
+                if ismember('deformation_2_s_rel', data.Properties.VariableNames)
+                    dataTable.deformation_2_s_rel = data.deformation_2_s_rel;
+                else
+                    dataTable.deformation_2_s_rel = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Relative deformation sensor 2 (deformation_2_s_rel) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'deformation_2_s_rel'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'deformation_2_s_rel'} = 'Relative deformation, zeroed at the beginning of the experiment';
+                
+                %Check if any relative deformation is given
+                if sum(isnan(dataTable.deformation_1_s_rel)) == size(data,1) && sum(isnan(dataTable.deformation_2_s_rel)) == size(data,1)
+                    warning([class(obj), ' - ', 'Deformation relative data missing (deformation_1_s_rel and deformation_2_s_rel) data missing. Permeability calculation not possible!']);
+                end
 
-                dataTable.deformation_2_s_taravalue = data.deformation_2_s_taravalue;
-                dataTable.Properties.VariableUnits{'deformation_2_s_taravalue'} = 'mm';
-                dataTable.Properties.VariableDescriptions {'deformation_2_s_taravalue'} = 'Difference between absolute and relative derformation meassurement';
-
-                dataTable.pump_1_V = data.pump_1_V;
+                %pump_1_V: volume pump 1
+                if ismember('pump_1_V', data.Properties.VariableNames)
+                    dataTable.pump_1_V = data.pump_1_V;
+                else
+                    dataTable.pump_1_V = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Volume Pump 1 (pump_1_V) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'pump_1_V'} = 'ml';
                 dataTable.Properties.VariableDescriptions {'pump_1_V'} = 'Liquid present in the pump';
 
-                dataTable.pump_1_p = data.pump_1_p;
+                %pump_1_p: relative pressure pump 1
+                if ismember('pump_1_p', data.Properties.VariableNames)
+                    dataTable.pump_1_p = data.pump_1_p;
+                else
+                    dataTable.pump_1_p = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Pressure Pump 1 (pump_1_p) data missing. Added column filled with NaN.']);
+                end                
                 dataTable.Properties.VariableUnits{'pump_1_p'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'pump_1_p'} = 'Pressure measured internally in the pump (relative value)';
 
-                dataTable.pump_2_V = data.pump_2_V;
+                %pump_2_V: volume pump 2
+                if ismember('pump_2_V', data.Properties.VariableNames)
+                    dataTable.pump_2_V = data.pump_1_V;
+                else
+                    dataTable.pump_2_V = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Volume Pump 2 (pump_2_V) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'pump_2_V'} = 'ml';
                 dataTable.Properties.VariableDescriptions {'pump_2_V'} = 'Liquid present in the pump';
 
-                dataTable.pump_2_p = data.pump_2_p;
+                %pump_2_p: relative pressure pump 2
+                if ismember('pump_2_p', data.Properties.VariableNames)
+                    dataTable.pump_2_p = data.pump_2_p;
+                else
+                    dataTable.pump_2_p = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Pressure Pump 2 (pump_2_p) data missing. Added column filled with NaN.']);
+                end                
                 dataTable.Properties.VariableUnits{'pump_2_p'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'pump_2_p'} = 'Pressure measured internally in the pump (relative value)';
 
-                dataTable.pump_3_V = data.pump_3_V;
+                %pump_3_V: volume pump 3
+                if ismember('pump_3_V', data.Properties.VariableNames)
+                    dataTable.pump_3_V = data.pump_1_V;
+                else
+                    dataTable.pump_3_V = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Volume Pump 3 (pump_3_V) data missing. Added column filled with NaN.']);
+                end
                 dataTable.Properties.VariableUnits{'pump_3_V'} = 'ml';
                 dataTable.Properties.VariableDescriptions {'pump_3_V'} = 'Liquid present in the pump';
 
-                dataTable.pump_3_p = data.pump_3_p;
+                %pump_3_p: relative pressure pump 3
+                if ismember('pump_3_p', data.Properties.VariableNames)
+                    dataTable.pump_3_p = data.pump_3_p;
+                else
+                    dataTable.pump_3_p = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Pressure Pump 3 (pump_3_p) data missing. Added column filled with NaN.']);
+                end  
                 dataTable.Properties.VariableUnits{'pump_3_p'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'pump_3_p'} = 'Pressure measured internally in the pump (relative value)';
-
-                dataTable.weight = data.weight;    
+                
+                %weight: weight of the water
+                if ismember('weight', data.Properties.VariableNames)
+                    dataTable.weight = data.weight;
+                else
+                    dataTable.weight = NaN(size(data,1),1);
+                end
+                
+                if sum(isnan(dataTable.weight)) == size(data,1)
+                    warning([class(obj), ' - ', 'Weight from scale (weight) data missing. Added column filled with NaN. Permeability calculation not possible!']);
+                end
                 dataTable.Properties.VariableUnits{'weight'} = 'kg';
                 dataTable.Properties.VariableDescriptions {'weight'} = 'Weight of the water meassured on the scale';
+                
             catch E
                 error([class(obj), ' - ', 'The given dataset is missing a column or properties can not be added. Please control the given data to be complete.']);
             end
@@ -195,16 +323,11 @@ classdef ExperimentsData < handle
             %Recast time-String to datetime, calculate time dependend
             %variables like runtime and convert to timetable
             try
-                %Convert time-column in datetime-variable
-                dataTable.time = datetime(dataTable.time,'InputFormat','yyyy-MM-dd HH:mm:ss.S');
-               
                 %Calculate runtime
-                dataTable.runtime = seconds(data{:,2}-data{1:1,2}); %working with timestamp
+                rt = table(dataTable.datetime);
+                dataTable.runtime = seconds(rt{:,1}-rt{1:1,1}); %working with datetime
                 dataTable.Properties.VariableUnits{'runtime'} = 's';
                 dataTable.Properties.VariableDescriptions{'runtime'} = 'Runtime in seconds since experiment start';
-                
-                %Convert table to timetable
-                dataTable = table2timetable(dataTable);
                 
                 %Set variable continuity for synchronizing data
                 %time is unset, should not be filled
@@ -212,10 +335,11 @@ classdef ExperimentsData < handle
                 %deformation related meassurements are stepwise
                 %volume in pumps is stepwise
                 %weight on scale is stepwise
-                dataTable.Properties.VariableContinuity = {'unset', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'step', 'step', 'step',  'step',  'step',  'step',  'step',  'step',  'step', 'continuous', 'step', 'continuous', 'step', 'continuous', 'step', 'continuous'};
+                %                                          room_t         room_p_abs    fluid_in_t    fluid_out_t   fluid_p_abs   fluid_p_rel  hydrCyl_p_rel hydrCyl_p_abs s23_p_abs     s23_p_rel     def1_a  def1_r  def2_a   def2_r   pump1V   pump1p        pump2V  pump2p        pump3V  pump3p        weight  runtime ...
+                dataTable.Properties.VariableContinuity = {'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'continuous', 'step', 'step', 'step',  'step',  'step',  'continuous', 'step', 'continuous', 'step', 'continuous', 'step', 'continuous'};
                 
             catch E
-                error([class(obj), ' - ', 'Can not convert data to timetable and/or claculate time difference']);
+                error([class(obj), ' - ', 'Can not add runtime to timetable and/or calculate time difference']);
             end
             
         end
@@ -329,20 +453,38 @@ classdef ExperimentsData < handle
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %Filtering of deformation must be used carefully, as we have a
             %changed deformation meassurement system
+            %Check if a absulote deformation is given. Otherwise the
+            %relative deformation will be saved as abs and the corected
+            % (nulled) value will be saved as rel.
             try
-                dat = movmedian(data.deformation_1_s_abs, 30);
-                dataTable.deformation_1_s_abs = round(dat, 2);
+                if (sum(isnan(dataTable.deformation_1_s_abs)) == length(dataTable.deformation_1_s_abs)) %Check if all absolute data is NaN
+                    dat = movmedian(data.deformation_1_s_rel, 30);
+                    dataTable.deformation_1_s_abs = round(dat, 3);
+                    
+                    dataTable.deformation_1_s_rel = round(dat - min(dat), 3);
+                else
+                    dat = movmedian(data.deformation_1_s_abs, 30);
+                    dataTable.deformation_1_s_abs = round(dat, 3);
+
+                    dataTable.deformation_1_s_rel = round(dat - min(dat), 3);
+                end
                 
-                dataTable.deformation_1_s_rel = round(dat - min(dat), 2);
             catch
                 warning([class(obj), ' - ', 'Error while filtering deformation_1_s_abs/deformation_1_s_rel']);
             end
             
             try
-                dat = movmedian(data.deformation_2_s_abs, 30);
-                dataTable.deformation_2_s_abs = round(dat, 2);   
-                
-                dataTable.deformation_2_s_rel = round(dat - min(dat), 2);
+                if (sum(isnan(dataTable.deformation_2_s_abs)) == length(dataTable.deformation_2_s_abs)) %Check if all absolute data is NaN
+                    dat = movmedian(data.deformation_2_s_rel, 30);
+                    dataTable.deformation_2_s_abs = round(dat, 3);
+                    
+                    dataTable.deformation_2_s_rel = round(dat - min(dat), 3);
+                else
+                    dat = movmedian(data.deformation_2_s_abs, 30);
+                    dataTable.deformation_2_s_abs = round(dat, 3);
+
+                    dataTable.deformation_2_s_rel = round(dat - min(dat), 3);
+                end
             catch
                 warning([class(obj), ' - ', 'Error while filtering deformation_2_s_abs/deformation_2_s_rel']);
             end
@@ -374,7 +516,7 @@ classdef ExperimentsData < handle
                 end
 
                 %Check if the variable data is a table
-                if ~istable(data)
+                if ~istimetable(data)
                     error(['Input "data" must consider a timetable-variable. Handed variable is class of: ',class(data)])
                 end
 
@@ -671,91 +813,104 @@ classdef ExperimentsData < handle
                 error('Input parameters length, diameter and timestep have to be numeric and bigger zero!');
             end
             
-            %Catch all relevant data as timetable
-            dataTable = obj.getFlowData;
-            dataTable.deformation_mean = obj.getDeformationRelative.deformation_mean;
-            dataTable.density = obj.waterDensity(dataTable.fluid_out_t);
-            
-            %Set length from cm to m
-            length = length / 100;
-            
-            %Retime the dataTable to given timestep
-            start = dataTable.time(1);
-            time = (start:minutes(timestep):dataTable.time(end));
-            dataTable = retime(dataTable,time,'linear');
-            
-            %Calculating differences
-            dataTable.weight_diff = [0;max(0, diff(dataTable.weight))]; %Calculate weight difference between to entrys, no negative values are allows: max(0,value)
-            dataTable.time_diff = [0;diff(dataTable.runtime)]; %Calculate time difference between to entrys
-                                   
-            %Add deltaL (variable) and A (constant)
-            dataTable.deltaL = length - (dataTable.deformation_mean./1000);
-            A = ((diameter/100)/2)^2*pi; %crosssection
-            
-            %Checking data for outliers
-            %dataTable.fluid_p_rel = filloutliers(dataTable.fluid_p_rel,
-            %'linear', 'mean'); % no longer needes. Is done in creator
-            dataTable.weight_diff = filloutliers(dataTable.weight_diff, 'linear', 'movmean', [0 240]);
-            dataTable.weight_diff = round(dataTable.weight_diff,3); %round to avoid spikes
-           
-            %Handling emptying the scale for the flow measurement
-                %Split table if weight drops and weight difference between
-                %to entrys in the given timestep is below zero
-                weightDropPoints = find(dataTable.weight_diff<-0.01); %find where weight difference drops to below zero and count
-                TF = isempty(weightDropPoints);
+            try
+                %Catch all relevant data as timetable
+                dataTable = obj.getFlowData;
+                dataTable.deformation_mean = obj.getDeformationRelative.deformation_mean;
+                if isnan(dataTable.fluid_out_t)
+                    dataTable.fluid_out_t = zeros(size(dataTable,1),1)+18;
+                    disp([class(obj), ' - ', 'Fluid outflow temperature set to 18°C.']);
+                end
+                dataTable.density = obj.waterDensity(dataTable.fluid_out_t);
+                
+                %Set length from cm to m
+                length = length / 100;
 
-                weightDropPoints=[1; weightDropPoints]; %add starting index 1
+                %Retime the dataTable to given timestep
+                start = dataTable.datetime(1);
+                time = (start:minutes(timestep):dataTable.datetime(end));
+                dataTable = retime(dataTable,time,'linear');
 
-                %Splitting up
-                if TF==0
-                    %split datatable where weight drops below zero
-                    dataTable_Splitted = cell(numel(weightDropPoints)-1, 1); %create cell array in which to store the split tables
-                    
-                    for k=2:numel(weightDropPoints)
-                        dataTable_Splitted{k-1} = dataTable(weightDropPoints(k-1):weightDropPoints(k)-1,:);
+                %Calculating differences
+                dataTable.weight_diff = [0;max(0, diff(dataTable.weight))]; %Calculate weight difference between to entrys, no negative values are allows: max(0,value)
+                dataTable.time_diff = [0;diff(dataTable.runtime)]; %Calculate time difference between to entrys
+
+                %Add deltaL (variable) and A (constant)
+                dataTable.deltaL = length - (dataTable.deformation_mean./1000);
+                A = ((diameter/100)/2)^2*pi; %crosssection
+
+                %Checking data for outliers
+                %dataTable.fluid_p_rel = filloutliers(dataTable.fluid_p_rel,
+                %'linear', 'mean'); % no longer needes. Is done in creator
+                dataTable.weight_diff = filloutliers(dataTable.weight_diff, 'linear', 'movmean', [0 240]);
+                %dataTable.weight_diff = round(dataTable.weight_diff,6); %round to avoid spikes
+
+                %Handling emptying the scale for the flow measurement
+                    %Split table if weight drops and weight difference between
+                    %to entrys in the given timestep is below zero
+                    weightDropPoints = find(dataTable.weight_diff<-0.01); %find where weight difference drops to below zero and count
+                    TF = isempty(weightDropPoints);
+
+                    weightDropPoints=[1; weightDropPoints]; %add starting index 1
+
+                    %Splitting up
+                    if TF==0
+                        %split datatable where weight drops below zero
+                        dataTable_Splitted = cell(numel(weightDropPoints)-1, 1); %create cell array in which to store the split tables
+
+                        for k=2:numel(weightDropPoints)
+                            dataTable_Splitted{k-1} = dataTable(weightDropPoints(k-1):weightDropPoints(k)-1,:);
+                        end
+
+                        dataTable_Splitted{k,1} = dataTable(weightDropPoints(end):end,:); %add end section of table
+
+                    else
+                        %create single cell array if weight does not drop below zero
+                        dataTable_Splitted = cell(1,1);
+                        dataTable_Splitted{1,1} = dataTable;
+
                     end
-                
-                    dataTable_Splitted{k,1} = dataTable(weightDropPoints(end):end,:); %add end section of table
 
+                    %Calculating the permeability for each of the splitted data
+                    %tables
+                    for j = 1:numel(dataTable_Splitted)
+                        tempTable = dataTable_Splitted{j,1}; %Save data in temporarily table
+
+                        g = 9.81; %Gravity m/s² or N/kg
+
+                        tempTable.h = (tempTable.fluid_p_rel .* 100000) ./ (tempTable.density .* g); %Pressure difference h between inflow and outflow in m
+                        tempTable.WaterFlowVolume = (tempTable.weight_diff ./ tempTable.density); %water flow volume Q in m³
+
+                        tempTable.k = ((tempTable.WaterFlowVolume ./ tempTable.time_diff) .* tempTable.deltaL) ./ (tempTable.h .* A); %calculate permeability
+
+                        %Normalize permeability to a reference temperature of 10 °C
+                        tempTable.Itest = (0.02414 * 10.^((ones(size(tempTable.k)) * 247.8) ./ (tempTable.fluid_out_t + 133)));
+                        tempTable.I_T = (0.02414 * 10.^((ones(size(tempTable.k)) * 247.8) ./ (10 + 133)));%Using reference temperature of 10 °C
+                        tempTable.alpha = tempTable.Itest ./ tempTable.I_T;
+                        tempTable.k_t = tempTable.k .* tempTable.alpha;
+
+                        dataTable_Splitted{j,1} = tempTable; %Save temp data in original table
+                    end
+
+                %Assembly the dataTable_Splitted back into one dataTable
+                dataTable = cat(1,dataTable_Splitted{:});
+
+                %Create output timetable-variable
+                if debug
+                    permeability = dataTable;
                 else
-                    %create single cell array if weight does not drop below zero
-                    dataTable_Splitted = cell(1,1);
-                    dataTable_Splitted{1,1} = dataTable;
-                    
+                    permeability = dataTable(:,{'runtime', 'weight_diff'});
                 end
+                permeability.permeability = dataTable.k_t;
+                permeability.perm_alpha = dataTable.alpha;
+            catch
+                warning([class(obj), ' - ', 'Calculating permeability FAILED!']);
                 
-                %Calculating the permeability for each of the splitted data
-                %tables
-                for j = 1:numel(dataTable_Splitted)
-                    tempTable = dataTable_Splitted{j,1}; %Save data in temporarily table
-                    
-                    g = 9.81; %Gravity m/s² or N/kg
-                    
-                    tempTable.h = (tempTable.fluid_p_rel .* 100000) ./ (tempTable.density .* g); %Pressure difference h between inflow and outflow in m
-                    tempTable.WaterFlowVolume = (tempTable.weight_diff ./ tempTable.density); %water flow volume Q in m³
-                    
-                    tempTable.k = ((tempTable.WaterFlowVolume ./ seconds(tempTable.time_diff)) .* tempTable.deltaL) ./ (tempTable.h .* A); %calculate permeability
-                    
-                    %Normalize permeability to a reference temperature of 10 °C
-                    tempTable.Itest = (0.02414 * 10.^((ones(size(tempTable.k)) * 247.8) ./ (tempTable.fluid_out_t + 133)));
-                    tempTable.I_T = (0.02414 * 10.^((ones(size(tempTable.k)) * 247.8) ./ (10 + 133)));%Using reference temperature of 10 °C
-                    tempTable.alpha = tempTable.Itest ./ tempTable.I_T;
-                    tempTable.k_t = tempTable.k .* tempTable.alpha;
-                    
-                    dataTable_Splitted{j,1} = tempTable; %Save temp data in original table
-                end
-            
-            %Assembly the dataTable_Splitted back into one dataTable
-            dataTable = cat(1,dataTable_Splitted{:});
-            
-            %Create output timetable-variable
-            if debug
-                permeability = dataTable;
-            else
-                permeability = dataTable(:,{'runtime', 'weight_diff'});
+                permeability = dataTable(:,{'runtime'});
+                permeability.weight_diff = zeros(size(dataTable,1),1);
+                permeability.permeability = zeros(size(dataTable,1),1);
+                permeability.perm_alpha = zeros(size(dataTable,1),1);
             end
-            permeability.permeability = dataTable.k_t;
-            permeability.perm_alpha = dataTable.alpha;
                           
         end 
         
