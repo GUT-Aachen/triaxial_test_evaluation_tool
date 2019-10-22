@@ -70,7 +70,7 @@ classdef ExperimentsMetaData < handle
         %Input parameter: table with time log
             try
                 %Check if timelog fits to set experiment number
-                if (timeLogTable.experiment_no(1) == obj.experimentNo)
+                if (timeLogTable.experimentNo(1) == obj.experimentNo)
                     obj.timeLog = timeLogTable;
 
                     %Recasting datetime-String to real Datetime in Matlab
