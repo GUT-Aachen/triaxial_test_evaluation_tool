@@ -10,6 +10,8 @@ classdef ExperimentsSpecimenData < handle
 %
 % Biebricher 2019-05-13
 %   * Added variable massWet incl. getter
+% Biebricher 2019-10-22
+%   * Match camelCase
     
     properties (SetAccess = immutable)
         experimentNo; %Number of the experiment the data in this object contains to.
@@ -54,18 +56,18 @@ classdef ExperimentsSpecimenData < handle
             
             obj.dataTable.Properties.VariableUnits{'height'} = 'cm';
             obj.dataTable.Properties.VariableUnits{'diameter'} = 'cm';
-            obj.dataTable.Properties.VariableUnits{'mass_sat'} = 'kg';
-            obj.dataTable.Properties.VariableUnits{'mass_wet'} = 'kg';
-            obj.dataTable.Properties.VariableUnits{'mass_dry'} = 'kg';
-            obj.dataTable.Properties.VariableUnits{'density_wet'} = 'g/cm³';
-            obj.dataTable.Properties.VariableUnits{'density_sat'} = 'g/cm³';
-            obj.dataTable.Properties.VariableUnits{'density_dry'} = 'g/cm³';
-            obj.dataTable.Properties.VariableUnits{'density_grain'} = 'g/cm³';
-            obj.dataTable.Properties.VariableUnits{'perm_coeff'} = 'm/s';
+            obj.dataTable.Properties.VariableUnits{'massSat'} = 'kg';
+            obj.dataTable.Properties.VariableUnits{'massWet'} = 'kg';
+            obj.dataTable.Properties.VariableUnits{'massDry'} = 'kg';
+            obj.dataTable.Properties.VariableUnits{'densityWet'} = 'g/cm³';
+            obj.dataTable.Properties.VariableUnits{'densitySat'} = 'g/cm³';
+            obj.dataTable.Properties.VariableUnits{'densityDry'} = 'g/cm³';
+            obj.dataTable.Properties.VariableUnits{'densityGrain'} = 'g/cm³';
+            obj.dataTable.Properties.VariableUnits{'permCoeff'} = 'm/s';
             obj.dataTable.Properties.VariableUnits{'porosity'} = '-';
-            obj.dataTable.Properties.VariableUnits{'void_ratio'} = '-';
-            obj.dataTable.Properties.VariableUnits{'uniAx_comp_strength'} = 'kN/m²';
-            obj.dataTable.Properties.VariableUnits{'uniAx_emodulus'} = 'kN/m²';
+            obj.dataTable.Properties.VariableUnits{'voidRatio'} = '-';
+            obj.dataTable.Properties.VariableUnits{'uniAxCompStrength'} = 'kN/m²';
+            obj.dataTable.Properties.VariableUnits{'uniAxEModulus'} = 'kN/m²';
             
             
             disp([class(obj), ': ', 'Data set sucessfully']);
@@ -77,11 +79,11 @@ classdef ExperimentsSpecimenData < handle
         end
         
         function specimen = get.specimen(obj) 
-            specimen = obj.dataTable.specimen_name{1};
+            specimen = obj.dataTable.specimenName{1};
         end
         
         function rockType = get.rockType(obj) 
-            rockType = obj.dataTable.rock_name{1};
+            rockType = obj.dataTable.rockName{1};
         end
         
         function rockDescription = get.rockDescription(obj) 
@@ -97,43 +99,43 @@ classdef ExperimentsSpecimenData < handle
         end
         
         function massSaturated = get.massSaturated(obj) 
-            massSaturated = obj.dataTable.mass_sat;
+            massSaturated = obj.dataTable.massSat;
         end
         
         function massDry = get.massDry(obj) 
-            massDry = obj.dataTable.mass_dry;
+            massDry = obj.dataTable.massDry;
         end
         
         function massWet = get.massWet(obj) 
-            massWet = obj.dataTable.mass_wet;
+            massWet = obj.dataTable.massWet;
         end
         
         function densityWet = get.rockDensityWet(obj) 
-            densityWet = obj.dataTable.density_wet;
+            densityWet = obj.dataTable.densityWet;
         end
         
         function density = get.rockDensitySatturated(obj) 
-            density = obj.dataTable.density_sat;
+            density = obj.dataTable.densitySat;
         end
         
         function density = get.rockDensityDry(obj) 
-            density = obj.dataTable.density_dry;
+            density = obj.dataTable.densityDry;
         end
         
         function density = get.rockDensityGrain(obj) 
-            density = obj.dataTable.density_grain;
+            density = obj.dataTable.densityGrain;
         end
         
         function densityDry = get.densityDry(obj) 
-            densityDry = obj.dataTable.mass_wet/(obj.dataTable.height*pi*(obj.dataTable.diameter/2)^2);
+            densityDry = obj.dataTable.massWet/(obj.dataTable.height*pi*(obj.dataTable.diameter/2)^2);
         end
         
         function densitySaturated = get.densitySaturated(obj) 
-            densitySaturated = obj.dataTable.mass_sat/(obj.dataTable.height*pi*(obj.dataTable.diameter/2)^2);
+            densitySaturated = obj.dataTable.massSat/(obj.dataTable.height*pi*(obj.dataTable.diameter/2)^2);
         end
         
         function permeabilityCoefficient = get.permeabilityCoefficient(obj) 
-            permeabilityCoefficient = obj.dataTable.perm_coeff;
+            permeabilityCoefficient = obj.dataTable.permCoeff;
         end
         
         function porosity = get.porosity(obj) 
@@ -141,15 +143,15 @@ classdef ExperimentsSpecimenData < handle
         end
         
         function voidRatio = get.voidRatio(obj) 
-            voidRatio = obj.dataTable.void_ratio;
+            voidRatio = obj.dataTable.voidRatio;
         end
         
         function uniAxialCompressiveStrength = get.uniAxialCompressiveStrength(obj) 
-            uniAxialCompressiveStrength = obj.dataTable.uniAx_comp_strength;
+            uniAxialCompressiveStrength = obj.dataTable.uniAxCompStrength;
         end
         
         function uniAxialEModulus = get.uniAxialEModulus(obj) 
-            uniAxialEModulus = obj.dataTable.uniAx_emodulus;
+            uniAxialEModulus = obj.dataTable.uniAxEModulus;
         end
         
         
