@@ -103,7 +103,7 @@ classdef ExperimentsData < handle
                 vD.fluidPressureRel= 'continuous';
                 vD.hydrCylinderPressureAbs= 'continuous';
                 vD.hydrCylinderPressureRel= 'continuous';
-                vD.ConfiningPressureAbs= 'continuous';
+                vD.confiningPressureAbs= 'continuous';
                 vD.confiningPressureRel= 'continuous';
                 vD.strainSensor1Pos= 'step';
                 vD.strainSensor1Rel= 'step';
@@ -223,18 +223,18 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'hydrCylinderPressureRel'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'hydrCylinderPressureRel'} = 'Operating pressure of the hydraulic cylinder (relative value)';
                 
-                %ConfiningPressureAbs: absolute confining pressure
+                %confiningPressureAbs: absolute confining pressure
                 if ismember('sigma2_3_p_abs_1', data.Properties.VariableNames)
-                    dataTable.ConfiningPressureAbs = data.sigma2_3_p_abs_1;
+                    dataTable.confiningPressureAbs = data.sigma2_3_p_abs_1;
                 else
-                    dataTable.ConfiningPressureAbs = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Confining absolute pressure (ConfiningPressureAbs) data missing. Added column filled with NaN.']);
+                    dataTable.confiningPressureAbs = NaN(size(data,1),1);
+                    warning([class(obj), ' - ', 'Confining absolute pressure (confiningPressureAbs) data missing. Added column filled with NaN.']);
                 end
-                if sum(isnan(dataTable.ConfiningPressureAbs)) == size(data,1) 
-                    vD.ConfiningPressureAbs = 'unset';
+                if sum(isnan(dataTable.confiningPressureAbs)) == size(data,1) 
+                    vD.confiningPressureAbs = 'unset';
                 end
-                dataTable.Properties.VariableUnits{'ConfiningPressureAbs'} = 'bar';
-                dataTable.Properties.VariableDescriptions {'ConfiningPressureAbs'} = 'Confining pressure in the bassin. Meassured at the inflow pipe (absolute value)';
+                dataTable.Properties.VariableUnits{'confiningPressureAbs'} = 'bar';
+                dataTable.Properties.VariableDescriptions {'confiningPressureAbs'} = 'Confining pressure in the bassin. Meassured at the inflow pipe (absolute value)';
 
                 %confiningPressureRel: relative confining pressure
                 if ismember('sigma2_3_p_rel_1', data.Properties.VariableNames)
@@ -413,7 +413,7 @@ classdef ExperimentsData < handle
                 %flowMass on scale is stepwise
                 dataTable.Properties.VariableContinuity = { vD.roomTemp ,vD.roomPressureAbs , ...
                     vD.fluidInTemp ,vD.fluidOutTemp ,vD.fluidPressureAbs ,vD.fluidPressureRel , ...
-                    vD.hydrCylinderPressureAbs ,vD.hydrCylinderPressureRel ,vD.ConfiningPressureAbs ,vD.confiningPressureRel , ...
+                    vD.hydrCylinderPressureAbs ,vD.hydrCylinderPressureRel ,vD.confiningPressureAbs ,vD.confiningPressureRel , ...
                     vD.strainSensor1Pos ,vD.strainSensor1Rel ,vD.strainSensor2Pos , ...
                     vD.strainSensor2Rel ,vD.pump1Volume ,vD.pump1PressureRel ,vD.pump2Volume ,vD.pump2PressureRel , ...
                     vD.pump3Volume ,vD.pump3PressureRel ,vD.flowMass};
@@ -443,10 +443,10 @@ classdef ExperimentsData < handle
             %PRESSURE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             try
-                dat = data.ConfiningPressureAbs;
+                dat = data.confiningPressureAbs;
                 dat = fillmissing(dat, 'nearest');
                 dat = lowpass(dat, 0.01);
-                dataTable.ConfiningPressureAbs = round(dat, 2);
+                dataTable.confiningPressureAbs = round(dat, 2);
                 
                 dat = data.confiningPressureRel;
                 dat = fillmissing(dat, 'nearest');
@@ -454,7 +454,7 @@ classdef ExperimentsData < handle
                 dataTable.confiningPressureRel = round(dat, 2);
 
             catch
-                warning([class(obj), ' - ', 'Error while filtering ConfiningPressureAbs/confiningPressureRel']);
+                warning([class(obj), ' - ', 'Error while filtering confiningPressureAbs/confiningPressureRel']);
             end
             
             try
@@ -773,9 +773,9 @@ classdef ExperimentsData < handle
         
         function dataTable = getAllPressureAbsolute(obj)
         %Returns a timetable containing all absolute pressure data: time, runtime
-        %fluidPressureAbs, hydrCylinderPressureAbs, ConfiningPressureAbs
+        %fluidPressureAbs, hydrCylinderPressureAbs, confiningPressureAbs
             dataTable = obj.createTable();
-            dataTable = [dataTable obj.filteredData(:,{'roomPressureAbs', 'fluidPressureAbs', 'hydrCylinderPressureAbs', 'ConfiningPressureAbs'})];
+            dataTable = [dataTable obj.filteredData(:,{'roomPressureAbs', 'fluidPressureAbs', 'hydrCylinderPressureAbs', 'confiningPressureAbs'})];
         end
         
         
