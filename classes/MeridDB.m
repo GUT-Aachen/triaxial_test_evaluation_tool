@@ -339,59 +339,52 @@ classdef MeridDB < handle
         function result = joinDataTables(obj, dataPeekel, dataScale, dataPumps)
         %Recast data from table to timetable and join them without data loss
             
+            syncable = 0;
+        
             %Check if table is not empty. Otherwise a recast would fail
             if ~isempty(dataPeekel)
                 dataPeekel.time = datetime(dataPeekel.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
                 dataPeekel = removevars(dataPeekel, 'experiment_no');
                 dataPeekel = table2timetable(dataPeekel);
+                syncable = syncable + 1;
             end
             
             if ~isempty(dataScale)
                 dataScale.time = datetime(dataScale.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
                 dataScale = removevars(dataScale, 'experiment_no');
                 dataScale = table2timetable(dataScale);
+                syncable = syncable + 10;
             end
             
             if ~isempty(dataPumps)
                 dataPumps.time = datetime(dataPumps.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
                 dataPumps = removevars(dataPumps, 'experiment_no');
                 dataPumps = table2timetable(dataPumps);
+                syncable = syncable + 100;
             end
             
-            %Join non empty tables
-            if ~isempty(dataPeekel) && ~isempty(dataScale)
-                dataTable = synchronize(dataPeekel, dataScale);
-
-                if ~isempty(dataPumps)
-                    dataTable = synchronize(dataTable, dataPumps);
-                end
+            switch syncable
+                case 1
+                    dataTable = dataPeekel;
+                case 10
+                    dataTable = dataScale;
+                case 11
+                    dataTable = synchronize(dataPeekel, dataScale);
+                case 100
+                    dataTable = dataPumps;
+                case 101
+                    dataTable = synchronize(dataPeekel, dataPumps);
+                case 110
+                    dataTable = synchronize(dataScale, dataPumps);
+                case 111
+                    dataTable = synchronize(dataPeekel, dataScale, dataPumps);
                 
-                
-                
-            elseif ~isempty(dataScale) && ~isempty(dataPumps) 
-                %If dataPeekel is empty another table should be used as root
-                dataTable = synchronize(dataPeekel, dataScale);
-
-                if ~isempty(dataPeekel)
-                    dataTable = synchronize(dataTable, dataPumps);
-                end
-                
-                
-                
-            elseif ~isempty(dataPeekel) && ~isempty(dataPumps) 
-                %If dataPeekel is empty another table should be used as root
-                dataTable = synchronize(dataPeekel, dataScale);
-
-                if ~isempty(dataScale)
-                    dataTable = synchronize(dataTable, dataPumps);
-                end               
-                
-            else
-                error([class(obj), ': ', 'At least two tables are empty and the data cannot be joined.']);
+               otherwise
+                  error([class(obj), ': ', 'There are no datasets stored for this experiment!']);
             end
-        
+            
             result = dataTable;
-            
+                        
         end
         
         function result = getExperimentData(obj, experimentNo, updateForced)
