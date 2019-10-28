@@ -579,6 +579,7 @@ classdef ExperimentsData < handle
         end
         
         function dataTable = createTable(obj)
+        %Function to create a timetable constisting of the runtime only
             dataTable = obj.filteredData(:,{'runtime'}); 
         end
         
@@ -687,6 +688,7 @@ classdef ExperimentsData < handle
         %get a short overview over all existing data
             plot = stackedplot(obj.originalData,'-x');
         end
+        
     end
     
     methods (Static)
@@ -776,9 +778,9 @@ classdef ExperimentsData < handle
         %fluidPressureAbs, hydrCylinderPressureAbs, confiningPressureAbs
             dataTable = obj.createTable();
             dataTable = [dataTable obj.filteredData(:,{'roomPressureAbs', 'fluidPressureAbs', 'hydrCylinderPressureAbs', 'confiningPressureAbs'})];
-        end
+		end
         
-        
+		
         function dataTable = getDeformationRelative(obj)
         %Returns a timetable containing deformation data of the specimen: time, runtime
         %strainSensor1Rel, strainSensor2Rel, strainSensorMean
@@ -786,9 +788,9 @@ classdef ExperimentsData < handle
 
             %Calculating the mean deformation influenced by deformatoin
             %sensor 1 and 2. NaN entrys will be ignored.
-            dataTable.strainSensorsMean = mean([dataTable.strainSensor1Rel, dataTable.strainSensor2Rel], 2, 'omitnan');
-            dataTable.Properties.VariableUnits{'strainSensorsMean'} = 'mm';
-            dataTable.Properties.VariableDescriptions {'strainSensorsMean'} = 'Mean relative deformation from sensor 1 and 2, zeroed at the beginning of the experiment';
+            %dataTable.strainSensorsMean = mean([dataTable.strainSensor1Rel, dataTable.strainSensor2Rel], 2, 'omitnan');
+            %dataTable.Properties.VariableUnits{'strainSensorsMean'} = 'mm';
+            %dataTable.Properties.VariableDescriptions {'strainSensorsMean'} = 'Mean relative deformation from sensor 1 and 2, zeroed at the beginning of the experiment';
         end
         
         
@@ -905,7 +907,7 @@ classdef ExperimentsData < handle
             try
                 %Catch all relevant data as timetable
                 dataTable = obj.getFlowData;
-                dataTable.strainSensorsMean = obj.getDeformationRelative.strainSensorsMean;
+                dataTable.strainSensorsMean = obj.getDeformationRelative.strainSensor1Rel;
                 if isnan(dataTable.fluidOutTemp)
                     dataTable.fluidOutTemp = zeros(size(dataTable,1),1)+18;
                     disp([class(obj), ' - ', 'Fluid outflow temperature set to 18°C.']);
@@ -932,6 +934,7 @@ classdef ExperimentsData < handle
                 %dataTable.fluidPressureRel = filloutliers(dataTable.fluidPressureRel,
                 %'linear', 'mean'); % no longer needes. Is done in creator
                 dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiff, 'linear', 'movmean', [0 240]);
+				%dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiff, 'next', 'percentile', [5 95]);
                 %dataTable.flowMassDiff = round(dataTable.flowMassDiff,6); %round to avoid spikes
 
                 %Handling emptying the scale for the flow measurement
@@ -1034,19 +1037,11 @@ classdef ExperimentsData < handle
             dataTable.confiningPressureRel = obj.getAllPressureRelative.confiningPressureRel;
             dataTable.pumpVolumeSum = obj.getBassinPumpData.pumpVolumeSum;
             
-            dataTable.roomTemp = fillmissing(obj.getAllTemperatures.roomTemp, 'linear');
-            dataTable.fluidOutTemp = fillmissing(dataTable.fluidOutTemp, 'linear');
-            dataTable.flowMass = fillmissing(dataTable.flowMass, 'previous');
+            dataTable.roomTemp = obj.getAllTemperatures.roomTemp;
             
-            dataTable.density = obj.waterDensity(dataTable.fluidOutTemp);
+            %dataTable.density = obj.waterDensity(dataTable.fluidOutTemp);
             %%%%%%%%%%%
-            dataTable.flowMassDiff = [0; diff(dataTable.flowMass)]; %Is this correct???
-            
-            
-            %It is possible to synchronize two timetables even if the data
-            %is not consistent. The datatasets will be interpolized linear.
-            %https://de.mathworks.com/help/matlab/matlab_prog/combine-timetables-and-synchronize-their-data.html
-            %dataTable = synchronize(dataTable,permeability,);
+            dataTable.flowMassDiff = [0; diff(dataTable.flowMass)];
                 
         end 
 
