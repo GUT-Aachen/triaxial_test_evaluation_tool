@@ -2,8 +2,8 @@ import MeridDB.*
 
 %Clear start!
 %Clear screen and delete all variables
-clearvars;
-clc;
+%clearvars;
+%clc;
 
 %close all existing windows of matlab
 close all
@@ -49,6 +49,6 @@ dbSpecimenData = dbConnection.getSpecimenData(experimentNo, dbMetaData.specimenI
 dbData = dbConnection.getExperimentData(experimentNo);
 
 %%
-permeabilityTable=dbData.getPermeability(dbSpecimenData.height,dbSpecimenData.diameter,0.5);
+permeabilityTable=dbData.getPermeability(dbSpecimenData.height.value, dbSpecimenData.diameter.value ,0.5);
 
 %%
