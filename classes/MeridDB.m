@@ -28,6 +28,8 @@ classdef MeridDB < handle
 %       mysql. Multiple users can now connect to the database!
 % 2019-10-22 Biebricher
 %   * all variables in camel case
+% 2019-10-28
+%	* getExperimentData() added values for experiment start and end time
     
     properties (Constant = true)
         %credentials and server data
@@ -164,7 +166,7 @@ classdef MeridDB < handle
         end
         
 
-        function result = catchFromDatabase(obj, experimentNo, tableName)
+        function result = catchFromDatabase(obj, experimentNo, tableName, timeStart, timeEnd)
         %Function reading data from database
         
             %Open connection to database
@@ -176,8 +178,13 @@ classdef MeridDB < handle
             selectionLimit = 50000; %maximum number of rows within one select query
 
             %Read the number of rows for the given experiment
-            dbQuery = strcat('SELECT COUNT(*) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo));
-            dbResult = select(dbConnection,dbQuery);
+			if ~isempty(timeStart) && ~isempty(timeEnd)
+				dbQuery = ['SELECT COUNT(*) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''''];
+				dbResult = select(dbConnection,dbQuery);
+			else
+				dbQuery = strcat('SELECT COUNT(*) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo));
+				dbResult = select(dbConnection,dbQuery);
+			end
 
             noRows = double(dbResult{1,1}); %total number of rows; cast as double for later calculation
 
@@ -196,9 +203,13 @@ classdef MeridDB < handle
 
             %Extract the data, taking into account the maximum number of rows
             for i = 0:steps-1
-
-                dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
-                dbResult = select(dbConnection,dbQuery);
+				if ~isempty(timeStart) && ~isempty(timeEnd)
+					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
+					dbResult = select(dbConnection,dbQuery);
+				else
+					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
+					dbResult = select(dbConnection,dbQuery);
+				end
 
                 if (i == 0)
                     %Step 1: A data table is created
@@ -269,17 +280,15 @@ classdef MeridDB < handle
                         
         end
         
-        function result = getExperimentData(obj, experimentNo, updateForced)
+        function result = getExperimentData(obj, experimentNo, timeStart, timeEnd)
         %Collect datasets from database, join and create object of
         %ExperimentsData-Class containing all datasets.
             import ExperimentsData.*
             
             %Check for correct input parameters     
             if nargin == 2
-                updateForced = false;
-            end
-            if updateForced
-                disp([class(obj), ': ','Option ''updateForced'' is deprecated']);
+                timeStart = 0;
+				timeEnd = 0;
             end
             
             if ~isnumeric(experimentNo)
@@ -290,9 +299,9 @@ classdef MeridDB < handle
             if (obj.experimentExists(experimentNo) == 0)
                 error([class(obj), ': ','Selected experiment number (', int2str(experimentNo), ') does not exist']);
             else               
-                dataPeekel = obj.catchFromDatabase(experimentNo, 'peekel_data');
-                dataScale = obj.catchFromDatabase(experimentNo, 'scale_fluid');
-                dataPumps = obj.catchFromDatabase(experimentNo, 'pumps_sigma2-3');
+                dataPeekel = obj.catchFromDatabase(experimentNo, 'peekel_data', timeStart, timeEnd);
+                dataScale = obj.catchFromDatabase(experimentNo, 'scale_fluid', timeStart, timeEnd);
+                dataPumps = obj.catchFromDatabase(experimentNo, 'pumps_sigma2-3', timeStart, timeEnd);
                 
                 dataTable = obj.joinDataTables(dataPeekel, dataScale, dataPumps);
                 
