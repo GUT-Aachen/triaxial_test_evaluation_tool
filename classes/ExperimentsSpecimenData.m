@@ -12,6 +12,8 @@ classdef ExperimentsSpecimenData < handle
 %   * Added variable massWet incl. getter
 % Biebricher 2019-10-22
 %   * Match camelCase
+% Biebricher 2019-10-25
+%   * Properties as struct containing of value/unit pair
     
     properties (SetAccess = immutable)
         experimentNo; %Number of the experiment the data in this object contains to.
@@ -27,7 +29,7 @@ classdef ExperimentsSpecimenData < handle
         massWet; %Proxyvariable for mass of wet specimen in rockdata. Data is only saved in rockDataTable.
         massDry; %Proxyvariable for mass of dry specimen in rockdata. Data is only saved in rockDataTable.
         rockDensityWet; %Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
-        rockDensitySatturated; %Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
+        rockDensitySaturated; %Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
         rockDensityDry; %Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
         rockDensityGrain; %Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
         densityDry;
@@ -56,9 +58,9 @@ classdef ExperimentsSpecimenData < handle
             
             obj.dataTable.Properties.VariableUnits{'height'} = 'cm';
             obj.dataTable.Properties.VariableUnits{'diameter'} = 'cm';
-            obj.dataTable.Properties.VariableUnits{'massSat'} = 'kg';
-            obj.dataTable.Properties.VariableUnits{'massWet'} = 'kg';
-            obj.dataTable.Properties.VariableUnits{'massDry'} = 'kg';
+            obj.dataTable.Properties.VariableUnits{'massSat'} = 'g';
+            obj.dataTable.Properties.VariableUnits{'massWet'} = 'g';
+            obj.dataTable.Properties.VariableUnits{'massDry'} = 'g';
             obj.dataTable.Properties.VariableUnits{'densityWet'} = 'g/cm³';
             obj.dataTable.Properties.VariableUnits{'densitySat'} = 'g/cm³';
             obj.dataTable.Properties.VariableUnits{'densityDry'} = 'g/cm³';
@@ -75,7 +77,7 @@ classdef ExperimentsSpecimenData < handle
         
         %GETTER
         function experimentNo = get.experimentNo(obj) 
-            experimentNo = obj.experimentNo;
+            experimentNo = single(obj.experimentNo);
         end
         
         function specimen = get.specimen(obj) 
@@ -91,67 +93,83 @@ classdef ExperimentsSpecimenData < handle
         end
         
         function height = get.height(obj) 
-            height = obj.dataTable.height;
+            height.value = single(obj.dataTable.height);
+            height.unit = obj.dataTable.Properties.VariableUnits{'height'};
         end
         
         function diameter = get.diameter(obj) 
-            diameter = obj.dataTable.diameter;
+            diameter.value = single(obj.dataTable.diameter);
+            diameter.unit = obj.dataTable.Properties.VariableUnits{'diameter'};
         end
         
         function massSaturated = get.massSaturated(obj) 
-            massSaturated = obj.dataTable.massSat;
+            massSaturated.value = single(obj.dataTable.massSat);
+            massSaturated.unit = obj.dataTable.Properties.VariableUnits{'massSat'};
         end
         
         function massDry = get.massDry(obj) 
-            massDry = obj.dataTable.massDry;
+            massDry.value = single(obj.dataTable.massDry);
+            massDry.unit = obj.dataTable.Properties.VariableUnits{'massDry'};
         end
         
         function massWet = get.massWet(obj) 
-            massWet = obj.dataTable.massWet;
+            massWet.value = single(obj.dataTable.massWet);
+            massWet.unit = obj.dataTable.Properties.VariableUnits{'massWet'};
         end
         
         function densityWet = get.rockDensityWet(obj) 
-            densityWet = obj.dataTable.densityWet;
+            densityWet.value = single(obj.dataTable.densityWet);
+            densityWet.unit = obj.dataTable.Properties.VariableUnits{'densityWet'};
         end
         
-        function density = get.rockDensitySatturated(obj) 
-            density = obj.dataTable.densitySat;
+        function density = get.rockDensitySaturated(obj) 
+            density.value = single(obj.dataTable.densitySat);
+            density.unit = obj.dataTable.Properties.VariableUnits{'densitySat'};
         end
         
         function density = get.rockDensityDry(obj) 
-            density = obj.dataTable.densityDry;
+            density.value = single(obj.dataTable.densityDry);
+            density.unit = obj.dataTable.Properties.VariableUnits{'densityDry'};
         end
         
         function density = get.rockDensityGrain(obj) 
-            density = obj.dataTable.densityGrain;
+            density.value = single(obj.dataTable.densityGrain);
+            density.unit = obj.dataTable.Properties.VariableUnits{'densityGrain'};
         end
         
         function densityDry = get.densityDry(obj) 
-            densityDry = obj.dataTable.massWet/(obj.dataTable.height*pi*(obj.dataTable.diameter/2)^2);
+            densityDry.value = single(obj.dataTable.massWet/(obj.dataTable.height*pi*(obj.dataTable.diameter/2)^2));
+            densityDry.unit = obj.dataTable.Properties.VariableUnits{'densitySat'};
         end
         
         function densitySaturated = get.densitySaturated(obj) 
-            densitySaturated = obj.dataTable.massSat/(obj.dataTable.height*pi*(obj.dataTable.diameter/2)^2);
+            densitySaturated.value = single(obj.dataTable.massSat/(obj.dataTable.height*pi*(obj.dataTable.diameter/2)^2));
+            densitySaturated.unit = obj.dataTable.Properties.VariableUnits{'densitySat'};
         end
         
         function permeabilityCoefficient = get.permeabilityCoefficient(obj) 
-            permeabilityCoefficient = obj.dataTable.permCoeff;
+            permeabilityCoefficient.value = single(obj.dataTable.permCoeff);
+            permeabilityCoefficient.unit = obj.dataTable.Properties.VariableUnits{'permCoeff'};
         end
         
         function porosity = get.porosity(obj) 
-            porosity = obj.dataTable.porosity;
+            porosity.value = single(obj.dataTable.porosity);
+            porosity.unit = obj.dataTable.Properties.VariableUnits{'porosity'};
         end
         
         function voidRatio = get.voidRatio(obj) 
-            voidRatio = obj.dataTable.voidRatio;
+            voidRatio.value = single(obj.dataTable.voidRatio);
+            voidRatio.unit = obj.dataTable.Properties.VariableUnits{'voidRatio'};
         end
         
         function uniAxialCompressiveStrength = get.uniAxialCompressiveStrength(obj) 
-            uniAxialCompressiveStrength = obj.dataTable.uniAxCompStrength;
+            uniAxialCompressiveStrength.value = single(obj.dataTable.uniAxCompStrength);
+            uniAxialCompressiveStrength.unit = obj.dataTable.Properties.VariableUnits{'uniAxCompStrength'};
         end
         
         function uniAxialEModulus = get.uniAxialEModulus(obj) 
-            uniAxialEModulus = obj.dataTable.uniAxEModulus;
+            uniAxialEModulus.value = single(obj.dataTable.uniAxEModulus);
+            uniAxialEModulus.unit = obj.dataTable.Properties.VariableUnits{'uniAxEModulus'};
         end
         
         
