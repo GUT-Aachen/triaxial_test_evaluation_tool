@@ -178,7 +178,7 @@ classdef MeridDB < handle
             selectionLimit = 50000; %maximum number of rows within one select query
 
             %Read the number of rows for the given experiment
-			if ~isempty(timeStart) && ~isempty(timeEnd)
+			if timeStart ~= 0 && timeEnd ~= 0
 				dbQuery = ['SELECT COUNT(*) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''''];
 				dbResult = select(dbConnection,dbQuery);
 			else
@@ -203,7 +203,7 @@ classdef MeridDB < handle
 
             %Extract the data, taking into account the maximum number of rows
             for i = 0:steps-1
-				if ~isempty(timeStart) && ~isempty(timeEnd)
+				if timeStart ~= 0 && timeEnd ~= 0
 					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
 					dbResult = select(dbConnection,dbQuery);
 				else
