@@ -30,6 +30,8 @@ classdef MeridDB < handle
 %   * all variables in camel case
 % 2019-10-28
 %	* getExperimentData() added values for experiment start and end time
+% 2019-10-31
+%	* getExperimentData() corrected start and end time verification
     
     properties (Constant = true)
         %credentials and server data
@@ -178,7 +180,7 @@ classdef MeridDB < handle
             selectionLimit = 50000; %maximum number of rows within one select query
 
             %Read the number of rows for the given experiment
-			if timeStart ~= 0 && timeEnd ~= 0
+			if ~isempty(timeStart) && ~isempty(timeEnd)
 				dbQuery = ['SELECT COUNT(*) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''''];
 				dbResult = select(dbConnection,dbQuery);
 			else
@@ -203,7 +205,7 @@ classdef MeridDB < handle
 
             %Extract the data, taking into account the maximum number of rows
             for i = 0:steps-1
-				if timeStart ~= 0 && timeEnd ~= 0
+				if ~isempty(timeStart) && ~isempty(timeEnd)
 					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
 					dbResult = select(dbConnection,dbQuery);
 				else
@@ -287,8 +289,8 @@ classdef MeridDB < handle
             
             %Check for correct input parameters     
             if nargin == 2
-                timeStart = 0;
-				timeEnd = 0;
+                timeStart = '';
+				timeEnd = '';
             end
             
             if ~isnumeric(experimentNo)
