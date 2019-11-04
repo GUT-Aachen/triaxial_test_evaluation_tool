@@ -207,6 +207,8 @@ classdef TriaxTestHandler < handle
 				error([class(obj), ' - ', 'Input value timestep has to be a positive integer value.']);
 			elseif timestep < 0
 				error([class(obj), ' - ', 'Input value timestep has to be a positive integer value.']);
+			elseif timestep == 0
+				timestep = [];
 			end
 			
 			%Select case to determine which values are used and where to find the needed dataset
@@ -232,6 +234,20 @@ classdef TriaxTestHandler < handle
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'probe compaction \epsilon';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					
+				case 'strainSensor1'
+					dataLabel = 'strainSensor1Rel';
+					dataTable = obj.getStrain(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'deformation sensor 1 \epsilon_1';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+				
+				case 'strainSensor2'
+					dataLabel = 'strainSensor2Rel';
+					dataTable = obj.getStrain(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'deformation sensor 2 \epsilon_2';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);				
 				
 				case 'hydrCylinderPressure'
 					dataLabel = 'hydrCylinderPressureRel';
@@ -305,8 +321,12 @@ classdef TriaxTestHandler < handle
 
 					
 				otherwise
-						warning([class(obj), ' - ', 'unknown columns']);
-                        result = [];
+					warning([class(obj), ' - ', 'unknown columns']);
+					dataTable = obj.getPressureData(experimentNo);
+					nanTable = table(nan(size(dataTable, 1),1));
+					result.data = [dataTable(:,{'runtime'}) nanTable];
+					result.label = 'NaN';
+					result.unit = 'NaN';
 			end
 			
 			if ~isempty(result)
@@ -317,9 +337,14 @@ classdef TriaxTestHandler < handle
 				end
 				
 				%Retime if a timestep is given
-				if timestep
+				if ~isempty(timestep) && ~strcmp(result.label, 'NaN')
 					time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
-					result.data = retime(result.data,time,'linear');
+					result.data = retime(result.data, time, 'linear');
+					
+				elseif ~isempty(timestep) && strcmp(result.label, 'NaN')
+					time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
+					result.data = retime(result.data, time);
+					
 				end
 				
 				result.legend = [result.label, ' [', result.unit,']'];
@@ -351,7 +376,7 @@ classdef TriaxTestHandler < handle
 			obj.labelList('runtime') = 'runtime';
 			obj.labelList('permeability') = 'permeability';
 			obj.labelList('strainSensor') = 'strainSensorsMean';
-			obj.labelList('hydrCylinderPressure') = 'fluidPressureRel';
+			obj.labelList('hydrCylinderPressure') = 'hydrCylinderPressureRel';
 			obj.labelList('fluidPressure') = 'fluidPressureRel';
 			obj.labelList('confiningPressure') = 'confiningPressureRel';
 			obj.labelList('confiningPumpVolume') = 'pumpVolumeSum';
@@ -506,9 +531,11 @@ classdef TriaxTestHandler < handle
 				xStruct = obj.catchGraphData(experimentNo, xValue, timestep);
 				result.x = xStruct;
 				result.x.data = xStruct.data.dataset;
+			else
+				error([class(obj), ' - ', 'An x-axis value is mandatory!']);
 			end
 
-			if ~isempty(y1Value)
+			
 				y1Struct = obj.catchGraphData(experimentNo, y1Value, timestep);
 				
 				result.y1 = y1Struct;
@@ -516,9 +543,9 @@ classdef TriaxTestHandler < handle
 				
 				result.dataset = synchronize(xStruct.data(:,{'dataset'}), y1Struct.data(:,{'dataset'}));
 				result.dataset.Properties.VariableNames = {'x', 'y1'}; %renaming columns in result to be uniform
-			end
 			
-			if ~isempty(y2Value)
+			
+			
 				y2Struct = obj.catchGraphData(experimentNo, y2Value, timestep);
 				
 				result.y2 = y2Struct;
@@ -526,7 +553,8 @@ classdef TriaxTestHandler < handle
 				
 				result.dataset = synchronize(result.dataset, y2Struct.data(:,{'dataset'}));
 				result.dataset.Properties.VariableNames = {'x', 'y1', 'y2'}; %renaming columns in result to be uniform
-			end
+			
+			
 
 
 			
@@ -890,8 +918,22 @@ classdef TriaxTestHandler < handle
                 result = [];
             end
             
-        end
+		end
+		
+		function result = getTimelog(obj, experimentNo)
+			
+			if ~isempty(obj.getMetaData(experimentNo).timelog)
+				timelog = table2timetable(obj.getMetaData(experimentNo).timelog);
+			
+				result = timelog(:,{'retrospective', 'description'});
+			else
+				result = [];
+			end
+			
+		end
 
-    end
+	end
+	
+	
 end
 
