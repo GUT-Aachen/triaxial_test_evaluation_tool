@@ -11,7 +11,7 @@ classdef ExperimentsMetaData < handle
 %2019-05-13  Biebricher
 %   * Added timeLog as variable
 %   * Added setter 'setTimeLogAsTable()' for time log
-%   * Added getter 'getTimeLog()' for time log
+%   * Added getter 'get.Timelog()' for time log
 %   * Changed setter 'setMetaDataAsTable()' to recast start and end time to
 %       Datetime format.
     
@@ -29,7 +29,7 @@ classdef ExperimentsMetaData < handle
         fluidPressure; %Proxyvariable for fluid pressure used in metadata. Data is only saved in metaDataTable.
         confiningPressure; %Proxyvariable for confining pressure used in metadata. Data is only saved in metaDataTable.
         metaDataTable; %Table containing all metadata from database
-        timeLog; %Table containing the time log for the given experiment: experiment_no, retrospective, time, description
+        timelog; %Table containing the time log for the given experiment: experiment_no, retrospective, time, description
         
     end
     
@@ -65,16 +65,16 @@ classdef ExperimentsMetaData < handle
             end
         end
         
-        function obj = setTimeLogAsTable(obj, timeLogTable)
+        function obj = setTimeLogAsTable(obj, timelogTable)
         %Set time log for the experiment into the object.
         %Input parameter: table with time log
             try
                 %Check if timelog fits to set experiment number
-                if (timeLogTable.experimentNo(1) == obj.experimentNo)
-                    obj.timeLog = timeLogTable;
+                if (timelogTable.experimentNo(1) == obj.experimentNo)
+                    obj.timelog = timelogTable;
 
                     %Recasting datetime-String to real Datetime in Matlab
-                    obj.timeLog.time = datetime(obj.timeLog.time,'InputFormat','yyyy-MM-dd HH:mm:ss.S');
+                    obj.timelog.time = datetime(obj.timelog.time,'InputFormat','yyyy-MM-dd HH:mm:ss.S');
 
 
                     disp([class(obj), ': ', 'Time log set sucessfully']);
@@ -163,11 +163,11 @@ classdef ExperimentsMetaData < handle
             pressureConfining = obj.metaDataTable.pressureConfining;
         end
         
-        function timeLog = get.timeLog(obj) 
+        function timelog = get.timelog(obj) 
             %Getter for the experiments time log.
             %Column 'retrospective' contains a boolean value that tells you whether the 
             %information was recorded during or after the experiment.
-            timeLog = obj.timeLog;
+            timelog = obj.timelog;
            
         end
         
