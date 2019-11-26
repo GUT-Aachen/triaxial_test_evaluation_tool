@@ -4,6 +4,8 @@ classdef TriaxTestHandler < handle
     %
     % 2019-10-23 Biebricher
     %   * New class
+	% 2019-11-26 Biebricher
+	%	* Added MPa as unit for pressure in graphs
     
     properties %(GetAccess = private, SetAccess = private)
 		listExperimentNo;
@@ -255,6 +257,14 @@ classdef TriaxTestHandler < handle
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'compaction pressure \sigma_1';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+				
+				case 'hydrCylinderPressureMPa'  %Change values from bar to MPa
+					dataLabel = 'hydrCylinderPressureRel';
+					dataTable = obj.getPressureData(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.data.hydrCylinderPressureRel = result.data.hydrCylinderPressureRel * 0.1;
+					result.label = 'compaction pressure \sigma_1';
+					result.unit = 'MPa';
 					
 				case 'fluidPressure'
 					dataLabel = 'fluidPressureRel';
@@ -269,6 +279,14 @@ classdef TriaxTestHandler < handle
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'confining Pressure \sigma_{2/3}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					
+				case 'confiningPressureMPa' %Change values from bar to MPa
+					dataLabel = 'confiningPressureRel';
+					dataTable = obj.getPressureData(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.data.confiningPressureRel = result.data.confiningPressureRel * 0.1;
+					result.label = 'confining Pressure \sigma_{2/3}';
+					result.unit = 'MPa';
 					
 				case 'confiningPumpVolume'
 					dataLabel = 'pumpVolumeSum';
@@ -373,19 +391,23 @@ classdef TriaxTestHandler < handle
 			obj.listExperimentNo = single(obj.getExperimentOverview.experimentNo);
 			
 			obj.labelList = containers.Map;
-			obj.labelList('runtime') = 'runtime';
-			obj.labelList('permeability') = 'permeability';
-			obj.labelList('strainSensor') = 'strainSensorsMean';
-			obj.labelList('hydrCylinderPressure') = 'hydrCylinderPressureRel';
-			obj.labelList('fluidPressure') = 'fluidPressureRel';
-			obj.labelList('confiningPressure') = 'confiningPressureRel';
-			obj.labelList('confiningPumpVolume') = 'pumpVolumeSum';
-			obj.labelList('confiningPumpPressure') = 'pumpPressureMean';
-			obj.labelList('flowMass') = 'flowMassAcc';
-			obj.labelList('flowMassDiff') = 'flowMassDiff';
-			obj.labelList('flowRate') = 'flowRate';
-			obj.labelList('fluidOutTemp') = 'fluidOutTemp';
-			obj.labelList('roomTemp') = 'roomTemp';
+			obj.labelList('runtime') = 'Runtime';
+			obj.labelList('permeability') = 'Permeability';
+			obj.labelList('strainSensor') = 'Deformation';
+			obj.labelList('strainSensor1') = 'Strain Sensor 1';
+			obj.labelList('strainSensor2') = 'Strain Sensor 2';
+			obj.labelList('hydrCylinderPressure') = 'Compaction Pressure [bar]';
+			obj.labelList('hydrCylinderPressureMPa') = 'Compaction Pressure [MPa]';
+			obj.labelList('fluidPressure') = 'Flow Pressure';
+			obj.labelList('confiningPressure') = 'Confining Pressure [bar]';
+			obj.labelList('confiningPressureMPa') = 'Confining Pressure [MPa]';
+			obj.labelList('confiningPumpVolume') = 'Volume in Pumps';
+			obj.labelList('confiningPumpPressure') = 'Pressure in Pumps';
+			obj.labelList('flowMass') = 'Fluid Mass';
+			obj.labelList('flowMassDiff') = 'Fluid Difference';
+			obj.labelList('flowRate') = 'Fluid Flow Rate';
+			obj.labelList('fluidOutTemp') = 'Fluid Temperature Outflow';
+			obj.labelList('roomTemp') = 'Room Temperature';
 			
 		end
         
@@ -505,7 +527,6 @@ classdef TriaxTestHandler < handle
         
 		function result = getGraphData(obj, experimentNo, xValue, y1Value, y2Value, timestep)
 		%Returning a struct containing all necessary datasets and information for plotting a graph
-		
 			%Inputdata consistence checks
 			%Check if there are two variables handed over
 			if nargin < 4 || nargin > 6
@@ -518,15 +539,13 @@ classdef TriaxTestHandler < handle
 				timestep = [];
 
 			end
-		
+
 			%Check if the variable experimentNo is valid
-            validateExpNo = obj.validateExperimentNoInput(experimentNo);
-            if ischar(validateExpNo)
-                error([class(obj), ' - ', validateExpNo]);
+			validateExpNo = obj.validateExperimentNoInput(experimentNo);
+			if ischar(validateExpNo)
+				error([class(obj), ' - ', validateExpNo]);
 			end
-			
-		
-			
+
 			if ~isempty(xValue) && ~strcmp(xValue, 'none')
 				xStruct = obj.catchGraphData(experimentNo, xValue, timestep);
 				result.x = xStruct;
@@ -534,7 +553,7 @@ classdef TriaxTestHandler < handle
 			else
 				error([class(obj), ' - ', 'An x-axis value is mandatory!']);
 			end
-			
+
 			if ~isempty(y1Value) && ~strcmp(y1Value, 'none')
 				y1Struct = obj.catchGraphData(experimentNo, y1Value, timestep);
 
@@ -550,7 +569,7 @@ classdef TriaxTestHandler < handle
 
 				result.y2 = y2Struct;
 				result.y2.data = y2Struct.data.dataset;
-				
+
 				if ~isempty(y1Value)
 					result.dataset = synchronize(result.dataset, y2Struct.data(:,{'dataset'}));
 					result.dataset.Properties.VariableNames = {'x', 'y1', 'y2'}; %renaming columns in result to be uniform
@@ -558,17 +577,14 @@ classdef TriaxTestHandler < handle
 					result.dataset = synchronize(xStruct.data(:,{'dataset'}), y2Struct.data(:,{'dataset'}));
 					result.dataset.Properties.VariableNames = {'x', 'y2'}; %renaming columns in result to be uniform
 				end
-				
-				
+
+
 			end
-			
+
 			if isempty(y1Value) && isempty(y2Value)
 				error([class(obj), ' - ', 'At least one y-axis value is mandatory!']);
 			end
-
-
-			
-			
+				
 		end
 		
 		
