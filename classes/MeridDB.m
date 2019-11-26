@@ -32,6 +32,8 @@ classdef MeridDB < handle
 %	* getExperimentData() added values for experiment start and end time
 % 2019-10-31
 %	* getExperimentData() corrected start and end time verification
+% 2019-11-26
+%	* catchFromDatabase() print experiment number while loading
     
     properties (Constant = true)
         %credentials and server data
@@ -201,7 +203,7 @@ classdef MeridDB < handle
                 steps = 1;
             end
 
-            disp([class(obj), ': ', 'Fetching data from `', tableName, '` in ', int2str(steps), ' steps (', int2str(noRows) , ' rows).']);
+            disp([class(obj), ': ', '(#', int2str(experimentNo) ,') Fetching data from `', tableName, '` in ', int2str(steps), ' steps (', int2str(noRows) , ' rows).']);
 
             %Extract the data, taking into account the maximum number of rows
             for i = 0:steps-1
