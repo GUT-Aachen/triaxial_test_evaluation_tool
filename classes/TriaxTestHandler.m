@@ -526,35 +526,45 @@ classdef TriaxTestHandler < handle
 			end
 			
 		
-		
-			if ~isempty(xValue)
+			
+			if ~isempty(xValue) && ~strcmp(xValue, 'none')
 				xStruct = obj.catchGraphData(experimentNo, xValue, timestep);
 				result.x = xStruct;
 				result.x.data = xStruct.data.dataset;
 			else
 				error([class(obj), ' - ', 'An x-axis value is mandatory!']);
 			end
-
 			
+			if ~isempty(y1Value) && ~strcmp(y1Value, 'none')
 				y1Struct = obj.catchGraphData(experimentNo, y1Value, timestep);
-				
+
 				result.y1 = y1Struct;
 				result.y1.data = y1Struct.data.dataset;
-				
+
 				result.dataset = synchronize(xStruct.data(:,{'dataset'}), y1Struct.data(:,{'dataset'}));
 				result.dataset.Properties.VariableNames = {'x', 'y1'}; %renaming columns in result to be uniform
-			
-			
-			
+			end
+
+			if ~isempty(y2Value) && ~strcmp(y2Value, 'none')
 				y2Struct = obj.catchGraphData(experimentNo, y2Value, timestep);
-				
+
 				result.y2 = y2Struct;
 				result.y2.data = y2Struct.data.dataset;
 				
-				result.dataset = synchronize(result.dataset, y2Struct.data(:,{'dataset'}));
-				result.dataset.Properties.VariableNames = {'x', 'y1', 'y2'}; %renaming columns in result to be uniform
+				if ~isempty(y1Value)
+					result.dataset = synchronize(result.dataset, y2Struct.data(:,{'dataset'}));
+					result.dataset.Properties.VariableNames = {'x', 'y1', 'y2'}; %renaming columns in result to be uniform
+				else
+					result.dataset = synchronize(xStruct.data(:,{'dataset'}), y2Struct.data(:,{'dataset'}));
+					result.dataset.Properties.VariableNames = {'x', 'y2'}; %renaming columns in result to be uniform
+				end
+				
+				
+			end
 			
-			
+			if isempty(y1Value) && isempty(y2Value)
+				error([class(obj), ' - ', 'At least one y-axis value is mandatory!']);
+			end
 
 
 			
