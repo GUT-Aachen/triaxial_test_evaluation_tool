@@ -70,6 +70,8 @@ classdef ExperimentsData < handle
     %   * organizeTableData() solved retime issues with NaN-entry-only colums
     %   * all variables in camel case
     %   * renaming all columns in timetables
+	% 2019-11-26
+	%	* filterTableData() added NaN check for all variabled
     
     properties (SetAccess = immutable)%, GetAccess = private)
         originalData; %Dataset as timetable
@@ -224,7 +226,10 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableDescriptions {'hydrCylinderPressureRel'} = 'Operating pressure of the hydraulic cylinder (relative value)';
                 
                 %confiningPressureAbs: absolute confining pressure
-                if ismember('sigma2_3_p_abs_1', data.Properties.VariableNames)
+				%Sometimes the database returns the column name with an additional _1. This error is caught here.
+                if ismember('sigma2_3_p_abs', data.Properties.VariableNames)
+                    dataTable.confiningPressureAbs = data.sigma2_3_p_abs;
+				elseif ismember('sigma2_3_p_abs_1', data.Properties.VariableNames)
                     dataTable.confiningPressureAbs = data.sigma2_3_p_abs_1;
                 else
                     dataTable.confiningPressureAbs = NaN(size(data,1),1);
@@ -237,7 +242,10 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableDescriptions {'confiningPressureAbs'} = 'Confining pressure in the bassin. Meassured at the inflow pipe (absolute value)';
 
                 %confiningPressureRel: relative confining pressure
-                if ismember('sigma2_3_p_rel_1', data.Properties.VariableNames)
+				%Sometimes the database returns the column name with an additional _1. This error is caught here.
+                if ismember('sigma2_3_p_rel', data.Properties.VariableNames) 
+                    dataTable.confiningPressureRel = data.sigma2_3_p_rel;
+				elseif ismember('sigma2_3_p_rel_1', data.Properties.VariableNames) 
                     dataTable.confiningPressureRel = data.sigma2_3_p_rel_1;
                 else
                     dataTable.confiningPressureRel = NaN(size(data,1),1);
@@ -443,55 +451,69 @@ classdef ExperimentsData < handle
             %PRESSURE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             try
-                dat = data.confiningPressureAbs;
-                dat = fillmissing(dat, 'nearest');
-                dat = lowpass(dat, 0.01);
-                dataTable.confiningPressureAbs = round(dat, 2);
-                
-                dat = data.confiningPressureRel;
-                dat = fillmissing(dat, 'nearest');
-                dat = lowpass(dat, 0.01);
-                dataTable.confiningPressureRel = round(dat, 2);
+				if (sum(isnan(dataTable.confiningPressureAbs)) ~= length(dataTable.confiningPressureAbs)) %Check if all absolute data is NaN
+					dat = data.confiningPressureAbs;
+					dat = fillmissing(dat, 'nearest');
+					dat = lowpass(dat, 0.01);
+					dataTable.confiningPressureAbs = round(dat, 2);
+				end
+				
+				if (sum(isnan(dataTable.confiningPressureRel)) ~= length(dataTable.confiningPressureRel)) %Check if all relative data is NaN
+					dat = data.confiningPressureRel;
+					dat = fillmissing(dat, 'nearest');
+					dat = lowpass(dat, 0.01);
+					dataTable.confiningPressureRel = round(dat, 2);
+				end
 
             catch
                 warning([class(obj), ' - ', 'Error while filtering confiningPressureAbs/confiningPressureRel']);
             end
             
             try
-                dat = data.roomPressureAbs;
-                dat = fillmissing(dat, 'nearest');
-                dat = movmedian(dat, 50);
-                dataTable.roomPressureAbs = round(dat, 3);
+				if (sum(isnan(dataTable.roomPressureAbs)) ~= length(dataTable.roomPressureAbs)) %Check if all data is NaN
+					dat = data.roomPressureAbs;
+					dat = fillmissing(dat, 'nearest');
+					dat = movmedian(dat, 50);
+					dataTable.roomPressureAbs = round(dat, 3);
+				end
 
             catch
                 warning([class(obj), ' - ', 'Error while filtering roomPressureAbs']);
             end
             
             try
-                dat = data.hydrCylinderPressureAbs;
-                dat = fillmissing(dat, 'nearest');
-                dat = lowpass(dat, 0.05);
-                dataTable.hydrCylinderPressureAbs = round(dat, 1);
-                
-                dat = data.hydrCylinderPressureRel;
-                dat = fillmissing(dat, 'nearest');
-                dat = lowpass(dat, 0.05);
-                dataTable.hydrCylinderPressureRel = round(dat, 1);
+				if (sum(isnan(dataTable.hydrCylinderPressureAbs)) ~= length(dataTable.hydrCylinderPressureAbs)) %Check if all data is NaN
+					dat = data.hydrCylinderPressureAbs;
+					dat = fillmissing(dat, 'nearest');
+					dat = lowpass(dat, 0.05);
+					dataTable.hydrCylinderPressureAbs = round(dat, 1);
+				end
+
+				if (sum(isnan(dataTable.hydrCylinderPressureRel)) ~= length(dataTable.hydrCylinderPressureRel)) %Check if all data is NaN
+					dat = data.hydrCylinderPressureRel;
+					dat = fillmissing(dat, 'nearest');
+					dat = lowpass(dat, 0.05);
+					dataTable.hydrCylinderPressureRel = round(dat, 1);
+				end
 
             catch
                 warning([class(obj), ' - ', 'Error while filtering hydrCylinderPressureAbs/hydrCylinderPressureRel']);
             end
             
             try
-                dat = data.fluidPressureAbs;
-                dat = fillmissing(dat, 'nearest');
-                dat =  movmedian(dat, 50);
-                dataTable.fluidPressureAbs = round(dat, 3);
-                
-                dat = data.fluidPressureRel;
-                dat = fillmissing(dat, 'nearest');
-                dat = movmedian(dat, 50);
-                dataTable.fluidPressureRel = round(dat, 3);
+				if (sum(isnan(dataTable.fluidPressureAbs)) ~= length(dataTable.fluidPressureAbs)) %Check if all data is NaN
+					dat = data.fluidPressureAbs;
+					dat = fillmissing(dat, 'nearest');
+					dat =  movmedian(dat, 50);
+					dataTable.fluidPressureAbs = round(dat, 3);
+				end
+				
+				if (sum(isnan(dataTable.fluidPressureRel)) ~= length(dataTable.fluidPressureRel)) %Check if all data is NaN
+					dat = data.fluidPressureRel;
+					dat = fillmissing(dat, 'nearest');
+					dat = movmedian(dat, 50);
+					dataTable.fluidPressureRel = round(dat, 3);
+				end
 
             catch
                 warning([class(obj), ' - ', 'Error while filtering fluidPressureAbs/fluidPressureRel']);
@@ -502,33 +524,39 @@ classdef ExperimentsData < handle
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %PT100 Temperatures as filtered by movmedian
             try
-                dat = data.fluidInTemp;
-                dat = filloutliers(dat, 'nearest', 'movmedian', 180);
-                dat = fillmissing(dat, 'nearest');
-                dat = movmedian(dat, 600);
-                dataTable.fluidInTemp = round(dat, 1);
+				if (sum(isnan(dataTable.fluidInTemp)) ~= length(dataTable.fluidInTemp)) %Check if all data is NaN
+					dat = data.fluidInTemp;
+					dat = filloutliers(dat, 'nearest', 'movmedian', 180);
+					dat = fillmissing(dat, 'nearest');
+					dat = movmedian(dat, 600);
+					dataTable.fluidInTemp = round(dat, 1);
+				end
 
             catch
                 warning([class(obj), ' - ', 'Error while filtering fluidInTemp']);
             end
             
             try
-                dat = data.fluidOutTemp;
-                dat = filloutliers(dat, 'nearest', 'movmedian', 180);
-                dat = fillmissing(dat, 'nearest');
-                dat = movmedian(dat, 600);
-                dataTable.fluidOutTemp = round(dat, 1);
+				if (sum(isnan(dataTable.fluidOutTemp)) ~= length(dataTable.fluidOutTemp)) %Check if all data is NaN
+					dat = data.fluidOutTemp;
+					dat = filloutliers(dat, 'nearest', 'movmedian', 180);
+					dat = fillmissing(dat, 'nearest');
+					dat = movmedian(dat, 600);
+					dataTable.fluidOutTemp = round(dat, 1);
+				end
 
             catch
                 warning([class(obj), ' - ', 'Error while filtering fluidOutTemp']);
             end
             
             try
-                dat = data.roomTemp;
-                dat = filloutliers(dat, 'nearest', 'movmedian', 180);
-                dat = fillmissing(dat, 'nearest');
-                dat = movmedian(dat, 600);
-                dataTable.roomTemp = round(dat, 1);
+				if (sum(isnan(dataTable.fluidOutTemp)) ~= length(dataTable.fluidOutTemp)) %Check if all data is NaN
+					dat = data.roomTemp;
+					dat = filloutliers(dat, 'nearest', 'movmedian', 180);
+					dat = fillmissing(dat, 'nearest');
+					dat = movmedian(dat, 600);
+					dataTable.roomTemp = round(dat, 1);
+				end
 
             catch
                 warning([class(obj), ' - ', 'Error while filtering roomTemp']);
