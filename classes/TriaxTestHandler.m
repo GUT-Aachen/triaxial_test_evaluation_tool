@@ -19,7 +19,7 @@ classdef TriaxTestHandler < handle
         dbConnection; %Database connection
 		labelList;
 		waterProperties; %Struct for water properties from isantosruiz repo
-    end
+	end 
     
     %%
     
