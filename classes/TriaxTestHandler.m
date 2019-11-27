@@ -6,38 +6,24 @@ classdef TriaxTestHandler < handle
     %   * New class
 	% 2019-11-26 Biebricher
 	%	* Added MPa as unit for pressure in graphs
+	% 2019-11-27 Biebricher
+	%	* added and included water_properties() from isantosruiz (https://github.com/isantosruiz/water-properties)
+	%	* waterViscosity() and waterDensity() using loopup table in waterProperties
+	%	* getPermeability() added permeability in mD and m²
+	%	* labelList extended with 'permeability [mD]' and 'permeability [m²]'
+	%	* labelList changed 'permeability' to 'permeability coefficient [m/s]'
     
     properties %(GetAccess = private, SetAccess = private)
 		listExperimentNo;
         experiment = struct('metaData', [], 'specimenData', [], 'testData', [], 'calculatedData', []); %Struct handling all experiments
         dbConnection; %Database connection
 		labelList;
+		waterProperties; %Struct for water properties from isantosruiz repo
     end
     
     %%
     
     methods (Static)
-        function density = waterDensity(temp)
-        %Function to calculate the density of water at a specific temperature.
-        %Input parameters:
-        %   temp : temperature in °C
-        %Returns a double containing the water density.
-        %
-        %Water density is herefore approximated by a parabolic function:
-        %999.972-7E-3(T-4)^2
-        
-            if (nargin ~= 1)
-                error('Not enough input arguments. One input parameter needed in °C as numeric or float.')
-            end
-
-            %Check if the variable experimentNo is numeric
-            if ~isnumeric(temp)
-                error(['Input parameter temperature needed in °C as numeric or float. Handed variable is class of: ',class(temp)])
-            end
-            
-            density = 999.972-(temp-4).^2*0.007;
-            
-		end
 		
 		function result = isinteger(value)
 		%Check wether the input value is an integer or nor
@@ -223,12 +209,27 @@ classdef TriaxTestHandler < handle
 					result.label = 'runtime';
 					result.unit = 'hh:mm';
 					
-				case 'permeability'
-					dataLabel = 'permeability';
+				case 'permeabilityCoeff'
+					dataLabel = 'permeabilityCoeff';
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'permeability k_{f, 10°C}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					
+				case 'permeability'
+					dataLabel = 'permeability';
+					dataTable = obj.getPermeability(experimentNo, timestep);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'permeability';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					
+				case 'permeabilityDarcy'
+					dataLabel = 'permeability';
+					dataTable = obj.getPermeability(experimentNo, timestep);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.data.permeability = result.data.permeability ./ 9.86923E-13 ./ 0.001;
+					result.label = 'permeability';
+					result.unit = 'mD';
                 
 				case 'strainSensor'
 					dataLabel = 'strainSensorsMean';
@@ -392,7 +393,9 @@ classdef TriaxTestHandler < handle
 			
 			obj.labelList = containers.Map;
 			obj.labelList('runtime') = 'Runtime';
-			obj.labelList('permeability') = 'Permeability';
+			obj.labelList('permeabilityCoeff') = 'Permeability Coefficient [m/s]';
+			obj.labelList('permeability') = 'Permeability [m²]';
+			obj.labelList('permeabilityDarcy') = 'Permeability [mD]';
 			obj.labelList('strainSensor') = 'Deformation';
 			obj.labelList('strainSensor1') = 'Strain Sensor 1';
 			obj.labelList('strainSensor2') = 'Strain Sensor 2';
@@ -409,8 +412,70 @@ classdef TriaxTestHandler < handle
 			obj.labelList('fluidOutTemp') = 'Fluid Temperature Outflow';
 			obj.labelList('roomTemp') = 'Room Temperature';
 			
+			%Load submodule water-properties
+			try
+				thisPath = fileparts(which([mfilename('class'),'.m'])); %Get the folder of the actual class file
+				submodulePath = [thisPath, '/water-properties'];
+				addpath(submodulePath) %Add sobmodule path
+				obj.waterProperties = water_properties;
+				obj.waterProperties.density = obj.waterProperties.rho; %Load water properties as struct
+				obj.waterProperties.viscosity = obj.waterProperties.nu; %Load water properties as struct
+			catch
+				warning([class(obj), ' - ', 'Error while loading water_properties() from submodule ''water-properties/water-properties.m''.']);
+			end
+			
 		end
         
+		function density = waterDensity(obj, temp)
+        %Function to calculate the density of water at a specific temperature.
+        %Input parameters:
+        %   temp : temperature in °C
+        %Returns a double containing the water density.
+        %
+        %If loopup table for density is not loaded the water density will be approximated by a parabolic function:
+		%999.972-7E-3(T-4)^2
+        
+            if (nargin ~= 2)
+                error('Not enough input arguments. One input parameter needed in °C as numeric or float.')
+            end
+
+            %Check if the variable experimentNo is numeric
+            if ~isnumeric(temp)
+                error(['Input parameter temperature needed in °C as numeric or float. Handed variable is class of: ',class(temp)])
+			end
+            
+			try
+				density = obj.waterProperties.density(temp);
+			catch
+				density = 999.972-(temp-4).^2*0.007;
+			end
+            
+		end
+		
+		
+		function viscosity = waterViscosity(obj, temp)
+		%Function returning the viscosity of water at a specific temperature. Viscosity is saved by lookup table in the
+		%variable waterProperties.
+		%Input parameters:
+		%   temp : temperature in °C
+		%Returns a double containing the water viscosity.
+        
+            if (nargin ~= 2)
+                error('Not enough input arguments. One input parameter needed in °C as numeric or float.')
+            end
+
+            %Check if the variable experimentNo is numeric
+			if ~isnumeric(temp)
+                error(['Input parameter temperature needed in °C as numeric or float. Handed variable is class of: ',class(temp)])
+			end
+			
+			try
+				viscosity = obj.waterProperties.viscosity(temp);
+			catch E
+				viscosity = 1.0;
+				warning(['Viscosity for water not loaded. Value set to 1.0. (', E.message, ')']);
+			end
+		end
 		
 		function result = isExperimentLoaded(obj, experimentNo)
         %Function checks, if the input experiment number is allready loaded
@@ -856,7 +921,7 @@ classdef TriaxTestHandler < handle
 			end
 		
             %Check for correct input parameters
-            if nargin == 2
+			if nargin == 2
                 warning('Set timestep to default: 5 minutes');
                 timestep = 5;
 				debug = false;
@@ -899,6 +964,7 @@ classdef TriaxTestHandler < handle
                     disp([class(obj), ' - ', 'Fluid outflow temperature set to 18°C.']);
                 end
                 dataTable.fluidDensity = obj.waterDensity(dataTable.fluidOutTemp); %get fluid (water) density
+				dataTable.fluidViscosity = obj.waterViscosity(dataTable.fluidOutTemp); %get fluid (water) viscosity
 
                 %Retime the dataTable to given timestep
                 time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
@@ -913,8 +979,12 @@ classdef TriaxTestHandler < handle
 
 				dataTable.deltaPressureHeight = (dataTable.fluidPressureRel .* 100000) ./ (dataTable.fluidDensity .* gravity); %Pressure difference h between inflow and outflow in m
 				dataTable.fluidFlowVolume = (dataTable.flowMassDiff ./ dataTable.fluidDensity); %water flow volume Q in m³
-
-				dataTable.permCoeff = ((dataTable.fluidFlowVolume ./ seconds(dataTable.timeDiff)) .* dataTable.probeHeigth) ./ (dataTable.deltaPressureHeight .* crossSecArea); %calculate permeability
+				
+				dataTable.permeability = ((dataTable.fluidFlowVolume ./ seconds(dataTable.timeDiff)) ... %calculate permeability
+					.* dataTable.probeHeigth .* dataTable.fluidViscosity) ./ (dataTable.deltaPressureHeight .* crossSecArea);
+				
+				dataTable.permCoeff = ((dataTable.fluidFlowVolume ./ seconds(dataTable.timeDiff)) ... %calculate permeability coefficient
+					.* dataTable.probeHeigth) ./ (dataTable.deltaPressureHeight .* crossSecArea); 
 				dataTable.permCoeff = max(0, dataTable.permCoeff);
 
 				%Normalize permeability to a reference temperature of 10 °C
@@ -928,10 +998,14 @@ classdef TriaxTestHandler < handle
 					permeability = dataTable;
 				else
 					permeability = dataTable(:,{'runtime'});
-
-					permeability.permeability = dataTable.permCoeffAlphaCorr;
-					permeability.Properties.VariableUnits{'permeability'} = 'm/s';
-					permeability.Properties.VariableDescriptions{'permeability'} = 'Coefficient of permeability alpha corrected to 10°C';
+					
+					permeability.permeability = dataTable.permeability;
+					permeability.Properties.VariableUnits{'permeability'} = 'm²';
+					permeability.Properties.VariableDescriptions{'permeability'} = 'Permeability';
+					
+					permeability.permeabilityCoeff = dataTable.permCoeffAlphaCorr;
+					permeability.Properties.VariableUnits{'permeabilityCoeff'} = 'm/s';
+					permeability.Properties.VariableDescriptions{'permeabilityCoeff'} = 'Coefficient of permeability alpha corrected to 10°C';
 
 					permeability.alphaValue = dataTable.alpha;
 					permeability.Properties.VariableUnits{'alphaValue'} = '-';
@@ -939,8 +1013,8 @@ classdef TriaxTestHandler < handle
 				end
 				
 				result = permeability;
-            catch
-                warning([class(obj), ' - ', 'Calculating permeability FAILED!']);
+			catch E
+                warning([class(obj), ' - ', 'Calculating permeability FAILED! (', E.message ,')']);
                 result = [];
             end
             
