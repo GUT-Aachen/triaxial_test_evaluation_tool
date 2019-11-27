@@ -61,19 +61,26 @@ classdef ExperimentsData < handle
     %   * getPermeability() add debug mode: output all parameters
     %   * getPermeability() prohibit negative flowMass differences and
     %                       replace by 0
-    % 2019-10-21
+    % 2019-10-21 Biebricher
     %   * organizeTableData() fixed to work with timetable as input
     %       (instead of table). Check if a row exists, otherwise creating
     %       the row and filling with NaN. Not used datasets like timestamp
     %       deleted.
-    % 2019-10-22
+    % 2019-10-22 Biebricher
     %   * organizeTableData() solved retime issues with NaN-entry-only colums
     %   * all variables in camel case
     %   * renaming all columns in timetables
-	% 2019-11-26
+	% 2019-11-26 Biebricher
 	%	* filterTableData() added NaN check for all variabled
+	% 2019-11-27 Biebricher
+	%	* waterDensity() shifted to TriaxTestHandler-Class
+	%	* getPermeability() shifted to TriaxTestHandler-Class
+	%	* getCalculationTable() deleted (deprecated)
+	%	* getAnalytics() deleted (deprecated)
+	%	* getAnalyticsDataForGUI() deleted
+	%	* getconfiningPressureRelative() deleted
     
-    properties (SetAccess = immutable)%, GetAccess = private)
+    properties (SetAccess = immutable, GetAccess = private)
         originalData; %Dataset as timetable
         filteredData; %Filtered dataset as timetable
     end
@@ -718,30 +725,7 @@ classdef ExperimentsData < handle
         end
         
     end
-    
-    methods (Static)
-        function density = waterDensity(temp)
-        %Function to calculate the density of water at a specific temperature.
-        %Input parameters:
-        %   temp : temperature in °C
-        %Returns a double containing the water density.
-        %
-        %Water density is herefore approximated by a parabolic function:
-        %999.972-7E-3(T-4)^2
-        
-            if (nargin ~= 1)
-                error('Not enough input arguments. One input parameter needed in °C as numeric or float.')
-            end
 
-            %Check if the variable experimentNo is numeric
-            if ~isnumeric(temp)
-                error(['Input parameter temperature needed in °C as numeric or float. Handed variable is class of: ',class(temp)])
-            end
-            
-            density = 999.972-(temp-4).^2*0.007;
-            
-        end
-    end
 
 %% GETTER
     methods
@@ -814,11 +798,6 @@ classdef ExperimentsData < handle
         %strainSensor1Rel, strainSensor2Rel, strainSensorMean
             dataTable = [obj.createTable() obj.filteredData(:,{'strainSensor1Rel','strainSensor2Rel',})];    
 
-            %Calculating the mean deformation influenced by deformatoin
-            %sensor 1 and 2. NaN entrys will be ignored.
-            %dataTable.strainSensorsMean = mean([dataTable.strainSensor1Rel, dataTable.strainSensor2Rel], 2, 'omitnan');
-            %dataTable.Properties.VariableUnits{'strainSensorsMean'} = 'mm';
-            %dataTable.Properties.VariableDescriptions {'strainSensorsMean'} = 'Mean relative deformation from sensor 1 and 2, zeroed at the beginning of the experiment';
         end
         
         
@@ -830,14 +809,6 @@ classdef ExperimentsData < handle
             dataTable.Properties.VariableDescriptions{'confiningPressureRel'} = obj.getAllPressureRelative.Properties.VariableDescriptions{'confiningPressureRel'};
         end
         
-        
-        function dataTable = getconfiningPressureRelative(obj)
-        %DEPRECATED!!
-        %Returns a timetable containing confing pressure data: time, runtime, confiningPressureRel
-            warning('Function getconfiningPressureRelative() deprecated. Use getConfiningPressure()')
-        
-            dataTable = obj.getConfiningPressure();
-        end
         
         function dataTable = getBassinPumpData(obj)
         %Returns a timetable containing confing pressure data: time, runtime
@@ -859,8 +830,7 @@ classdef ExperimentsData < handle
             dataTable.Properties.VariableUnits{'pumpVolumeSum'} = dataTable.Properties.VariableUnits{'pump1Volume'};
             dataTable.Properties.VariableDescriptions{'pumpVolumeSum'} = 'Sum of present liquid in all pumps.';
         end
-        
-        
+           
         
         function dataTable = getFlowData(obj)
         %Returns a timetable containing all flow data relevant data: time, runtime
@@ -876,202 +846,7 @@ classdef ExperimentsData < handle
             dataTable.fluidPressureRel = tempData.fluidPressureRel;
             dataTable.Properties.VariableUnits{'fluidPressureRel'} = tempData.Properties.VariableUnits{'fluidPressureRel'};
             dataTable.Properties.VariableDescriptions{'fluidPressureRel'} = tempData.Properties.VariableDescriptions{'fluidPressureRel'};
-        end
-        
-        function dataTable=getCalculationTable(obj)
-        %DEPRECATED!!
-        %Helperfunction to collect all relevant data for permeability
-        %calculation. Calculates the density
-        %Returns a timetable containing all flow data relevant data: time, runtime
-        %flowMass, fluidPressureRel, fluidOutTemp, strainSensorsMean and density
-            warning('Function getCalculationTable is deprecated. Load the data directly without helper function!');
-            
-            dataTable = obj.getFlowData;
-            
-            tempData = obj.getDeformationRelative();
-            dataTable.strainSensorsMean = tempData.strainSensorsMean;
-            dataTable.Properties.VariableUnits{'strainSensorsMean'} = tempData.Properties.VariableUnits{'strainSensorsMean'};
-            dataTable.Properties.VariableDescriptions{'strainSensorsMean'} = tempData.Properties.VariableDescriptions{'strainSensorsMean'};
-            
-            dataTable.density = obj.waterDensity(dataTable.fluidOutTemp);
-            dataTable.Properties.VariableUnits{'density'} = 'kg/m³';
-            dataTable.Properties.VariableDescriptions{'density'} = 'Watedensity depening on the fluid temperature on the flowMass (fluidOutTemp)';
-        end 
-
-        
-        function permeability = getPermeability(obj, length, diameter, timestep, debug)                   
-            %Input parameters:
-            %   length : height of specimen in cm
-            %   diameter: diameter of specimen in cm
-            %   timestep: timestep between to calculation point of perm
-            %   debug: all influencing parameters for permeability calculation
-            %This function calculates the permeability and returns a
-            %timetable containing the permeability and runtime. 
-            %FluidPressureRel and flowMassDiff outliers are detected using the mean method. Alpha is included.
-            
-            %Check for correct input parameters
-            if nargin == 3
-                warning('Set timestep to default: 5 minutes');
-                timestep = 5;
-                debug = false;
-            end
-            
-            if nargin == 4
-                debug = false;
-            end
-            
-            if nargin == 5
-                warning('Debug mode in getPermeability: all parameters as output');
-            end
-            
-            if nargin < 3
-                error('Not enough input arguments. specimen length; specimen diameter; timestep (optional)');
-            end
-            
-            if ~isnumeric(length) || ~isnumeric(diameter) || ~isnumeric(timestep) || diameter <= 0 || length <= 0 || timestep <= 0 || isnan(diameter) || isnan(length)
-                error('Input parameters length, diameter and timestep have to be numeric and bigger zero!');
-            end
-            
-            try
-                %Catch all relevant data as timetable
-                dataTable = obj.getFlowData;
-                dataTable.strainSensorsMean = obj.getDeformationRelative.strainSensor1Rel;
-                if isnan(dataTable.fluidOutTemp)
-                    dataTable.fluidOutTemp = zeros(size(dataTable,1),1)+18;
-                    disp([class(obj), ' - ', 'Fluid outflow temperature set to 18°C.']);
-                end
-                dataTable.density = obj.waterDensity(dataTable.fluidOutTemp);
-                
-                %Set length from cm to m
-                length = length / 100;
-
-                %Retime the dataTable to given timestep
-                start = dataTable.datetime(1);
-                time = (start:minutes(timestep):dataTable.datetime(end));
-                dataTable = retime(dataTable,time,'linear');
-
-                %Calculating differences
-                dataTable.flowMassDiff = [0;max(0, diff(dataTable.flowMass))]; %Calculate flowMass difference between to entrys, no negative values are allows: max(0,value)
-                dataTable.timeDiff = [0;diff(dataTable.runtime)]; %Calculate time difference between to entrys
-
-                %Add deltaL (variable) and A (constant)
-                dataTable.deltaL = length - (dataTable.strainSensorsMean./1000);
-                A = ((diameter/100)/2)^2*pi; %crosssection
-
-                %Checking data for outliers
-                %dataTable.fluidPressureRel = filloutliers(dataTable.fluidPressureRel,
-                %'linear', 'mean'); % no longer needes. Is done in creator
-                dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiff, 'linear', 'movmean', [0 240]);
-				%dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiff, 'next', 'percentile', [5 95]);
-                %dataTable.flowMassDiff = round(dataTable.flowMassDiff,6); %round to avoid spikes
-
-                %Handling emptying the scale for the flow measurement
-                    %Split table if flowMass drops and flowMass difference between
-                    %to entrys in the given timestep is below zero
-                    flowMassDropPoints = find(dataTable.flowMassDiff<-0.01); %find where flowMass difference drops to below zero and count
-                    TF = isempty(flowMassDropPoints);
-
-                    flowMassDropPoints=[1; flowMassDropPoints]; %add starting index 1
-
-                    %Splitting up
-                    if TF==0
-                        %split datatable where flowMass drops below zero
-                        dataTableSplitted = cell(numel(flowMassDropPoints)-1, 1); %create cell array in which to store the split tables
-
-                        for k=2:numel(flowMassDropPoints)
-                            dataTableSplitted{k-1} = dataTable(flowMassDropPoints(k-1):flowMassDropPoints(k)-1,:);
-                        end
-
-                        dataTableSplitted{k,1} = dataTable(flowMassDropPoints(end):end,:); %add end section of table
-
-                    else
-                        %create single cell array if flowMass does not drop below zero
-                        dataTableSplitted = cell(1,1);
-                        dataTableSplitted{1,1} = dataTable;
-
-                    end
-
-                    %Calculating the permeability for each of the splitted data
-                    %tables
-                    for j = 1:numel(dataTableSplitted)
-                        tempTable = dataTableSplitted{j,1}; %Save data in temporarily table
-
-                        g = 9.81; %Gravity m/s² or N/kg
-
-                        tempTable.h = (tempTable.fluidPressureRel .* 100000) ./ (tempTable.density .* g); %Pressure difference h between inflow and outflow in m
-                        tempTable.WaterFlowVolume = (tempTable.flowMassDiff ./ tempTable.density); %water flow volume Q in m³
-
-                        tempTable.k = ((tempTable.WaterFlowVolume ./ seconds(tempTable.timeDiff)) .* tempTable.deltaL) ./ (tempTable.h .* A); %calculate permeability
-
-                        %Normalize permeability to a reference temperature of 10 °C
-                        tempTable.Itest = (0.02414 * 10.^((ones(size(tempTable.k)) * 247.8) ./ (tempTable.fluidOutTemp + 133)));
-                        tempTable.IT = (0.02414 * 10.^((ones(size(tempTable.k)) * 247.8) ./ (10 + 133)));%Using reference temperature of 10 °C
-                        tempTable.alpha = tempTable.Itest ./ tempTable.IT;
-                        tempTable.kT = tempTable.k .* tempTable.alpha;
-
-                        dataTableSplitted{j,1} = tempTable; %Save temp data in original table
-                    end
-
-                %Assembly the dataTableSplitted back into one dataTable
-                dataTable = cat(1,dataTableSplitted{:});
-
-                %Create output timetable-variable
-                if debug
-                    permeability = dataTable;
-                else
-                    permeability = dataTable(:,{'runtime', 'flowMassDiff'});
-                    permeability.Properties.VariableUnits{'flowMassDiff'} = 'kg';
-                    permeability.Properties.VariableDescriptions{'flowMassDiff'} = 'Difference of flow mass between two calculation steps';
-                end
-                permeability.permeability = dataTable.kT;
-                permeability.Properties.VariableUnits{'permeability'} = 'm/s';
-                permeability.Properties.VariableDescriptions{'permeability'} = 'Coefficient of permeability alpha corrected to 10°C';
-            
-                permeability.alphaValue = dataTable.alpha;
-                permeability.Properties.VariableUnits{'alphaValue'} = '-';
-                permeability.Properties.VariableDescriptions{'alphaValue'} = 'Rebalancing factor to compare permeabilitys depending on the fluid temperature';
-            catch
-                warning([class(obj), ' - ', 'Calculating permeability FAILED!']);
-                
-                permeability = dataTable(:,{'runtime'});
-                permeability.flowMassDiff = zeros(size(dataTable,1),1);
-                permeability.permeability = zeros(size(dataTable,1),1);
-                permeability.alphaValue = zeros(size(dataTable,1),1);
-            end
-                          
-        end 
-        
-        function dataTable = getAnalytics(obj)
-        %DEPRECATED!!
-            warning('Function getCalculationTable is deprecated. Use getAnalyticsDataForGUI() instead!');
-            dataTable = obj.getAnalyticsDataForGUI();
-        end
-        
-        function dataTable = getAnalyticsDataForGUI(obj)
-            %This function returns a table with all relevant data for
-            %the GUI. This includes the flowMass, flowMass difference,
-            %fluid pressure, hydraulic cylinder pressure, confining
-            %pressure, bassin pump data, room temperature, fluid
-            %temperature, deformation mean
-            %All data will be synchronized and linear interpolated via
-            %retime-function of the timetable.
-
-            %get table and add neccessary variables    
-            dataTable = obj.getFlowData;
-            dataTable.strainSensorsMean = obj.getDeformationRelative.strainSensorsMean;
-            dataTable.strainSensor1MeanDelta = obj.getDeformationRelative.strainSensor1Rel - dataTable.strainSensorsMean;
-            dataTable.strainSensor2MeanDelta = obj.getDeformationRelative.strainSensor2Rel - dataTable.strainSensorsMean;
-            dataTable.hydrCylinderPressureRel = obj.getAllPressureRelative.hydrCylinderPressureRel;
-            dataTable.confiningPressureRel = obj.getAllPressureRelative.confiningPressureRel;
-            dataTable.pumpVolumeSum = obj.getBassinPumpData.pumpVolumeSum;
-            
-            dataTable.roomTemp = obj.getAllTemperatures.roomTemp;
-            
-            %dataTable.density = obj.waterDensity(dataTable.fluidOutTemp);
-            %%%%%%%%%%%
-            dataTable.flowMassDiff = [0; diff(dataTable.flowMass)];
-                
-        end 
+		end
 
     end
 end 
