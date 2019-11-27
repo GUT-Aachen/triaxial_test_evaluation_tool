@@ -1,0 +1,3 @@
+[submodule "classes/water-properties"]
+	path = classes/water-properties
+	url = https://github.com/isantosruiz/water-properties
