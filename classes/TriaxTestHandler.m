@@ -356,15 +356,15 @@ classdef TriaxTestHandler < handle
 				end
 				
 				%Retime if a timestep is given
-				if ~isempty(timestep) && ~strcmp(result.label, 'NaN')
-					time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
-					result.data = retime(result.data, time, 'linear');
-					
-				elseif ~isempty(timestep) && strcmp(result.label, 'NaN')
-					time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
-					result.data = retime(result.data, time);
-					
-				end
+% 				if ~isempty(timestep) && ~strcmp(result.label, 'NaN')
+% 					time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
+% 					result.data = retime(result.data, time, 'linear');
+% 					
+% 				elseif ~isempty(timestep) && strcmp(result.label, 'NaN')
+% 					time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
+% 					result.data = retime(result.data, time);
+% 					
+% 				end
 				
 				result.legend = [result.label, ' [', result.unit,']'];
 				result.data.Properties.VariableNames = {'runtime', 'dataset'}; %renaming columns in result to be uniform
