@@ -79,7 +79,9 @@ classdef ExperimentsData < handle
 	%	* getAnalytics() deleted (deprecated)
 	%	* getAnalyticsDataForGUI() deleted
 	%	* getconfiningPressureRelative() deleted
-    
+    % 2019-12-02 Biebricher
+	%	* ExperimentsData() added disp() to follow up the process
+	
     properties (SetAccess = immutable, GetAccess = private)
         originalData; %Dataset as timetable
         filteredData; %Filtered dataset as timetable
@@ -653,9 +655,11 @@ classdef ExperimentsData < handle
                 
             %Organize all data in the table: adding units and desciptions
             %Convert from table to timetable
+			disp(strcat(class(obj), {' - '},  {'Reorganizing experiments data'}));
             data = obj.organizeTableData(data);
             
             %Filter all data
+			disp(strcat(class(obj), {' - '},  {'Filtering experiments data'}));
             obj.filteredData = obj.filterTableData(data);
             
             %Saving variables in actual object
