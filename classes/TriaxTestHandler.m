@@ -12,6 +12,8 @@ classdef TriaxTestHandler < handle
 	%	* getPermeability() added permeability in mD and m²
 	%	* labelList extended with 'permeability [mD]' and 'permeability [m²]'
 	%	* labelList changed 'permeability' to 'permeability coefficient [m/s]'
+	% 2019-12-02 Biebricher
+	%	* added deformation in % and ‰ to 'graph' values and 'labelList'
     
     properties %(GetAccess = private, SetAccess = private)
 		listExperimentNo;
@@ -237,6 +239,21 @@ classdef TriaxTestHandler < handle
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'probe compaction \epsilon';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+				
+				case 'deformationPercentage'
+					dataLabel = 'deformationPercentage';
+					dataTable = obj.getStrain(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'probe compaction \epsilon';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					
+				case 'deformationPerMil'
+					dataLabel = 'deformationPercentage';
+					dataTable = obj.getStrain(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.data.deformationPercentage = result.data.deformationPercentage * 10;
+					result.label = 'probe compaction \epsilon';
+					result.unit = '‰';
 					
 				case 'strainSensor1'
 					dataLabel = 'strainSensor1Rel';
@@ -396,7 +413,9 @@ classdef TriaxTestHandler < handle
 			obj.labelList('permeabilityCoeff') = 'Permeability Coefficient [m/s]';
 			obj.labelList('permeability') = 'Permeability [m²]';
 			obj.labelList('permeabilityDarcy') = 'Permeability [mD]';
-			obj.labelList('strainSensor') = 'Deformation';
+			obj.labelList('strainSensor') = 'Deformation [mm]';
+			obj.labelList('deformationPercentage') = 'Deformation [%]';
+			obj.labelList('deformationPerMil') = 'Deformation [‰]';
 			obj.labelList('strainSensor1') = 'Strain Sensor 1';
 			obj.labelList('strainSensor2') = 'Strain Sensor 2';
 			obj.labelList('hydrCylinderPressure') = 'Compaction Pressure [bar]';
@@ -905,6 +924,10 @@ classdef TriaxTestHandler < handle
             dataTable.strainSensorsMean = mean([dataTable.strainSensor1Rel, dataTable.strainSensor2Rel], 2, 'omitnan');
             dataTable.Properties.VariableUnits{'strainSensorsMean'} = 'mm';
             dataTable.Properties.VariableDescriptions {'strainSensorsMean'} = 'Mean relative deformation from sensor 1 and 2, zeroed at the beginning of the experiment';
+			
+			dataTable.deformationPercentage = dataTable.strainSensorsMean ./ obj.getSpecimenData(experimentNo).height.value;
+            dataTable.Properties.VariableUnits{'deformationPercentage'} = '%';
+            dataTable.Properties.VariableDescriptions {'deformationPercentage'} = 'Mean relative deformation from sensor 1 and 2, zeroed at the beginning of the experiment, in relation to initial height';
 		end
 		
         function result = getPermeability(obj, experimentNo, timestep, debug)
