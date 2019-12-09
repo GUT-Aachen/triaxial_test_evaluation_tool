@@ -14,6 +14,10 @@ classdef TriaxTestHandler < handle
 	%	* labelList changed 'permeability' to 'permeability coefficient [m/s]'
 	% 2019-12-02 Biebricher
 	%	* added deformation in % and ‰ to 'graph' values and 'labelList'
+	% 2019-12-09 Biebricher
+	%	* seperating axialPressure on probe and hydr. cylinder pressure with a distiction of 80 mm and 250 mm probe
+	%	* changed hydr. cylinder pressure to bar, t
+	%	* added axial pressure on probe in kN/m², MPa
     
     properties %(GetAccess = private, SetAccess = private)
 		listExperimentNo;
@@ -269,11 +273,33 @@ classdef TriaxTestHandler < handle
 					result.label = 'deformation sensor 2 \epsilon_2';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);				
 				
+				case 'axialPressure'
+					dataLabel = 'axialPressureRel';
+					dataTable = obj.getPressureData(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'compaction pressure \sigma_1';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+				
+				case 'axialPressureMPa'
+					dataLabel = 'axialPressureRel';
+					dataTable = obj.getPressureData(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.data.axialPressureRel = result.data.axialPressureRel * 0.001;
+					result.label = 'compaction pressure \sigma_1';
+					result.unit = 'MPa';
+				
 				case 'hydrCylinderPressure'
 					dataLabel = 'hydrCylinderPressureRel';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'compaction pressure \sigma_1';
+					result.label = 'hydr. cylinder \sigma_1';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+				
+				case 'hydrCylinderPressureT'
+					dataLabel = 'axialPressureRelTonnes';
+					dataTable = obj.getPressureData(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'hydr. cylinder \sigma_1';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 				
 				case 'hydrCylinderPressureMPa'  %Change values from bar to MPa
@@ -281,7 +307,7 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.hydrCylinderPressureRel = result.data.hydrCylinderPressureRel * 0.1;
-					result.label = 'compaction pressure \sigma_1';
+					result.label = 'hydr. cylinder pressure \sigma_1';
 					result.unit = 'MPa';
 					
 				case 'fluidPressure'
@@ -418,8 +444,11 @@ classdef TriaxTestHandler < handle
 			obj.labelList('deformationPerMil') = 'Deformation [‰]';
 			obj.labelList('strainSensor1') = 'Strain Sensor 1';
 			obj.labelList('strainSensor2') = 'Strain Sensor 2';
-			obj.labelList('hydrCylinderPressure') = 'Compaction Pressure [bar]';
-			obj.labelList('hydrCylinderPressureMPa') = 'Compaction Pressure [MPa]';
+			obj.labelList('axialPressure') = 'Compaction Pressure [kN/m^2]';
+			obj.labelList('axialPressureMPa') = 'Compaction Pressure [Mpa]';
+			obj.labelList('hydrCylinderPressure') = 'Hydr. Cylinder Pressure [bar]';
+			obj.labelList('hydrCylinderPressureMPa') = 'Hydr. Cylinder Pressure [MPa]';
+			obj.labelList('hydrCylinderPressureT') = 'Hydr. Cylinder Force [t]';
 			obj.labelList('fluidPressure') = 'Flow Pressure';
 			obj.labelList('confiningPressure') = 'Confining Pressure [bar]';
 			obj.labelList('confiningPressureMPa') = 'Confining Pressure [MPa]';
@@ -765,7 +794,6 @@ classdef TriaxTestHandler < handle
             
             %Loading rock data table
             specimenData = obj.experiment(experimentNo).specimenData;
-            
             dataTable = table();
             
             %Creating the output table [name, value + unit]            
@@ -858,6 +886,7 @@ classdef TriaxTestHandler < handle
 			dataTable = obj.experiment(experimentNo).testData.getAllTemperatures;
 		end
 		
+		
 		function dataTable = getPressureData(obj, experimentNo) 
         %Returns a timetable containing all relative pressure data: time, runtime
         %fluidPressureRel, hydrCylinderPressureRel, confiningPressureRel
@@ -873,6 +902,25 @@ classdef TriaxTestHandler < handle
 			end
 			
 			dataTable = obj.experiment(experimentNo).testData.getAllPressureRelative;
+			
+			%Calculate axial pressure and distinct between 250mm and 8mm probe
+			diameter = obj.experiment(experimentNo).specimenData.diameter.value;
+			A = (0.5 * 0.01 * diameter)^2 * pi();
+			
+			if (diameter > 10)
+				dataTable.axialPressureRel = (2541 / 700 * dataTable.hydrCylinderPressureRel) ./ A;
+				dataTable.axialPressureRelTonnes = (2541 / 700 * dataTable.hydrCylinderPressureRel) ./ 9.81;
+				
+			else
+				dataTable.axialPressureRel = dataTable.hydrCylinderPressureRel * 100;
+				dataTable.axialPressureRelTonnes = dataTable.hydrCylinderPressureRel * 100 * A ./ 9.81;
+			end
+			
+			dataTable.Properties.VariableUnits{'axialPressureRel'} = 'kN/m^2';
+			dataTable.Properties.VariableDescriptions{'axialPressureRel'} = 'Axial pressure on probe';
+			
+			dataTable.Properties.VariableUnits{'axialPressureRelTonnes'} = 't';
+			dataTable.Properties.VariableDescriptions{'axialPressureRelTonnes'} = 'Axial force on probe in tonnes';
 		end
 		
 		function dataTable = getBassinPumpData(obj, experimentNo) 
