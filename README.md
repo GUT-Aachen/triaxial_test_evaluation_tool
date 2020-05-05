@@ -110,5 +110,6 @@ Reach out to me at one of the following places!
 ## License
 
 ![License: GNU](https://img.shields.io/github/license/froido/merid_triaxial_data_analysis?style=flat-square)
+
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
 
