@@ -2,9 +2,9 @@
 
 > With this evaluation tool you can check and interpret the results of a modified <a href="https://en.wikipedia.org/wiki/Triaxial_shear_test" target="_blank">`geotechnical triaxial test`</a>. With this aperature it is possible to confine a probe, rise the axial stress and measure the permeability of the probe at all stages. The tool was developed as part of a joint project called MERID (Microstructural Influence on Reservoir Integrity at Variable Hydromechanical Conditions) funded by the German Federal Ministry of Education and Research as part of GEO:N Project ([Geoforschung für Nachhaltigkeit](https://www.bmbf.de/de/geoforschung-2398.html)) to evaluate the results of a special assembled large triaxial cell. This tool consists of a backend and a frontend both assembled in MathWorks Matlab. The backend creates a connection to a MySQL-Database where all experiments results are stored.
 
-![License: GNU](https://img.shields.io/github/license/froido/merid_triaxial_data_analysis)
-![License: GNU](https://img.shields.io/github/release-date/froido/merid_triaxial_data_analysis)
-![License: GNU](https://img.shields.io/github/v/release/froido/merid_triaxial_data_analysis)
+![License: GNU](https://img.shields.io/github/license/froido/merid_triaxial_data_analysis?style=flat-square)
+![License: GNU](https://img.shields.io/github/release-date/froido/merid_triaxial_data_analysis?style=flat-square)
+![License: GNU](https://img.shields.io/github/v/release/froido/merid_triaxial_data_analysis?style=flat-square)
 
 ---
 
@@ -37,7 +37,7 @@
  - Seperated classes for handling experiments meta data `ExperimentsMetaData`, meassured values `ExperimentsData`, rock/soil related data `ExperimentsSpecimenData`, MySQL database connection `MeridDB`, interface to frontend (GUI) `TriaxTestHandler`
  - Measured data cleansing like filtering NaN values
  - Calculating permeability and permeability coefficient according to fluid (water) properties with help of <a href="https://github.com/isantosruiz" target="_blank">isantosruiz</a> <a href="https://github.com/isantosruiz/water-properties" target="_blank">`water-properties`</a> repository.
- ![Test](https://img.shields.io/github/license/isantosruiz/water-properties)
+ ![isantosruiz/water-properties](https://img.shields.io/github/license/isantosruiz/water-properties?style=flat-square)
 
 
 ---
@@ -109,6 +109,6 @@ Reach out to me at one of the following places!
 
 ## License
 
-![License: GNU](https://img.shields.io/github/license/froido/merid_triaxial_data_analysis)
-This project is licensed under the GNU Public License - see the [LICENSE.md](LICENSE.md) file for details
+![License: GNU](https://img.shields.io/github/license/froido/merid_triaxial_data_analysis?style=flat-square)
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
 
