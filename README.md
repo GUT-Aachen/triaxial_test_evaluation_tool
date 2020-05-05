@@ -37,7 +37,6 @@
  - Seperated classes for handling experiments meta data `ExperimentsMetaData`, meassured values `ExperimentsData`, rock/soil related data `ExperimentsSpecimenData`, MySQL database connection `MeridDB`, interface to frontend (GUI) `TriaxTestHandler`
  - Measured data cleansing like filtering NaN values
  - Calculating permeability and permeability coefficient according to fluid (water) properties with help of <a href="https://github.com/isantosruiz" target="_blank">isantosruiz</a> <a href="https://github.com/isantosruiz/water-properties" target="_blank">`water-properties`</a> repository.
- ![isantosruiz/water-properties](https://img.shields.io/github/license/isantosruiz/water-properties?style=flat-square)
 
 
 ---
@@ -112,4 +111,10 @@ Reach out to me at one of the following places!
 ![License: GNU](https://img.shields.io/github/license/froido/merid_triaxial_data_analysis?style=flat-square)
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
+
+---
+
+## Thanks
+to *isantosruiz* for *water-properties* ![isantosruiz/water-properties](https://img.shields.io/github/license/isantosruiz/water-properties?style=flat-square)
+
 
