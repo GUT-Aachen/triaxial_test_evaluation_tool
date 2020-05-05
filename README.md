@@ -20,8 +20,10 @@
 
 <p align="center">
   <img src = "https://github.com/froido/merid_triaxial_data_analysis/blob/master/sample/experiments_list.png" width=300> <img src = "https://github.com/froido/merid_triaxial_data_analysis/blob/master/sample/data_overview.png" width=300>
+</p><p align="center">
   <img src = "https://github.com/froido/merid_triaxial_data_analysis/blob/master/sample/data_vs_timelog.png" width=300> <img src = "https://github.com/froido/merid_triaxial_data_analysis/blob/master/sample/comparison.png" width=300>
- </p>
+</p>
+ 
 
 ### Backend
  - Class oriented programming in matlab
