@@ -2,9 +2,9 @@
 
 > With this evaluation tool you can check and interpret the results of a modified <a href="https://en.wikipedia.org/wiki/Triaxial_shear_test" target="_blank">`geotechnical triaxial test`</a>. With this aperature it is possible to confine a probe, rise the axial stress and measure the permeability of the probe at all stages. The tool was developed as part of a joint project called MERID (Microstructural Influence on Reservoir Integrity at Variable Hydromechanical Conditions) funded by the German Federal Ministry of Education and Research as part of GEO:N Project ([Geoforschung für Nachhaltigkeit](https://www.bmbf.de/de/geoforschung-2398.html)) to evaluate the results of a special assembled large triaxial cell. This tool consists of a backend and a frontend both assembled in MathWorks Matlab. The backend creates a connection to a MySQL-Database where all experiments results are stored.
 
-![License: GNU](https://img.shields.io/github/license/froido/merid_triaxial_data_analysis?style=flat-square)
-![License: GNU](https://img.shields.io/github/release-date/froido/merid_triaxial_data_analysis?style=flat-square)
-![License: GNU](https://img.shields.io/github/v/release/froido/merid_triaxial_data_analysis?style=flat-square)
+![License: GNU](https://img.shields.io/github/license/froido/triaxial_test_evaluation_tool?style=flat-square)
+![License: GNU](https://img.shields.io/github/release-date/froido/triaxial_test_evaluation_tool?style=flat-square)
+![License: GNU](https://img.shields.io/github/v/release/froido/triaxial_test_evaluation_tool?style=flat-square)
 
 ![MathWorks Matlab](https://img.shields.io/static/v1?label=Mathworks&message=Matlab&color=blue&style=flat-square&logo=mathworks)
 ![MySQL](https://img.shields.io/static/v1?label=Oracle&message=MySQL&color=blue&style=flat-square&logo=mysql)
@@ -111,8 +111,7 @@ Reach out to me at one of the following places!
 
 ## License
 
-![License: GNU](https://img.shields.io/github/license/froido/merid_triaxial_data_analysis?style=flat-square)
-
+![License: GNU](https://img.shields.io/github/license/froido/triaxial_test_evaluation_tool?style=flat-square)
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
 
 ---
