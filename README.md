@@ -5,7 +5,24 @@
 
 ---
 
-## Installation
+## Features
+ - List and overview all experiments in databse
+ - Keep rock/soil parameters always in view
+ - Check experiment description and additional comments
+ - Show experiments timelog related to experiments data
+ - Get an overview of important parameters and their connection
+ - Plot graphs with variable x-axis and two possible y-axis
+ - Compare to different/independent experiments
+ - Export graphs easiely as raster graphics (1200 DPI) or vector graphics
+
+---
+
+## Setup
+Under construction
+
+---
+
+## Usage
 Under construction
 
 ---
@@ -25,4 +42,4 @@ Reach out to me at one of the following places!
 ## License
 [![License: CC BY 3.0](https://img.shields.io/badge/License-CC%20BY%203.0-lightgrey.svg)](https://creativecommons.org/licenses/by/3.0/de/deed.en)
 
-This tool can be shared and adapted used under Creative Common Attribution 3.0 license: You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+This tool can be shared and adapted used under **Creative Common Attribution 3.0** license: You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
