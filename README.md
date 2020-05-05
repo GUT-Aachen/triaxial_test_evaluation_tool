@@ -6,17 +6,6 @@
 ![License: GNU](https://img.shields.io/github/release-date/froido/merid_triaxial_data_analysis)
 ![License: GNU](https://img.shields.io/github/v/release/froido/merid_triaxial_data_analysis)
 
-
-## Table of Contents
-
-- [Features](#features)
-- [Requirements](#requirements)
-- [Setup](#setup)
-- [Usage](#usage)
-- [Additional Hints](#additional_hints)
-- [Support](#support)
-- [License](#license)
-
 ---
 
 ## Features
