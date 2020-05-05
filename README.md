@@ -49,14 +49,14 @@
  - Matlab Version 2019b or newer
  - [Matlab Curve Fitting Toolbox](https://de.mathworks.com/products/curvefitting.html) for permeability calculation
  - [JDBC MySQL Connector](https://dev.mysql.com/doc/connector-j/8.0/en/) included in Matlab `javaclasspath` (dynamic or static)
- - Configured MySQL database engine (a skript creating the skeleton für the database is comming soon) which includes all triaxial test datasets
+ - Configured MySQL database engine (a skript creating the database skeleton is [attached](sample/database_generation_script.sql) in this repo) which includes all triaxial test datasets
  
  ---
  
 ## Setup
 
  - Have a running MathWorks Matlab 2019b or higher engine with installed curve fitting toolbox.
- - Have a running MySQL engine with a database according to the needs of this tool. To create a valid database you can use the (upcomming) batch file in this repo.
+ - Have a running MySQL engine with a database according to the needs of this tool. To create a valid database you can use the [batch file](sample/database_generation_script.sql) in this repo.
  - Download [JDBC MySQL Connector](https://dev.mysql.com/doc/connector-j/8.0/en/) to your local machine.
  - Add JDBC MySQL Connector to `javaclasspath` dynamic part
   ```matlab
@@ -72,7 +72,7 @@
 
     /your_folder/mysql-connector-java-8.0.20.jar
   ```
- - Clone this repo to your local machine
+ - Download latest release of Triaxial Test Evaluation Toolto your local machine
  - Run `GUI.mlapp`
  
 
