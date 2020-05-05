@@ -18,6 +18,10 @@
  - Compare to different/independent experiments
  - Export graphs easiely as raster graphics (1200 DPI) or vector graphics
 
+<p align="center">
+  <img src = "https://github.com/froido/merid_triaxial_data_analysis/blob/master/sample/experiments_list.png" width=300> <img src = "https://github.com/froido/merid_triaxial_data_analysis/blob/master/sample/data_overview.png" width=300>
+  <img src = "https://github.com/froido/merid_triaxial_data_analysis/blob/master/sample/data_vs_timelog.png" width=300> <img src = "https://github.com/froido/merid_triaxial_data_analysis/blob/master/sample/comparison.png" width=300>
+ </p>
 
 ### Backend
  - Class oriented programming in matlab
@@ -26,11 +30,17 @@
  - Seperated classes for handling experiments meta data `ExperimentsMetaData`, meassured values `ExperimentsData`, rock/soil related data `ExperimentsSpecimenData`, MySQL database connection `MeridDB`, interface to frontend (GUI) `TriaxTestHandler`
  - Measured data cleansing like filtering NaN values
  - Calculating permeability and permeability coefficient according to fluid (water) properties with help of isantosruiz <a href="https://github.com/isantosruiz/water-properties" target="_blank">`water-properties`</a> repository.
- 
+
 ---
 
+## Requirements
+ - Matlab Version 2019b or newer
+ - [Matlab Curve Fitting Toolbox](https://de.mathworks.com/products/curvefitting.html) for permeability calculation
+ - [JDBC MySQL Connector](https://dev.mysql.com/doc/connector-j/8.0/en/) included in Matlab `javaclasspath` (dynamic or static)
+ - Configured MySQL database (Hints how to configure comming soon)
+
 ## Setup
-Under construction
+
 
 ---
 
