@@ -425,7 +425,7 @@ classdef TriaxTestHandler < handle
             
             dbUser = 'hiwi_ro';
             dbPassword = '#meridDB2019';
-            serverIpAdress = '134.130.87.47';
+            serverIpAdress = '134.130.87.29';
             serverPort = 3306;
             
             %Initialize database
