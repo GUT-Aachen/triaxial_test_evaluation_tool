@@ -6,6 +6,9 @@
 ![License: GNU](https://img.shields.io/github/release-date/froido/merid_triaxial_data_analysis?style=flat-square)
 ![License: GNU](https://img.shields.io/github/v/release/froido/merid_triaxial_data_analysis?style=flat-square)
 
+![MathWorks Matlab](https://img.shields.io/static/v1?label=Mathworks&message=Matlab&color=blue&style=flat-square&logo=mathworks)
+![MySQL](https://img.shields.io/static/v1?label=Oracle&message=MySQL&color=blue&style=flat-square&logo=mysql)
+
 ---
 
 ## Features
@@ -115,6 +118,7 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ---
 
 ## Thanks
-to *isantosruiz* for *water-properties* ![isantosruiz/water-properties](https://img.shields.io/github/license/isantosruiz/water-properties?style=flat-square)
+
+[![isantosruiz for water-properties](https://img.shields.io/static/v1?label=isantosruiz&message=water-properties&color=blue&style=flat-square&logo=github)](https://github.com/isantosruiz/water-properties)
 
 
