@@ -102,10 +102,17 @@ classdef MeridDB < handle
                 query = ['USE ', dbTable];		
                 exec(connection, query);
             else
-                if contains(connection.Message, 'JDBC Driver Error')
-                    error([class(obj), ': JDBC Driver Error. Is the JDBC driver available in javapath? Check with ', ...
+                if contains(connection.Message, 'No suitable driver found for jdbc')
+                    warning(connection.Message);
+                    error([class(obj), ': JDBC Driver not found. Is the JDBC driver available in javapath? Check with ', ...
                         ' ''javaclasspath''. If JDBC Driver not availabe add via ', ...
                         '''javaaddpath(/your_folder/driver_file_name.jar)''. - Original message: ', connection.Message]);
+                elseif contains(connection.Message, 'Communications link failure')
+                    warning(connection.Message);
+                    error([class(obj), ': Connection error. A connection to the database server can not established. Check ', ...
+                        'if a connection to the server (',obj.dbServer, ':', obj.dbServerPort, ') can be ' ...
+                        'established. - Original message: ', connection.Message]);
+                elseif contains(connection.Message, 'No suitable driver found for jdbc')
                 else
                     warning(connection.Message);
                     error([class(obj), ': ', 'Connection cannot be established to: ', dbTable, ' - Original message: ', connection.Message]);
