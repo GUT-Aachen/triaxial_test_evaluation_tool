@@ -423,6 +423,12 @@ classdef TriaxTestHandler < handle
         function obj = TriaxTestHandler()
             import MeridDB.*
             
+            %Check if 'Curve Fitting Toolbox' is installed
+            if ~license('test', 'Curve_Fitting_Toolbox')
+                error([class(obj), ' - ', 'Curve fitting toolbox is not installed on this system. Please install ', ...
+                                            'this toolbox in Matlab before using this tool.']);
+            end
+            
             dbUser = 'hiwi_ro';
             dbPassword = '#meridDB2019';
             serverIpAdress = '134.130.87.29';
@@ -468,8 +474,8 @@ classdef TriaxTestHandler < handle
 				obj.waterProperties = water_properties;
 				obj.waterProperties.density = obj.waterProperties.rho; %Load water properties as struct
 				obj.waterProperties.viscosity = obj.waterProperties.nu; %Load water properties as struct
-			catch
-				warning([class(obj), ' - ', 'Error while loading water_properties() from submodule ''water-properties/water-properties.m''.']);
+            catch E
+				warning([class(obj), ' - ', 'Error while loading water_properties() from submodule ''water-properties/water-properties.m''. (', E.message, ')']);
 			end
 			
 		end
