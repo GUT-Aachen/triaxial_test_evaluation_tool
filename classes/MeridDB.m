@@ -102,8 +102,14 @@ classdef MeridDB < handle
                 query = ['USE ', dbTable];		
                 exec(connection, query);
             else
-                warning(connection.Message);
-                error([class(obj), ': ', 'Connection cannot be established to: ', dbTable, '; (', connection.Message, ')']);
+                if contains(connection.Message, 'JDBC Driver Error')
+                    error([class(obj), ': JDBC Driver Error. Is the JDBC driver available in javapath? Check with ', ...
+                        ' ''javaclasspath''. If JDBC Driver not availabe add via ', ...
+                        '''javaaddpath(/your_folder/driver_file_name.jar)''. - Original message: ', connection.Message]);
+                else
+                    warning(connection.Message);
+                    error([class(obj), ': ', 'Connection cannot be established to: ', dbTable, ' - Original message: ', connection.Message]);
+                end
             end
         end
         
