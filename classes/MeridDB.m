@@ -103,7 +103,7 @@ classdef MeridDB < handle
                 exec(connection, query);
             else
                 warning(connection.Message);
-                error([class(obj), ': ', 'Connection cannot be established to: ', dbTable]);
+                error([class(obj), ': ', 'Connection cannot be established to: ', dbTable, '; (', connection.Message, ')']);
             end
         end
         
