@@ -34,6 +34,8 @@ classdef MeridDB < handle
 %	* getExperimentData() corrected start and end time verification
 % 2019-11-26
 %	* catchFromDatabase() print experiment number while loading
+% 2020-05-07 Biebricher
+%	* add more specific error messages on connection problems
     
     properties (Constant = true)
         %credentials and server data
@@ -112,7 +114,9 @@ classdef MeridDB < handle
                     error([class(obj), ': Connection error. A connection to the database server can not established. Check ', ...
                         'if a connection to the server (',obj.dbServer, ':', obj.dbServerPort, ') can be ' ...
                         'established. - Original message: ', connection.Message]);
-                elseif contains(connection.Message, 'No suitable driver found for jdbc')
+                elseif contains(connection.Message, 'time zone value')
+					warning(connection.Message);
+                    error([class(obj), ': Time zone error. Check mysql server time zone and do not use MEZ/MESZ. - Original message: ', connection.Message]);
                 else
                     warning(connection.Message);
                     error([class(obj), ': ', 'Connection cannot be established to: ', dbTable, ' - Original message: ', connection.Message]);
