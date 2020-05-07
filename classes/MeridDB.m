@@ -36,6 +36,7 @@ classdef MeridDB < handle
 %	* catchFromDatabase() print experiment number while loading
 % 2020-05-07 Biebricher
 %	* add more specific error messages on connection problems
+%
     
     properties (Constant = true)
         %credentials and server data
