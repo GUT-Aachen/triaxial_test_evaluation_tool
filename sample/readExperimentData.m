@@ -11,7 +11,7 @@ close all
 
 
 %Initialize database
-dbConnection = MeridDB('hiwi_ro','#meridDB2019','134.130.87.47',3306);
+dbConnection = MeridDB('MySQL-User','MySQL-Password','MySQL-IP',MySQL-Port);
 
 %Request all experiments and print out
 experimentOverview = dbConnection.getExperiments;
