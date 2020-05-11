@@ -76,7 +76,8 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
     /your_folder/mysql-connector-java-8.0.20.jar
   ```
- - Download latest release of Triaxial Test Evaluation Tool to your local machine
+ - Download latest release of Triaxial Test Evaluation Tool to your local machine and include the submodule `water-properties` additionaly. As an alternative you can clone the reposetory via
+ `git clone --recurse-submodules --remote-submodules https://github.com/froido/triaxial_test_evaluation_tool.git`
  - Run `GUI.mlapp`
  
 
