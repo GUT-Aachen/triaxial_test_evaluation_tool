@@ -117,7 +117,7 @@ Reach out to me at one of the following places!
 ## License
 
 ![License: GNU](https://img.shields.io/github/license/froido/triaxial_test_evaluation_tool?style=flat-square)
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the GNU General Public License v3.0 - see [LICENSE.md](LICENSE.md) file for details
 
 ---
 
