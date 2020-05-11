@@ -52,7 +52,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
  - Matlab Version 2019b or newer
  - [Matlab Curve Fitting Toolbox](https://de.mathworks.com/products/curvefitting.html) for permeability calculations
- - [JDBC MySQL Connector](https://dev.mysql.com/doc/connector-j/8.0/en/) included in Matlab `javaclasspath` (dynamic or static)
+ - [JDBC MySQL Connector](https://dev.mysql.com/downloads/connector/j/) included in Matlab `javaclasspath` (dynamic or static)
  - Configured MySQL database engine (a script creating the database skeleton is [attached](sample/database_generation_script.sql) in this repository) which includes all triaxial test data sets
  
  ---
@@ -61,7 +61,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
  - Have a running MathWorks Matlab 2019b or higher engine with installed curve fitting toolbox.
  - Have a running MySQL engine with a database according to the needs of this tool. To create a valid database you can use the [batch file](sample/database_generation_script.sql) in this repository.
- - Download [JDBC MySQL Connector](https://dev.mysql.com/doc/connector-j/8.0/en/) to your local machine.
+ - Download [JDBC MySQL Connector](https://dev.mysql.com/downloads/connector/j/) to your local machine.
  - Add JDBC MySQL Connector to `javaclasspath` dynamic part
   ```matlab
   >> javaaddpath('/your_folder/mysql-connector-java-8.0.20.jar')
