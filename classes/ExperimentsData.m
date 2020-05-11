@@ -10,80 +10,6 @@ classdef ExperimentsData < handle
     %
     %It is possible to get specific experiment data instead of the whole
     %table.
-    %
-    % 2019-05-16 Biebricher
-    %   * Bugfix getFlowData(): Changed fluid_t to fluidOutTemp
-    % 2019-05-14 Biebricher
-    %   * Creator changed to work with fluid temperature in and out seperate
-    %   * Changed getAllTemperatures(): Missing data will be filled up by a
-    %       linear interpolation between two neighbors.
-    % 2019-05-13 Biebricher
-    %   * Changed name from 'getChamberPumpData' to 'getBassinPumpData'
-    %   * Added some more unit information to datatable
-    % 2019-06-28 Hiestermann
-    %   *Added Calculation Table 
-    %   *Added getPermeability function
-    %   *Added Analytics Table
-    % 2019-08-09 Biebricher
-    %   *Changed all table-variables to timetable-variables
-    %   *Include checks for all input parameters for all functions
-    %   *Adding some aditional comments in code
-    %   *Deprecated function getCalculationData
-    %   *Adding function waterDensity(T), extracted from getCalculationData
-    %   *Refactoring getPermeability
-    %   *Refactoring getAnalytics to getAnalyticsDataForGUI
-    %   *Added function organizeTableData(data) to check the consistence of
-    %       the given data stream and add additional information like units
-    %       and description. Data conversion from table to timetable
-    % 2019-08-15 Hiestermann
-    %   *Added deformation deviation to getAnalyticsDataforGUI
-    % 2019-08-30 Hiestermann
-    %   *Added mean filter to getAllPressureRelative; window of 20 for
-    %   fluid pressure, window of 50 for confining pressure and pressure of hydraulic
-    %   cylinder 
-    % 2019-09-03 Hiestermann
-    %   *Added median filter to getAllTemperature; 
-    %   *Added median filter to getDeformationRelative
-    % 2019-09-06 Biebricher
-    %   *Added filterTableData() as a function to filter the data once
-    %       globaly. All other function adapted.
-    %   *Added showDebugPlotSingle() as function to plot all datasets
-    %       modified by filterTableData()
-    %   *Deprecated function getconfiningPressureRelative(). Use
-    %       getConfiningPressure().
-    %   *Fixed issues with VariableUnits and VariableDescription
-    %   *Changed access to 'private' for organizeTableData() and
-    %       filterTableData().
-    %   *Changed access to private for dataTables
-    % 2019-09-09 Biebricher
-    %   * getPermeability() added check if diameter or length are NaN
-    % 2019-09-30 Biebricher
-    %   * getPermeability() add debug mode: output all parameters
-    %   * getPermeability() prohibit negative flowMass differences and
-    %                       replace by 0
-    % 2019-10-21 Biebricher
-    %   * organizeTableData() fixed to work with timetable as input
-    %       (instead of table). Check if a row exists, otherwise creating
-    %       the row and filling with NaN. Not used datasets like timestamp
-    %       deleted.
-    % 2019-10-22 Biebricher
-    %   * organizeTableData() solved retime issues with NaN-entry-only colums
-    %   * all variables in camel case
-    %   * renaming all columns in timetables
-	% 2019-11-26 Biebricher
-	%	* filterTableData() added NaN check for all variabled
-	% 2019-11-27 Biebricher
-	%	* waterDensity() shifted to TriaxTestHandler-Class
-	%	* getPermeability() shifted to TriaxTestHandler-Class
-	%	* getCalculationTable() deleted (deprecated)
-	%	* getAnalytics() deleted (deprecated)
-	%	* getAnalyticsDataForGUI() deleted
-	%	* getconfiningPressureRelative() deleted
-    % 2019-12-02 Biebricher
-	%	* ExperimentsData() added disp() to follow up the process
-	% 2020-05-11 Biebricher
-	%	* organizeTableData() modified to calculate relative strain from absolute strain (sensor 1 and 2)
-	%	* organizeTableData() modified retime at the end to set endvalues to NaN if not data is available
 	
     properties (SetAccess = immutable, GetAccess = private)
         originalData; %Dataset as timetable
@@ -137,7 +63,7 @@ classdef ExperimentsData < handle
                     dataTable.roomTemp = data.room_t;
                 else
                     dataTable.roomTemp = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Room temperature (roomTemp) data missing. Added column filled with NaN.']);
+                    warning('%s: Room temperature (roomTemp) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.roomTemp)) == size(data,1) 
                     vD.roomTemp = 'unset';
@@ -151,7 +77,7 @@ classdef ExperimentsData < handle
                     dataTable.roomPressureAbs = data.room_p_abs;
                 else
                     dataTable.roomPressureAbs = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Air pressure (roomPressureAbs) data missing. Added column filled with NaN.']);
+                    warning('%s: Air pressure (roomPressureAbs) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.roomPressureAbs)) == size(data,1) 
                     vD.roomPressureAbs = 'unset';
@@ -164,7 +90,7 @@ classdef ExperimentsData < handle
                     dataTable.fluidInTemp = data.fluid_in_t;
                 else
                     dataTable.fluidInTemp = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Fluid inflow temperatur (fluidInTemp) data missing. Added column filled with NaN.']);
+                    warning('%s: Fluid inflow temperatur (fluidInTemp) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.fluidInTemp)) == size(data,1) 
                     vD.fluidInTemp = 'unset';
@@ -180,7 +106,7 @@ classdef ExperimentsData < handle
                 end
                 if sum(isnan(dataTable.fluidOutTemp)) == size(data,1)
                     vD.fluidOutTemp = 'unset';
-                    warning([class(obj), ' - ', 'Fluid outflow temperatur (fluidOutTemp) data missing. Added column filled with NaN. Permeabilitycalculation will be imprecisely.']);;
+                    warning('%s: Fluid outflow temperatur (fluidOutTemp) data missing. Added column filled with NaN. Permeabilitycalculation will be imprecisely.', class(obj));
                 end
                 dataTable.Properties.VariableUnits{'fluidOutTemp'} = '°C';
                 dataTable.Properties.VariableDescriptions {'fluidOutTemp'} = 'Temperature of the fluid after flowing through, meassured on the scale.';
@@ -190,7 +116,7 @@ classdef ExperimentsData < handle
                     dataTable.fluidPressureAbs = data.fluid_p_abs;
                 else
                     dataTable.fluidPressureAbs = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Fluid flow absolute pressure (fluidPressureAbs) data missing. Added column filled with NaN.']);
+                    warning('%s: Fluid flow absolute pressure (fluidPressureAbs) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.fluidPressureAbs)) == size(data,1) 
                     vD.fluidPressureAbs = 'unset';
@@ -206,7 +132,7 @@ classdef ExperimentsData < handle
                 end
                 if sum(isnan(dataTable.fluidPressureRel)) == size(data,1)
                     vD.fluidPressureRel = 'unset';
-                    warning([class(obj), ' - ', 'Fluid flow relative pressure (fluidPressureRel) data missing. Permeability calculation not possible!']);
+                    warning('%s: Fluid flow relative pressure (fluidPressureRel) data missing. Permeability calculation not possible!', class(obj));
                 end
                 dataTable.Properties.VariableUnits{'fluidPressureRel'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'fluidPressureRel'} = 'Inflow pressure specimen (relative value)';
@@ -216,7 +142,7 @@ classdef ExperimentsData < handle
                     dataTable.hydrCylinderPressureAbs = data.hydrCylinder_p_abs;
                 else
                     dataTable.hydrCylinderPressureAbs = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Hydraulic cynlinder absolute pressure (hydrCylinderPressureAbs) data missing. Added column filled with NaN.']);
+                    warning('%s: Hydraulic cynlinder absolute pressure (hydrCylinderPressureAbs) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.hydrCylinderPressureAbs)) == size(data,1) 
                     vD.hydrCylinderPressureAbs = 'unset';
@@ -229,7 +155,7 @@ classdef ExperimentsData < handle
                     dataTable.hydrCylinderPressureRel = data.hydrCylinder_p_rel;
                 else
                     dataTable.hydrCylinderPressureRel = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Hydraulic cynlinder relative pressure (hydrCylinderPressureRel) data missing. Added column filled with NaN.']);
+                    warning('%s: Hydraulic cynlinder relative pressure (hydrCylinderPressureRel) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.hydrCylinderPressureRel)) == size(data,1) 
                     vD.hydrCylinderPressureRel = 'unset';
@@ -245,7 +171,7 @@ classdef ExperimentsData < handle
                     dataTable.confiningPressureAbs = data.sigma2_3_p_abs_1;
                 else
                     dataTable.confiningPressureAbs = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Confining absolute pressure (confiningPressureAbs) data missing. Added column filled with NaN.']);
+                    warning('%s: Confining absolute pressure (confiningPressureAbs) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.confiningPressureAbs)) == size(data,1) 
                     vD.confiningPressureAbs = 'unset';
@@ -261,7 +187,7 @@ classdef ExperimentsData < handle
                     dataTable.confiningPressureRel = data.sigma2_3_p_rel_1;
                 else
                     dataTable.confiningPressureRel = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Confining relative pressure (confiningPressureRel) data missing. Added column filled with NaN.']);
+                    warning('%s: Confining relative pressure (confiningPressureRel) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.confiningPressureRel)) == size(data,1) 
                     vD.confiningPressureRel = 'unset';
@@ -274,7 +200,7 @@ classdef ExperimentsData < handle
                     dataTable.strainSensor1Pos = data.deformation_1_s_abs;
                 else
                     dataTable.strainSensor1Pos = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Absolute deformation sensor 1 (strainSensor1Pos) data missing. Added column filled with NaN.']);
+                    warning('%s: Absolute deformation sensor 1 (strainSensor1Pos) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.strainSensor1Pos)) == size(data,1) 
                     vD.strainSensor1Pos = 'unset';
@@ -287,7 +213,7 @@ classdef ExperimentsData < handle
                     dataTable.strainSensor1Rel = data.deformation_1_s_rel;
 				else
                     dataTable.strainSensor1Rel = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Relative deformation sensor 1 (strainSensor1Rel) data missing. Added column filled with NaN.']);
+                    warning('%s: Relative deformation sensor 1 (strainSensor1Rel) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.strainSensor1Rel)) == size(data,1) 
 					if sum(isnan(dataTable.strainSensor1Pos)) ~= size(data,1) %if relative strain is not given but absolute strain, take absolute strain and make it relative
@@ -304,7 +230,7 @@ classdef ExperimentsData < handle
                     dataTable.strainSensor2Pos = data.deformation_2_s_abs;
                 else
                     dataTable.strainSensor2Pos = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Absolute deformation sensor 2 (strainSensor2Pos) data missing. Added column filled with NaN.']);
+                    warning('%s: Absolute deformation sensor 2 (strainSensor2Pos) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.strainSensor2Pos)) == size(data,1) 
                     vD.strainSensor2Pos = 'unset';
@@ -317,7 +243,7 @@ classdef ExperimentsData < handle
                     dataTable.strainSensor2Rel = data.deformation_2_s_rel;
 				else
                     dataTable.strainSensor2Rel = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Relative deformation sensor 2 (strainSensor2Rel) data missing. Added column filled with NaN.']);
+                    warning('%s: Relative deformation sensor 2 (strainSensor2Rel) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.strainSensor2Rel)) == size(data,1) 
 					if sum(isnan(dataTable.strainSensor2Pos)) ~= size(data,1) %if relative strain is not given but absolute strain, take absolute strain and make it relative
@@ -331,7 +257,7 @@ classdef ExperimentsData < handle
                 
                 %Check if any relative deformation is given
                 if sum(isnan(dataTable.strainSensor1Rel)) == size(data,1) && sum(isnan(dataTable.strainSensor2Rel)) == size(data,1)
-                    warning([class(obj), ' - ', 'Deformation relative data missing (strainSensor1Rel and strainSensor2Rel) data missing. Permeability calculation not possible!']);
+                    warning('%s: Deformation relative data missing (strainSensor1Rel and strainSensor2Rel) data missing. Permeability calculation not possible!', class(obj));
                 end
 
                 %pump1Volume: volume pump 1
@@ -339,7 +265,7 @@ classdef ExperimentsData < handle
                     dataTable.pump1Volume = data.pump_1_V;
                 else
                     dataTable.pump1Volume = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Volume Pump 1 (pump1Volume) data missing. Added column filled with NaN.']);
+                    warning('%s: Volume Pump 1 (pump1Volume) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.pump1Volume)) == size(data,1) 
                     vD.pump1Volume = 'unset';
@@ -352,7 +278,7 @@ classdef ExperimentsData < handle
                     dataTable.pump1PressureRel = data.pump_1_V;
                 else
                     dataTable.pump1PressureRel = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Pressure Pump 1 (pump1PressureRel) data missing. Added column filled with NaN.']);
+                    warning('%s: Pressure Pump 1 (pump1PressureRel) data missing. Added column filled with NaN.', class(obj));
                 end 
                 if sum(isnan(dataTable.pump1PressureRel)) == size(data,1) 
                     vD.pump1PressureRel = 'unset';
@@ -365,7 +291,7 @@ classdef ExperimentsData < handle
                     dataTable.pump2Volume = data.pump_2_V;
                 else
                     dataTable.pump2Volume = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Volume Pump 2 (pump2Volume) data missing. Added column filled with NaN.']);
+                    warning('%s: Volume Pump 2 (pump2Volume) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.pump2Volume)) == size(data,1) 
                     vD.pump2Volume = 'unset';
@@ -378,7 +304,7 @@ classdef ExperimentsData < handle
                     dataTable.pump2PressureRel = data.pump_2_p;
                 else
                     dataTable.pump2PressureRel = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Pressure Pump 2 (pump2PressureRel) data missing. Added column filled with NaN.']);
+                    warning('%s: Pressure Pump 2 (pump2PressureRel) data missing. Added column filled with NaN.', class(obj));
                 end    
                 if sum(isnan(dataTable.pump2PressureRel)) == size(data,1) 
                     vD.pump2PressureRel = 'unset';
@@ -391,7 +317,7 @@ classdef ExperimentsData < handle
                     dataTable.pump3Volume = data.pump_3_V;
                 else
                     dataTable.pump3Volume = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Volume Pump 3 (pump3Volume) data missing. Added column filled with NaN.']);
+                    warning('%s: Volume Pump 3 (pump3Volume) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.pump3Volume)) == size(data,1) 
                     vD.pump3Volume = 'unset';
@@ -404,7 +330,7 @@ classdef ExperimentsData < handle
                     dataTable.pump3PressureRel = data.pump_3_p;
                 else
                     dataTable.pump3PressureRel = NaN(size(data,1),1);
-                    warning([class(obj), ' - ', 'Pressure Pump 3 (pump3PressureRel) data missing. Added column filled with NaN.']);
+                    warning('%s: Pressure Pump 3 (pump3PressureRel) data missing. Added column filled with NaN.', class(obj));
                 end  
                 if sum(isnan(dataTable.pump3PressureRel)) == size(data,1) 
                     vD.pump3PressureRel = 'unset';
@@ -421,13 +347,13 @@ classdef ExperimentsData < handle
                 
                 if sum(isnan(dataTable.flowMass)) == size(data,1)
                     vD.flowMass = 'unset';
-                    warning([class(obj), ' - ', 'Weight from scale (flowMass) data missing. Added column filled with NaN. Permeability calculation not possible!']);
+                    warning('%s: Weight from scale (flowMass) data missing. Added column filled with NaN. Permeability calculation not possible!', class(obj));
                 end
                 dataTable.Properties.VariableUnits{'flowMass'} = 'kg';
                 dataTable.Properties.VariableDescriptions {'flowMass'} = 'Weight of the water meassured on the scale';
                 
             catch E
-                error([class(obj), ' - ', 'The given dataset is missing a column or properties can not be added. Please control the given data to be complete.']);
+                error('%s: The given dataset is missing a column or properties can not be added. Please control the given data to be complete.', class(obj));
             end
             
             %Recast time-String to datetime, calculate time dependend
@@ -454,7 +380,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableDescriptions{'runtime'} = 'Runtime in seconds since experiment start';
                 
             catch E
-                error([class(obj), ' - ', 'Can not add runtime to timetable and/or calculate time difference']);
+                error('%s: Can not add runtime to timetable and/or calculate time difference', class(obj));
             end
             
         end
@@ -486,7 +412,7 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning([class(obj), ' - ', 'Error while filtering confiningPressureAbs/confiningPressureRel']);
+                warning('%s: error while filtering confiningPressureAbs/confiningPressureRel', class(obj));
             end
             
             try
@@ -498,7 +424,7 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning([class(obj), ' - ', 'Error while filtering roomPressureAbs']);
+                warning('%s: error while filtering roomPressureAbs', class(obj));
             end
             
             try
@@ -517,7 +443,7 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning([class(obj), ' - ', 'Error while filtering hydrCylinderPressureAbs/hydrCylinderPressureRel']);
+                warning('%s: Error while filtering hydrCylinderPressureAbs/hydrCylinderPressureRel', class(obj));
             end
             
             try
@@ -536,7 +462,7 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning([class(obj), ' - ', 'Error while filtering fluidPressureAbs/fluidPressureRel']);
+                warning('%s: Error while filtering fluidPressureAbs/fluidPressureRel', class(obj));
             end
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -553,7 +479,7 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning([class(obj), ' - ', 'Error while filtering fluidInTemp']);
+                warning('%s: Error while filtering fluidInTemp', class(obj));
             end
             
             try
@@ -566,7 +492,7 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning([class(obj), ' - ', 'Error while filtering fluidOutTemp']);
+                warning('%s: Error while filtering fluidOutTemp', class(obj));
             end
             
             try
@@ -579,7 +505,7 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning([class(obj), ' - ', 'Error while filtering roomTemp']);
+                warning('%s: Error while filtering roomTemp', class(obj));
             end
             
             
@@ -605,7 +531,7 @@ classdef ExperimentsData < handle
                 end
                 
             catch
-                warning([class(obj), ' - ', 'Error while filtering strainSensor1Pos/strainSensor1Rel']);
+                warning('%s: Error while filtering strainSensor1Pos/strainSensor1Rel', class(obj));
             end
             
             try
@@ -621,7 +547,7 @@ classdef ExperimentsData < handle
                     dataTable.strainSensor2Rel = round(dat - min(dat), 3);
                 end
             catch
-                warning([class(obj), ' - ', 'Error while filtering strainSensor2Pos/strainSensor2Rel']);
+                warning('%s: Error while filtering strainSensor2Pos/strainSensor2Rel', class(obj));
             end
             
         end
@@ -643,22 +569,22 @@ classdef ExperimentsData < handle
             %Inputdata consistence checks
                 %Check if there are two variables handed over
                 if (nargin ~= 2)
-                    error('Not enough input arguments. Two input parameters have to be handed over: experimentNo as Integer and data as timetable.')
+                    error('%s: Not enough input arguments. Two input parameters have to be handed over: experimentNo as Integer and data as timetable.', class(obj))
                 end
 
                 %Check if the variable experimentNo is numeric
                 if ~isnumeric(experimentNo)
-                    error(['Input "experimentNo" must consider a numeric-variable. Handed variable is class of: ',class(experimentNo)])
+                    error('%s: Input "experimentNo" must consider a numeric-variable. Handed variable is class of: %s',class(obj), class(experimentNo))
                 end
 
                 %Check if the variable data is a table
                 if ~istimetable(data)
-                    error(['Input "data" must consider a timetable-variable. Handed variable is class of: ',class(data)])
+                    error('%s: Input "data" must consider a timetable-variable. Handed variable is class of: %s',class(obj), class(data))
                 end
 
                 %Check if the data table is empty
                 if height(data) == 0
-                    error('Data table for the experiment is empty')
+                    error('%s: data table for the experiment is empty', class(obj))
                 end
             
             %Saving original data in object
@@ -755,12 +681,12 @@ classdef ExperimentsData < handle
         end
         
         function data = getFilteredDataTable(obj)
-            warning('This kind of access is possible but not recommended. Please use getter methods/functions to access data in this table!');
+            warning('%s: This kind of access is possible but not recommended. Please use getter methods/functions to access data in this table!', class(obj));
             data = obj.filteredData; %make timetable
         end
         
         function data = getOriginalDataTable(obj)
-            warning('This kind of access is possible but not recommended. Please use getter methods/functions to access data in this table!');
+            warning('%s: This kind of access is possible but not recommended. Please use getter methods/functions to access data in this table!', class(obj));
             data = obj.originalData; %make timetable
         end
         
