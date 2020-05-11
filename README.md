@@ -61,7 +61,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
  - Have a running MathWorks Matlab 2019b or higher engine with installed curve fitting toolbox.
  - Have a running MySQL engine with a database according to the needs of this tool. To create a valid database you can use the [batch file](sample/database_generation_script.sql) in this repository.
- - Download [JDBC MySQL Connector](https://dev.mysql.com/downloads/connector/j/) to your local machine.
+ - Download [JDBC MySQL Connector](https://dev.mysql.com/downloads/connector/j/) (platform indipendent version) to your local machine.
  - Add JDBC MySQL Connector to `javaclasspath` dynamic part
   ```matlab
   >> javaaddpath('/your_folder/mysql-connector-java-8.0.20.jar')
