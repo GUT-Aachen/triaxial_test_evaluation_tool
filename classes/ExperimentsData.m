@@ -81,6 +81,9 @@ classdef ExperimentsData < handle
 	%	* getconfiningPressureRelative() deleted
     % 2019-12-02 Biebricher
 	%	* ExperimentsData() added disp() to follow up the process
+	% 2020-05-11 Biebricher
+	%	* organizeTableData() modified to calculate relative strain from absolute strain (sensor 1 and 2)
+	%	* organizeTableData() modified retime at the end to set endvalues to NaN if not data is available
 	
     properties (SetAccess = immutable, GetAccess = private)
         originalData; %Dataset as timetable
@@ -282,17 +285,21 @@ classdef ExperimentsData < handle
                 %strainSensor1Rel: relative deformation sensor 1
                 if ismember('deformation_1_s_rel', data.Properties.VariableNames)
                     dataTable.strainSensor1Rel = data.deformation_1_s_rel;
-                else
+				else
                     dataTable.strainSensor1Rel = NaN(size(data,1),1);
                     warning([class(obj), ' - ', 'Relative deformation sensor 1 (strainSensor1Rel) data missing. Added column filled with NaN.']);
                 end
                 if sum(isnan(dataTable.strainSensor1Rel)) == size(data,1) 
-                    vD.strainSensor1Rel = 'unset';
+					if sum(isnan(dataTable.strainSensor1Pos)) ~= size(data,1) %if relative strain is not given but absolute strain, take absolute strain and make it relative
+						dataTable.strainSensor1Rel = dataTable.strainSensor1Pos - min(dataTable.strainSensor1Pos);
+					else
+						vD.strainSensor1Rel = 'unset';
+					end
                 end
                 dataTable.Properties.VariableUnits{'strainSensor1Rel'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'strainSensor1Rel'} = 'Relative deformation, zeroed at the beginning of the experiment';
                                 
-                %strainSensor1Pos: absolute deformation sensor 2
+                %strainSensor2Pos: absolute deformation sensor 2
                 if ismember('deformation_2_s_abs', data.Properties.VariableNames)
                     dataTable.strainSensor2Pos = data.deformation_2_s_abs;
                 else
@@ -305,15 +312,19 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'strainSensor2Pos'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'strainSensor2Pos'} = 'Absolute deformation derived from the voltage';
                 
-                %strainSensor1Rel: relative deformation sensor 2
+                %strainSensor2Rel: relative deformation sensor 2
                 if ismember('deformation_2_s_rel', data.Properties.VariableNames)
                     dataTable.strainSensor2Rel = data.deformation_2_s_rel;
-                else
+				else
                     dataTable.strainSensor2Rel = NaN(size(data,1),1);
                     warning([class(obj), ' - ', 'Relative deformation sensor 2 (strainSensor2Rel) data missing. Added column filled with NaN.']);
                 end
                 if sum(isnan(dataTable.strainSensor2Rel)) == size(data,1) 
-                    vD.strainSensor2Rel = 'unset';
+					if sum(isnan(dataTable.strainSensor2Pos)) ~= size(data,1) %if relative strain is not given but absolute strain, take absolute strain and make it relative
+						dataTable.strainSensor2Rel = dataTable.strainSensor2Pos - min(dataTable.strainSensor2Pos);
+					else
+						vD.strainSensor2Rel = 'unset';
+					end
                 end
                 dataTable.Properties.VariableUnits{'strainSensor2Rel'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'strainSensor2Rel'} = 'Relative deformation, zeroed at the beginning of the experiment';
@@ -434,7 +445,7 @@ classdef ExperimentsData < handle
                     vD.strainSensor1Pos ,vD.strainSensor1Rel ,vD.strainSensor2Pos , ...
                     vD.strainSensor2Rel ,vD.pump1Volume ,vD.pump1PressureRel ,vD.pump2Volume ,vD.pump2PressureRel , ...
                     vD.pump3Volume ,vD.pump3PressureRel ,vD.flowMass};
-                dataTable = retime(dataTable, 'secondly');
+                dataTable = retime(dataTable, 'secondly', 'endvalues', NaN);
                 
                 %Calculate runtime
                 rt = table(dataTable.datetime);
