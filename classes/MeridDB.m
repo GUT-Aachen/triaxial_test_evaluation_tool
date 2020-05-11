@@ -1,64 +1,24 @@
 classdef MeridDB < handle
-%Class to connect to the MERID MySQL Database with a JDBC Connecter. It is
-%mandatory to use the JDBC Connector, because the method 'runstoredprocedure'
-%cannot be used with the ODBC Connector.
-%
-% 2019-05-13  Biebricher
-%   * Function 'getMetaData()' changed to fetch timelog and pass it to existing ExperimentsMetaData class 
-%   * Function 'getMetaData()' gives a warning when no meta data or time log is available
-% 2019-06-12 Biebricher
-%   * Function 'getExperimentData()' has been changed, so that even long-term
-%       experiments (>150,000 lines) do not cause a memory overflow. The data
-%       is retrieved in smaller packets of 50,000 rows and then merged into a table.
-% 2019-08-12 Biebricher
-%   * Function 'getExperiment()' output changed. Start and Endtime are part
-%       of the output now.
-% 2019-09-06 Biebricher
-%   * Integrate handle class imports
-% 2019-10-08 Biebricher
-%   * Function 'getExperimentData()' error handlers for input parameters
-%       added.
-%   * Function 'getExperimentData()' new input parameter added
-%       (forcedUpdate) and handed over to function 'prepareExperimentData()'.
-%       Default value is 'false'.
-%   * Function 'getExperimentData()' castl noRows as double.
-% 2019-10-21 Biebricher
-%   * All data will be catched from the data_raw database. This includes
-%       that joining and synching the data will be done in matlab insted of
-%       mysql. Multiple users can now connect to the database!
-% 2019-10-22 Biebricher
-%   * all variables in camel case
-% 2019-10-28
-%	* getExperimentData() added values for experiment start and end time
-% 2019-10-31
-%	* getExperimentData() corrected start and end time verification
-% 2019-11-26
-%	* catchFromDatabase() print experiment number while loading
-% 2020-05-07 Biebricher
-%	* add more specific error messages on connection problems
-% 2020-05-11 Biebricher
-%	* getSpecimenData() added check if result is empty
+    %Class to connect to the MERID MySQL Database with a JDBC Connector. It
+    %is mandatory to use the JDBC Connector, as the method 
+    %'runstoredprocedure' cannot be used with the ODBC Connector.
     
     properties (Constant = true)
-        %credentials and server data
-        %db_table_inSync = 'data_inSync';    %databasename for synchron data
-        dbTableRaw = 'data_raw';          %databasename for raw data
-        dbVendor = 'MySQL';                %database vendor for example MySQL or Oracle
+        dbTableRaw = 'data_raw';  %databasename for raw data
+        dbVendor = 'MySQL';  %database vendor for example MySQL or Oracle
     end
     
     properties (SetAccess = immutable)
-        %credentials
-        dbUsername;        %username
-        dbServer;          %server adress
-        dbServerPort;     %server port        
+        dbUsername;  %username
+        dbServer;  %server adress
+        dbServerPort;  %server port        
     end
     
     properties (SetAccess = immutable, GetAccess = private)
-        dbPasswort;        %passwort
+        dbPasswort;  %passwort
     end
     
     properties (SetAccess = private)
-        %credentials and server data
         dbConnectionRaw;
         
     end
@@ -66,11 +26,10 @@ classdef MeridDB < handle
     
     methods
         function obj = MeridDB(user, pass, ip, port)
-        %Constructor to establish a connection to the database
-        %Credentials will be checked and connection tested
+        %Constructor to establish a connection to the database.
+        %Credentials will be checked and connection tested.
            if (nargin == 4)
                
-               %OUTSTANDING: Check if input is valid 
                obj.dbUsername = user;
                obj.dbPasswort = pass;
                obj.dbServer = ip;
@@ -86,7 +45,7 @@ classdef MeridDB < handle
                end
 
            else
-               error([class(obj), ': ', 'Number of arguments wrong']);
+               error('%s: number of arguments wrong', class(obj));
            end
         end
         
@@ -107,21 +66,22 @@ classdef MeridDB < handle
                 exec(connection, query);
             else
                 if contains(connection.Message, 'No suitable driver found for jdbc')
-                    warning(connection.Message);
-                    error([class(obj), ': JDBC Driver not found. Is the JDBC driver available in javapath? Check with ', ...
+                    error('%s: JDBC Driver not found. Is the JDBC driver available in javapath? Check with ', ...
                         ' ''javaclasspath''. If JDBC Driver not availabe add via ', ...
-                        '''javaaddpath(/your_folder/driver_file_name.jar)''. - Original message: ', connection.Message]);
+                        '''javaaddpath(/your_folder/driver_file_name.jar)''. \n(%s)', ...
+                        class(obj), connection.Message);
                 elseif contains(connection.Message, 'Communications link failure')
                     warning(connection.Message);
-                    error([class(obj), ': Connection error. A connection to the database server can not established. Check ', ...
-                        'if a connection to the server (',obj.dbServer, ':', obj.dbServerPort, ') can be ' ...
-                        'established. - Original message: ', connection.Message]);
+                    error('%s: Connection error. A connection to the database server can not established. Check ', ...
+                        'if a connection to the server (%s:%d) can be established. \n(%s)', ...
+                        class(obj), obj.dbServer, obj.dbServerPort, connection.Message);
                 elseif contains(connection.Message, 'time zone value')
 					warning(connection.Message);
-                    error([class(obj), ': Time zone error. Check mysql server time zone and do not use MEZ/MESZ. - Original message: ', connection.Message]);
+                    error('%s: Time zone error. Check mysql server time zone and do not use MEZ/MESZ. \n(%s)', ...
+                        class(obj), connection.Message);
                 else
                     warning(connection.Message);
-                    error([class(obj), ': ', 'Connection cannot be established to: ', dbTable, ' - Original message: ', connection.Message]);
+                    error('%s: connection cannot be established to "%s" \n(%s)', class(obj), dbTable, connection.Message);
                 end
             end
         end
@@ -130,9 +90,9 @@ classdef MeridDB < handle
         %Method to close a particular database connection
             close(dbConnection);
             if (isopen(dbConnection))
-                error([class(obj), ': ', 'Connection cannot be closed.']);
+                error('%s: connection cannot be closed.', class(obj));
             else
-                disp([class(obj), ': ', 'Connection closed.']);
+                disp([class(obj), ': ', 'connection closed.']);
             end
         end
         
@@ -153,7 +113,7 @@ classdef MeridDB < handle
                 result.timeEnd = datetime(result.timeEnd,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
 
             catch E
-                fprintf('getExperiments without success: %s\n', E.message);
+                warning('%s: getExperiments without success \n(%s)', class(obj), E.message);
             end
             
             %Close connection
@@ -178,7 +138,7 @@ classdef MeridDB < handle
                     result = true;
                 else
                     result = false;
-                    warning([class(obj), ': ', 'Experiment does not exist']);
+                    warning('%s: Experiment does not exist', class(obj));
                 end
             catch E
                 throw (E);
@@ -296,7 +256,7 @@ classdef MeridDB < handle
                     dataTable = synchronize(dataPeekel, dataScale, dataPumps);
                 
                otherwise
-                  error([class(obj), ': ', 'There are no datasets stored for this experiment!']);
+                  error('%s: there are no datasets stored for this experiment!', class(obj));
             end
             
             result = dataTable;
@@ -315,12 +275,12 @@ classdef MeridDB < handle
             end
             
             if ~isnumeric(experimentNo)
-                error([class(obj), ': ', 'The given experiment number is not numeric! Check if quotation marks used accidently.']);
+                error('%s: given experiment number is not numeric! Check if quotation marks used accidently.', class(obj));
             end
             
             %Check if the given experiment exists
             if (obj.experimentExists(experimentNo) == 0)
-                error([class(obj), ': ','Selected experiment number (', int2str(experimentNo), ') does not exist']);
+                error('%s: selected experiment number (%d) does not exist', class(obj), experimentNo);
             else               
                 dataPeekel = obj.catchFromDatabase(experimentNo, 'peekel_data', timeStart, timeEnd);
                 dataScale = obj.catchFromDatabase(experimentNo, 'scale_fluid', timeStart, timeEnd);
@@ -341,7 +301,7 @@ classdef MeridDB < handle
             %Check if the given experiment exists
             if (obj.experimentExists(experimentNo) == 0)
                 result = 0;
-                warning([class(obj), ': ', 'No metadata for the experiment found']);
+                warning('%s: No metadata for the experiment found', class(obj));
             else
                 %Create metaData object
                 metaData = ExperimentsMetaData(experimentNo);  
@@ -354,7 +314,7 @@ classdef MeridDB < handle
                     dbResult = select(dbConnection,dbQuery);
                     
                     if (isempty(dbResult))
-                        warning('No metadata found for experiment!')
+                        warning('no metadata found for experiment!')
                     else
                         dbResult.Properties.VariableNames = {'experimentNo' 'specimenId' 'description' 'comment' 'timeStart' 'timeEnd' 'short' 'pressureFluid' 'pressureConfining'}; %renaming columns in result table to match camelCase
                         metaData.setMetaDataAsTable(dbResult);
@@ -362,7 +322,7 @@ classdef MeridDB < handle
                     
                     
                 catch E
-                    warning('setting meta data without success: %s\n', E.message);
+                    warning('%s: Setting meta data without success: \n%s', class(obj), E.message);
                 end
                 
                 try
@@ -378,7 +338,7 @@ classdef MeridDB < handle
                     
                     
                 catch E
-                    warning('setting time log without success: %s\n', E.message);
+                    warning('%s: setting time log without success: \n%s', class(obj), E.message);
                 end
                     
                 result = metaData;
@@ -409,13 +369,13 @@ classdef MeridDB < handle
 				if height(dbResult) > 0
 					dbResult.Properties.VariableNames = {'specimenId' 'specimenName' 'height' 'diameter' 'massSat' 'massWet' 'massDry' 'rockName' 'description' 'densityWet' 'densitySat' 'densityDry' 'densityGrain' 'permCoeff' 'porosity' 'voidRatio' 'uniAxCompStrength' 'uniAxEModulus'}; %renaming columns in result table to match camelCase
 				else
-					error(['Database result for "', dbQuery,'" is empty. No specimen with id ', specimenId, ' found.']);
+					error('database result for "%s" is empty. No specimen with id %d found.', dbQuery, specimenId);
 				end
                 
                 specimenData.setDataAsTable(dbResult);
 
             catch E
-                warning('setting specimen data without success: %s\n', E.message);
+                error('%s: setting specimen data without success: %s\n', class(obj), E.message);
             end
 
             result = specimenData;
