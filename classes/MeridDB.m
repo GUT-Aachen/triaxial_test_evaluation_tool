@@ -36,7 +36,8 @@ classdef MeridDB < handle
 %	* catchFromDatabase() print experiment number while loading
 % 2020-05-07 Biebricher
 %	* add more specific error messages on connection problems
-%
+% 2020-05-11 Biebricher
+%	* getSpecimenData() added check if result is empty
     
     properties (Constant = true)
         %credentials and server data
@@ -404,7 +405,12 @@ classdef MeridDB < handle
 
                 dbQuery = strcat('SELECT * FROM joinspecimendata');
                 dbResult = select(dbConnection,dbQuery);
-                dbResult.Properties.VariableNames = {'specimenId' 'specimenName' 'height' 'diameter' 'massSat' 'massWet' 'massDry' 'rockName' 'description' 'densityWet' 'densitySat' 'densityDry' 'densityGrain' 'permCoeff' 'porosity' 'voidRatio' 'uniAxCompStrength' 'uniAxEModulus'}; %renaming columns in result table to match camelCase
+				
+				if height(dbResult) > 0
+					dbResult.Properties.VariableNames = {'specimenId' 'specimenName' 'height' 'diameter' 'massSat' 'massWet' 'massDry' 'rockName' 'description' 'densityWet' 'densitySat' 'densityDry' 'densityGrain' 'permCoeff' 'porosity' 'voidRatio' 'uniAxCompStrength' 'uniAxEModulus'}; %renaming columns in result table to match camelCase
+				else
+					error(['Database result for "', dbQuery,'" is empty. No specimen with id ', specimenId, ' found.']);
+				end
                 
                 specimenData.setDataAsTable(dbResult);
 
