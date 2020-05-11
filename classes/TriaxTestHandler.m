@@ -18,6 +18,8 @@ classdef TriaxTestHandler < handle
 	%	* seperating axialPressure on probe and hydr. cylinder pressure with a distiction of 80 mm and 250 mm probe
 	%	* changed hydr. cylinder pressure to bar, t
 	%	* added axial pressure on probe in kN/m², MPa
+	% 2020-05-11 Biebricher
+	%	* added error message when water-properties submodule is missing
     
     properties %(GetAccess = private, SetAccess = private)
 		listExperimentNo;
@@ -475,7 +477,7 @@ classdef TriaxTestHandler < handle
 				obj.waterProperties.density = obj.waterProperties.rho; %Load water properties as struct
 				obj.waterProperties.viscosity = obj.waterProperties.nu; %Load water properties as struct
             catch E
-				warning([class(obj), ' - ', 'Error while loading water_properties() from submodule ''water-properties/water-properties.m''. (', E.message, ')']);
+				error([class(obj), ' - ', 'Error while loading water_properties() from submodule ''water-properties/water-properties.m'' The submodule water-properties is missing. Get it from https://github.com/isantosruiz/water-properties (', E.message, ')']);
 			end
 			
 		end
