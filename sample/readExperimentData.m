@@ -7,7 +7,7 @@ import MeridDB.*
 
 %close all existing windows of matlab
 close all
-
+ 
 
 
 %Initialize database
