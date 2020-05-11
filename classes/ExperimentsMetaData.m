@@ -7,13 +7,6 @@ classdef ExperimentsMetaData < handle
 %depending variables like (description, short, etc.) are empty. They are some kind of
 %proxy values to be able to work with the values as if they where saved in
 %the variables.
-%
-%2019-05-13  Biebricher
-%   * Added timeLog as variable
-%   * Added setter 'setTimeLogAsTable()' for time log
-%   * Added getter 'get.Timelog()' for time log
-%   * Changed setter 'setMetaDataAsTable()' to recast start and end time to
-%       Datetime format.
     
     properties (SetAccess = immutable)
         experimentNo; %Number of the experiment the metadata in this object contains to.
@@ -58,10 +51,10 @@ classdef ExperimentsMetaData < handle
 
                     disp([class(obj), ': ', 'Metadata set sucessfully']);
                 else
-                   error('Given metadata do not fit to set experiment number');
+                   error('%s: Given metadata do not fit to set experiment number', class(obj));
                 end
             catch E
-                warning([class(obj), ': ', 'Error while setting meta data']);
+                warning('%s: Error while setting meta data', class(obj));
             end
         end
         
@@ -79,10 +72,10 @@ classdef ExperimentsMetaData < handle
 
                     disp([class(obj), ': ', 'Time log set sucessfully']);
                 else
-                   error('Given time log do not fit to set experiment number');
+                   error('%s: Given time log do not fit to set experiment number', class(obj));
                 end
             catch E
-                warning([class(obj), ': ', 'Error while setting time log']);
+                warning('%s: Error while setting time log', class(obj));
             end
         end
         
