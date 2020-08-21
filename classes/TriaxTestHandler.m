@@ -20,6 +20,8 @@ classdef TriaxTestHandler < handle
 	%	* added axial pressure on probe in kN/m², MPa
 	% 2020-05-11 Biebricher
 	%	* added error message when water-properties submodule is missing
+	% 2020-08-21 Biebricher
+	%	* getPermeability() added handling of NaN in strain data
     
     properties %(GetAccess = private, SetAccess = private)
 		listExperimentNo;
@@ -1008,7 +1010,7 @@ classdef TriaxTestHandler < handle
 			
 			if nargin == 3
                 debug = false;
-            end
+			end
             
             if nargin < 2
                 error([class(obj), ' - ', 'Not enough input arguments. One input parameter have to be handed over: experimentNo']);
@@ -1050,7 +1052,12 @@ classdef TriaxTestHandler < handle
                 dataTable = retime(dataTable,time,'linear');
 				
 				%Add probeHeight (variable) and crosssection area (constant)
-                dataTable.probeHeigth = probeInitHeight - (dataTable.strainSensorsMean ./ 1000);
+				if isnan(dataTable.strainSensorsMean)
+					dataTable.probeHeigth = zeros(size(dataTable,1),1) + probeInitHeight;
+					disp([class(obj), ' - ', 'Due to missing deformation data the initial height of the sample is used.']);
+				else
+					dataTable.probeHeigth = probeInitHeight - (dataTable.strainSensorsMean ./ 1000);
+				end
                 crossSecArea = ((probeDiameter) / 2)^2 * pi; %crosssection
 
 
