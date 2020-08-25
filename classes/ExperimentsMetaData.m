@@ -14,6 +14,10 @@ classdef ExperimentsMetaData < handle
 %   * Added getter 'get.Timelog()' for time log
 %   * Changed setter 'setMetaDataAsTable()' to recast start and end time to
 %       Datetime format.
+%2020-08-25	Biebricher
+%	* Added test rig information as variable
+%	* Added setter 'setTestRigDataAsTable()'
+%	* Added getter 'get.testRigData()'
     
     properties (SetAccess = immutable)
         experimentNo; %Number of the experiment the metadata in this object contains to.
@@ -30,6 +34,7 @@ classdef ExperimentsMetaData < handle
         confiningPressure; %Proxyvariable for confining pressure used in metadata. Data is only saved in metaDataTable.
         metaDataTable; %Table containing all metadata from database
         timelog; %Table containing the time log for the given experiment: experiment_no, retrospective, time, description
+		testRigData; %Table containing all test rig information from database
         
     end
     
@@ -63,8 +68,28 @@ classdef ExperimentsMetaData < handle
             catch E
                 warning([class(obj), ': ', 'Error while setting meta data']);
             end
-        end
+		end
         
+
+		function obj = setTestRigDataAsTable(obj, testRigTable)
+        %Set time log for the experiment into the object.
+        %Input parameter: table with time log
+            try
+                    obj.testRigData = testRigTable;
+					
+					obj.testRigData.Properties.VariableUnits{'diameterMax'} = 'm';
+					obj.testRigData.Properties.VariableUnits{'heightMax'} = 'm';
+					obj.testRigData.Properties.VariableUnits{'axialCylinderKgMax'} = 'kg';
+					obj.testRigData.Properties.VariableUnits{'axialCylinderPMax'} = 'N/m²';
+					obj.testRigData.Properties.VariableUnits{'confiningPMax'} = 'N/m²';
+
+                    disp([class(obj), ': ', 'Test rig data set sucessfully']);
+
+            catch E
+                warning([class(obj), ': ', 'Error while setting test rig data']);
+            end
+        end
+		
         function obj = setTimeLogAsTable(obj, timelogTable)
         %Set time log for the experiment into the object.
         %Input parameter: table with time log
@@ -161,8 +186,12 @@ classdef ExperimentsMetaData < handle
         
         function pressureConfining = get.confiningPressure(obj) 
             pressureConfining = obj.metaDataTable.pressureConfining;
-        end
+		end
         
+		function testRigData = get.testRigData(obj) 
+            testRigData = obj.testRigData;
+		end
+		
         function timelog = get.timelog(obj) 
             %Getter for the experiments time log.
             %Column 'retrospective' contains a boolean value that tells you whether the 
