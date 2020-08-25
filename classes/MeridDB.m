@@ -38,6 +38,8 @@ classdef MeridDB < handle
 %	* add more specific error messages on connection problems
 % 2020-05-11 Biebricher
 %	* getSpecimenData() added check if result is empty
+% 2020-08-25 Biebricher
+%	* getMetaData() added test rig catching
     
     properties (Constant = true)
         %credentials and server data
@@ -349,23 +351,24 @@ classdef MeridDB < handle
                 %Open connection to database
                 dbConnection = obj.openConnection(obj.dbTableRaw);
                 
-                try
+				try
                     dbQuery = strcat('SELECT * FROM experiments WHERE experiment_no = ',int2str(experimentNo));
                     dbResult = select(dbConnection,dbQuery);
                     
                     if (isempty(dbResult))
                         warning('No metadata found for experiment!')
                     else
-                        dbResult.Properties.VariableNames = {'experimentNo' 'specimenId' 'description' 'comment' 'timeStart' 'timeEnd' 'short' 'pressureFluid' 'pressureConfining'}; %renaming columns in result table to match camelCase
+                        dbResult.Properties.VariableNames = {'experimentNo' 'specimenId' 'testRigId' 'description' 'comment' 'timeStart' 'timeEnd' 'short' 'pressureFluid' 'pressureConfining'}; %renaming columns in result table to match camelCase
                         metaData.setMetaDataAsTable(dbResult);
                     end
                     
                     
                 catch E
                     warning('setting meta data without success: %s\n', E.message);
-                end
+				end
                 
-                try
+				
+				try
                     dbQuery = strcat('SELECT * FROM time_log WHERE experiment_no = ',int2str(experimentNo));
                     dbResult = select(dbConnection,dbQuery);
                     
@@ -379,7 +382,25 @@ classdef MeridDB < handle
                     
                 catch E
                     warning('setting time log without success: %s\n', E.message);
-                end
+				end
+				
+				
+				try
+					testRigId = metaData.metaDataTable.testRigId;
+					dbQuery = strcat('SELECT * FROM testrig WHERE id = ',int2str(testRigId));
+					dbResult = select(dbConnection,dbQuery);
+
+					if (isempty(dbResult))
+						warning('No test rig found for experiment!')
+					else
+						dbResult.Properties.VariableNames = {'id' 'name' 'description' 'diameterMax' 'heightMax' 'axialCylinderKgMax' 'axialCylinderPMax' 'confiningPMax'}; %renaming columns in result table to match camelCase
+						metaData.setTestRigDataAsTable(dbResult);
+					end
+
+
+				catch E
+					warning('setting test rig data without success: %s\n', E.message);
+				end
                     
                 result = metaData;
 
@@ -423,7 +444,7 @@ classdef MeridDB < handle
             %Close connection to database
             obj.closeConnection(dbConnection);
 
-        end
+		end
         
     end
 end
