@@ -7,15 +7,6 @@ classdef ExperimentsSpecimenData < handle
 %depending variables like (description, short, etc.) are empty. They are some kind of
 %proxy values to be able to work with the values as if they where saved in
 %the variables.
-%
-% Biebricher 2019-05-13
-%   * Added variable massWet incl. getter
-% Biebricher 2019-10-22
-%   * Match camelCase
-% Biebricher 2019-10-25
-%   * Properties as struct containing of value/unit pair
-% Biebricher 2019-11-04
-%	* Added getDataTable() to get all specimen information as a table at once
     
     properties (SetAccess = immutable)
         experimentNo; %Number of the experiment the data in this object contains to.
