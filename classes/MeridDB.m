@@ -107,8 +107,8 @@ classdef MeridDB < handle
                 dbQuery = strcat('SELECT * FROM experiments');
                 dbResult = select(obj.dbConnectionRaw,dbQuery);
                 
-                result = dbResult(:,{'experiment_no','short','time_start','time_end'});
-                result.Properties.VariableNames = {'experimentNo' 'short' 'timeStart' 'timeEnd'}; %renaming columns in result table to match camelCase
+                result = dbResult(:,{'experiment_no','short','time_start','time_end','assistant','pretest','testRigId'});
+                result.Properties.VariableNames = {'experimentNo' 'short' 'timeStart' 'timeEnd','assistant','preTest','testRigId'}; %renaming columns in result table to match camelCase
                 result.timeStart = datetime(result.timeStart,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
                 result.timeEnd = datetime(result.timeEnd,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
 
@@ -316,7 +316,7 @@ classdef MeridDB < handle
                     if (isempty(dbResult))
                         warning('no metadata found for experiment!')
                     else
-                        dbResult.Properties.VariableNames = {'experimentNo' 'specimenId' 'testRigId' 'description' 'comment' 'timeStart' 'timeEnd' 'short' 'pressureFluid' 'pressureConfining'}; %renaming columns in result table to match camelCase
+                        dbResult.Properties.VariableNames = {'experimentNo' 'specimenId' 'testRigId' 'description' 'comment' 'timeStart' 'timeEnd' 'short' 'pressureFluid' 'pressureConfining' 'assistant' 'pretest'}; %renaming columns in result table to match camelCase
                         metaData.setMetaDataAsTable(dbResult);
                     end
                     
