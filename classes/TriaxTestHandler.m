@@ -975,7 +975,7 @@ classdef TriaxTestHandler < handle
             dataTable.Properties.VariableUnits{'strainSensorsMean'} = 'mm';
             dataTable.Properties.VariableDescriptions {'strainSensorsMean'} = 'Mean relative deformation from sensor 1 and 2, zeroed at the beginning of the experiment';
 			
-			dataTable.deformationPercentage = dataTable.strainSensorsMean ./ obj.getSpecimenData(experimentNo).height.value;
+			dataTable.deformationPercentage = dataTable.strainSensorsMean ./ (obj.getSpecimenData(experimentNo).height.value * 10) * 100;
             dataTable.Properties.VariableUnits{'deformationPercentage'} = '%';
             dataTable.Properties.VariableDescriptions {'deformationPercentage'} = 'Mean relative deformation from sensor 1 and 2, zeroed at the beginning of the experiment, in relation to initial height';
 		end
