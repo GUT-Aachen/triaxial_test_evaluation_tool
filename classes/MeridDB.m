@@ -104,10 +104,10 @@ classdef MeridDB < handle
         
             try
                 
-                dbQuery = strcat('SELECT * FROM experiments');
+                dbQuery = strcat('SELECT `experiment_no`, `short`, `time_start`, `time_end`, `assistant`, `pretest`, `testRigId` FROM experiments');
                 dbResult = select(obj.dbConnectionRaw,dbQuery);
                 
-                result = dbResult(:,{'experiment_no','short','time_start','time_end','assistant','pretest','testRigId'});
+                result = dbResult;
                 result.Properties.VariableNames = {'experimentNo' 'short' 'timeStart' 'timeEnd','assistant','preTest','testRigId'}; %renaming columns in result table to match camelCase
                 result.timeStart = datetime(result.timeStart,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
                 result.timeEnd = datetime(result.timeEnd,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
@@ -131,7 +131,7 @@ classdef MeridDB < handle
             
             %Try to check if the experiment exists
             try
-                dbQuery = strcat('SELECT * FROM experiments WHERE experiment_no= ',int2str(experimentNo));
+                dbQuery = strcat('SELECT experiment_no FROM experiments WHERE experiment_no= ',int2str(experimentNo));
                 dbResult = select(obj.dbConnectionRaw,dbQuery);
                 
                 if (height(dbResult) == 1)
@@ -162,10 +162,10 @@ classdef MeridDB < handle
 
             %Read the number of rows for the given experiment
 			if ~isempty(timeStart) && ~isempty(timeEnd)
-				dbQuery = ['SELECT COUNT(*) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''''];
+				dbQuery = ['SELECT COUNT(experiment_no) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''''];
 				dbResult = select(dbConnection,dbQuery);
 			else
-				dbQuery = strcat('SELECT COUNT(*) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo));
+				dbQuery = strcat('SELECT COUNT(experiment_no) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo));
 				dbResult = select(dbConnection,dbQuery);
 			end
 
@@ -310,13 +310,13 @@ classdef MeridDB < handle
                 dbConnection = obj.openConnection(obj.dbTableRaw);
                 
 				try
-                    dbQuery = strcat('SELECT * FROM experiments WHERE experiment_no = ',int2str(experimentNo));
+                    dbQuery = strcat('SELECT `experiment_no`, `specimen_id`, `testRigId`, `description`, `comment`, `time_start`, `time_end`, `short`, `pressure_fluid`, `pressure_confining`, `assistant`, `pretest`, `const_head_diff` FROM experiments WHERE experiment_no = ',int2str(experimentNo));
                     dbResult = select(dbConnection,dbQuery);
                     
                     if (isempty(dbResult))
                         warning('no metadata found for experiment!')
                     else
-                        dbResult.Properties.VariableNames = {'experimentNo' 'specimenId' 'testRigId' 'description' 'comment' 'timeStart' 'timeEnd' 'short' 'pressureFluid' 'pressureConfining' 'assistant' 'pretest'}; %renaming columns in result table to match camelCase
+                        dbResult.Properties.VariableNames = {'experimentNo' 'specimenId' 'testRigId' 'description' 'comment' 'timeStart' 'timeEnd' 'short' 'pressureFluid' 'pressureConfining' 'assistant' 'pretest' 'constHeadDiff'}; %renaming columns in result table to match camelCase
                         metaData.setMetaDataAsTable(dbResult);
                     end
                     
@@ -326,13 +326,13 @@ classdef MeridDB < handle
 				end
 				
 				try
-                    dbQuery = strcat('SELECT * FROM time_log WHERE experiment_no = ',int2str(experimentNo));
+                    dbQuery = strcat('SELECT `experiment_no`, `retrospective`, `time`, `description` FROM time_log WHERE experiment_no = ',int2str(experimentNo));
                     dbResult = select(dbConnection,dbQuery);
                     
                     if (isempty(dbResult))
                         warning('No time log found for experiment!')
                     else
-                        dbResult.Properties.VariableNames = {'logId' 'experimentNo' 'retrospective' 'time' 'description'}; %renaming columns in result table to match camelCase
+                        dbResult.Properties.VariableNames = {'experimentNo' 'retrospective' 'time' 'description'}; %renaming columns in result table to match camelCase
                         metaData.setTimeLogAsTable(dbResult);
                     end
                     
@@ -344,7 +344,7 @@ classdef MeridDB < handle
 				
 				try
 					testRigId = metaData.metaDataTable.testRigId;
-					dbQuery = strcat('SELECT * FROM testrig WHERE id = ',int2str(testRigId));
+					dbQuery = strcat('SELECT `id`, `name`, `description`, `diameter_max`, `height_max`, `axial_cylinder_kg_max`, `axial_cylinder_p_max`, `confining_p_max` FROM testrig WHERE id = ',int2str(testRigId));
 					dbResult = select(dbConnection,dbQuery);
 
 					if (isempty(dbResult))
@@ -378,10 +378,10 @@ classdef MeridDB < handle
 
             try
                 dbProc = 'Fetch_Specimen_Data';
-                dbResult = runstoredprocedure(dbConnection,dbProc,{specimenId});
+                dbResult = runstoredprocedure(dbConnection,dbProc,{specimenId});  % use inner join functions of MySQL to join specimen and rock information
                 disp([class(obj), ': ', 'Preparing finisched']);
 
-                dbQuery = strcat('SELECT * FROM joinspecimendata');
+                dbQuery = strcat('SELECT `specimen_id`, `specimen_name`, `height`, `diameter`, `mass_sat`, `mass_wet`, `mass_dry`, `rock_name`, `description`, `density_wet`, `density_sat`, `density_dry`, `density_grain`, `perm_coeff`, `porosity`, `void_ratio`, `uniAx_comp_strength`, `uniAx_emodulus` FROM joinspecimendata');
                 dbResult = select(dbConnection,dbQuery);
 				
 				if height(dbResult) > 0
