@@ -420,7 +420,7 @@ classdef ExperimentsData < handle
 					dat = data.roomPressureAbs;
 					dat = fillmissing(dat, 'nearest');
 					dat = movmedian(dat, 50);
-					dataTable.roomPressureAbs = round(dat, 3);
+					dataTable.roomPressureAbs = round(dat, 4);
 				end
 
             catch
@@ -451,14 +451,14 @@ classdef ExperimentsData < handle
 					dat = data.fluidPressureAbs;
 					dat = fillmissing(dat, 'nearest');
 					dat =  movmedian(dat, 50);
-					dataTable.fluidPressureAbs = round(dat, 3);
+					dataTable.fluidPressureAbs = round(dat, 4);
 				end
 				
 				if (sum(isnan(dataTable.fluidPressureRel)) ~= length(dataTable.fluidPressureRel)) %Check if all data is NaN
 					dat = data.fluidPressureRel;
 					dat = fillmissing(dat, 'nearest');
 					dat = movmedian(dat, 50);
-					dataTable.fluidPressureRel = round(dat, 3);
+					dataTable.fluidPressureRel = round(dat, 4);
 				end
 
             catch
@@ -475,7 +475,7 @@ classdef ExperimentsData < handle
 					dat = filloutliers(dat, 'nearest', 'movmedian', 180);
 					dat = fillmissing(dat, 'nearest');
 					dat = movmedian(dat, 600);
-					dataTable.fluidInTemp = round(dat, 1);
+					dataTable.fluidInTemp = round(dat, 2);
 				end
 
             catch
@@ -488,7 +488,7 @@ classdef ExperimentsData < handle
 					dat = filloutliers(dat, 'nearest', 'movmedian', 180);
 					dat = fillmissing(dat, 'nearest');
 					dat = movmedian(dat, 600);
-					dataTable.fluidOutTemp = round(dat, 1);
+					dataTable.fluidOutTemp = round(dat, 2);
 				end
 
             catch
@@ -501,7 +501,7 @@ classdef ExperimentsData < handle
 					dat = filloutliers(dat, 'nearest', 'movmedian', 180);
 					dat = fillmissing(dat, 'nearest');
 					dat = movmedian(dat, 600);
-					dataTable.roomTemp = round(dat, 1);
+					dataTable.roomTemp = round(dat, 2);
 				end
 
             catch
