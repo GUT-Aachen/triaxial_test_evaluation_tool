@@ -6,6 +6,7 @@ classdef MeridDB < handle
     properties (Constant = true)
         dbTableRaw = 'data_raw';  %databasename for raw data
         dbVendor = 'MySQL';  %database vendor for example MySQL or Oracle
+		timezone_offset = "'+01:00'"
     end
     
     properties (SetAccess = immutable)
@@ -104,7 +105,7 @@ classdef MeridDB < handle
         
             try
                 
-                dbQuery = strcat('SELECT `experiment_no`, `short`, `time_start`, `time_end`, `assistant`, `pretest`, `testRigId` FROM experiments');
+                dbQuery = strcat("SELECT `experiment_no`, `short`, CONVERT_TZ(`time_start`, ", obj.timezone_offset, ", @@SESSION.time_zone) AS 'time_start', CONVERT_TZ(`time_end`, ", obj.timezone_offset, ", @@SESSION.time_zone) AS 'time_end', `assistant`, `pretest`, `testRigId` FROM data_raw.experiments");
                 dbResult = select(obj.dbConnectionRaw,dbQuery);
                 
                 result = dbResult;
@@ -310,7 +311,7 @@ classdef MeridDB < handle
                 dbConnection = obj.openConnection(obj.dbTableRaw);
                 
 				try
-                    dbQuery = strcat('SELECT `experiment_no`, `specimen_id`, `testRigId`, `description`, `comment`, `time_start`, `time_end`, `short`, `pressure_fluid`, `pressure_confining`, `assistant`, `pretest`, `const_head_diff` FROM experiments WHERE experiment_no = ',int2str(experimentNo));
+                    dbQuery = strcat("SELECT `experiment_no`, `specimen_id`, `testRigId`, `description`, `comment`, CONVERT_TZ(`time_start`, ", obj.timezone_offset, ", @@SESSION.time_zone) AS 'time_start', CONVERT_TZ(`time_end`, ", obj.timezone_offset, ", @@SESSION.time_zone) AS 'time_end', `short`, `pressure_fluid`, `pressure_confining`, `assistant`, `pretest`, `const_head_diff` FROM experiments WHERE experiment_no = ",int2str(experimentNo));
                     dbResult = select(dbConnection,dbQuery);
                     
                     if (isempty(dbResult))
