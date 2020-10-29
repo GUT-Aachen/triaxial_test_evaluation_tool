@@ -188,7 +188,8 @@ classdef MeridDB < handle
             %Extract the data, taking into account the maximum number of rows
             for i = 0:steps-1
 				if ~isempty(timeStart) && ~isempty(timeEnd)
-					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
+					% dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
+					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' AND CONVERT_TZ(`time`,@@SESSION.time_zone, ', obj.timezone_offset, ') BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
 					dbResult = select(dbConnection,dbQuery);
 				else
 					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
