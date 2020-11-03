@@ -399,15 +399,13 @@ classdef ExperimentsData < handle
             try
 				if (sum(isnan(dataTable.confiningPressureAbs)) ~= length(dataTable.confiningPressureAbs)) %Check if all absolute data is NaN
 					dat = data.confiningPressureAbs;
-					dat = fillmissing(dat, 'nearest');
-					dat = lowpass(dat, 0.01);
+					dat = movmedian(dat, 7);
 					dataTable.confiningPressureAbs = round(dat, 2);
 				end
 				
 				if (sum(isnan(dataTable.confiningPressureRel)) ~= length(dataTable.confiningPressureRel)) %Check if all relative data is NaN
 					dat = data.confiningPressureRel;
-					dat = fillmissing(dat, 'nearest');
-					dat = lowpass(dat, 0.01);
+					dat = movmedian(dat, 7);
 					dataTable.confiningPressureRel = round(dat, 2);
 				end
 
@@ -418,8 +416,7 @@ classdef ExperimentsData < handle
             try
 				if (sum(isnan(dataTable.roomPressureAbs)) ~= length(dataTable.roomPressureAbs)) %Check if all data is NaN
 					dat = data.roomPressureAbs;
-					dat = fillmissing(dat, 'nearest');
-					dat = movmedian(dat, 50);
+					dat = movmedian(dat, 20);
 					dataTable.roomPressureAbs = round(dat, 4);
 				end
 
@@ -430,16 +427,14 @@ classdef ExperimentsData < handle
             try
 				if (sum(isnan(dataTable.hydrCylinderPressureAbs)) ~= length(dataTable.hydrCylinderPressureAbs)) %Check if all data is NaN
 					dat = data.hydrCylinderPressureAbs;
-					dat = fillmissing(dat, 'nearest');
-					dat = lowpass(dat, 0.05);
-					dataTable.hydrCylinderPressureAbs = round(dat, 1);
+					dat = movmedian(dat, 3);
+					dataTable.hydrCylinderPressureAbs = round(dat, 2);
 				end
 
 				if (sum(isnan(dataTable.hydrCylinderPressureRel)) ~= length(dataTable.hydrCylinderPressureRel)) %Check if all data is NaN
 					dat = data.hydrCylinderPressureRel;
-					dat = fillmissing(dat, 'nearest');
-					dat = lowpass(dat, 0.05);
-					dataTable.hydrCylinderPressureRel = round(dat, 1);
+					dat = movmedian(dat, 3);
+					dataTable.hydrCylinderPressureRel = round(dat, 2);
 				end
 
             catch
@@ -449,15 +444,13 @@ classdef ExperimentsData < handle
             try
 				if (sum(isnan(dataTable.fluidPressureAbs)) ~= length(dataTable.fluidPressureAbs)) %Check if all data is NaN
 					dat = data.fluidPressureAbs;
-					dat = fillmissing(dat, 'nearest');
-					dat =  movmedian(dat, 50);
+					dat =  movmedian(dat, 9);
 					dataTable.fluidPressureAbs = round(dat, 4);
 				end
 				
 				if (sum(isnan(dataTable.fluidPressureRel)) ~= length(dataTable.fluidPressureRel)) %Check if all data is NaN
 					dat = data.fluidPressureRel;
-					dat = fillmissing(dat, 'nearest');
-					dat = movmedian(dat, 50);
+					dat = movmedian(dat, 9);
 					dataTable.fluidPressureRel = round(dat, 4);
 				end
 

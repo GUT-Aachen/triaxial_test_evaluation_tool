@@ -192,7 +192,7 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getFlowMassData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'runtime';
-					result.unit = 'hh:mm';
+					result.unit = 'hh:mm'; %'hh:mm';
 					
 				case 'permeabilityCoeff'
 					dataLabel = 'permeabilityCoeff';
@@ -678,7 +678,7 @@ classdef TriaxTestHandler < handle
 				result.y1 = y1Struct;
 				result.y1.data = y1Struct.data.dataset;
 
-				result.dataset = synchronize(xStruct.data(:,{'dataset'}), y1Struct.data(:,{'dataset'}));
+				result.dataset = synchronize(xStruct.data(:,{'dataset'}), y1Struct.data(:,{'dataset'}), 'intersection');
 				result.dataset.Properties.VariableNames = {'x', 'y1'}; %renaming columns in result to be uniform
 			end
 
@@ -689,10 +689,10 @@ classdef TriaxTestHandler < handle
 				result.y2.data = y2Struct.data.dataset;
 
 				if ~isempty(y1Value)
-					result.dataset = synchronize(result.dataset, y2Struct.data(:,{'dataset'}));
+					result.dataset = synchronize(result.dataset, y2Struct.data(:,{'dataset'}), 'intersection');
 					result.dataset.Properties.VariableNames = {'x', 'y1', 'y2'}; %renaming columns in result to be uniform
 				else
-					result.dataset = synchronize(xStruct.data(:,{'dataset'}), y2Struct.data(:,{'dataset'}));
+					result.dataset = synchronize(xStruct.data(:,{'dataset'}), y2Struct.data(:,{'dataset'}), 'intersection');
 					result.dataset.Properties.VariableNames = {'x', 'y2'}; %renaming columns in result to be uniform
 				end
 

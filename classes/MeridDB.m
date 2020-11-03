@@ -2,11 +2,11 @@ classdef MeridDB < handle
     %Class to connect to the MERID MySQL Database with a JDBC Connector. It
     %is mandatory to use the JDBC Connector, as the method 
     %'runstoredprocedure' cannot be used with the ODBC Connector.
+	% All datetime values querried from the mysql database are UTC!
     
     properties (Constant = true)
         dbTableRaw = 'data_raw';  %databasename for raw data
         dbVendor = 'MySQL';  %database vendor for example MySQL or Oracle
-		timezone_offset = "'+01:00'"
     end
     
     properties (SetAccess = immutable)
@@ -105,13 +105,13 @@ classdef MeridDB < handle
         
             try
                 
-                dbQuery = strcat("SELECT `experiment_no`, `short`, CONVERT_TZ(`time_start`, ", obj.timezone_offset, ", @@SESSION.time_zone) AS 'time_start', CONVERT_TZ(`time_end`, ", obj.timezone_offset, ", @@SESSION.time_zone) AS 'time_end', `assistant`, `pretest`, `testRigId` FROM data_raw.experiments");
+                dbQuery = strcat("SELECT `experiment_no`, `short`, `time_start`, `time_end`, `assistant`, `pretest`, `testRigId` FROM data_raw.experiments");
                 dbResult = select(obj.dbConnectionRaw,dbQuery);
                 
                 result = dbResult;
                 result.Properties.VariableNames = {'experimentNo' 'short' 'timeStart' 'timeEnd','assistant','preTest','testRigId'}; %renaming columns in result table to match camelCase
-                result.timeStart = datetime(result.timeStart,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
-                result.timeEnd = datetime(result.timeEnd,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
+                result.timeStart = datetime(result.timeStart,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS', 'TimeZone', 'UTC');
+                result.timeEnd = datetime(result.timeEnd,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS', 'TimeZone', 'UTC');
 
             catch E
                 warning('%s: getExperiments without success \n(%s)', class(obj), E.message);
@@ -189,7 +189,10 @@ classdef MeridDB < handle
             for i = 0:steps-1
 				if ~isempty(timeStart) && ~isempty(timeEnd)
 					% dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
-					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' AND CONVERT_TZ(`time`,@@SESSION.time_zone, ', obj.timezone_offset, ') BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
+					
+					% convert timeStart and timeEnd from UTC to MySQL system time to compare successfull to datetime values
+					% in table
+					dbQuery = char(strcat("SELECT * FROM `", tableName, "` WHERE `experiment_no`= ",int2str(experimentNo), " AND `time` BETWEEN CONVERT_TZ(STR_TO_DATE('", timeStart, "', '%Y/%m/%d %H:%i:%s'), '+00:00', 'system') AND CONVERT_TZ(STR_TO_DATE('", timeEnd, "', '%Y/%m/%d %H:%i:%s'), '+00:00', 'system') LIMIT ", int2str(i*selectionLimit) ,",", int2str(selectionLimit)));
 					dbResult = select(dbConnection,dbQuery);
 				else
 					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
@@ -221,21 +224,21 @@ classdef MeridDB < handle
         
             %Check if table is not empty. Otherwise a recast would fail
             if ~isempty(dataPeekel)
-                dataPeekel.time = datetime(dataPeekel.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
+                dataPeekel.time = datetime(dataPeekel.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS', 'TimeZone', 'UTC');
                 dataPeekel = removevars(dataPeekel, 'experiment_no');
                 dataPeekel = table2timetable(dataPeekel);
                 syncable = syncable + 1;
             end
             
             if ~isempty(dataScale)
-                dataScale.time = datetime(dataScale.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
+                dataScale.time = datetime(dataScale.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS', 'TimeZone', 'UTC');
                 dataScale = removevars(dataScale, 'experiment_no');
                 dataScale = table2timetable(dataScale);
                 syncable = syncable + 10;
             end
             
             if ~isempty(dataPumps)
-                dataPumps.time = datetime(dataPumps.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS');
+                dataPumps.time = datetime(dataPumps.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS', 'TimeZone', 'UTC');
                 dataPumps = removevars(dataPumps, 'experiment_no');
                 dataPumps = table2timetable(dataPumps);
                 syncable = syncable + 100;
@@ -312,9 +315,13 @@ classdef MeridDB < handle
                 dbConnection = obj.openConnection(obj.dbTableRaw);
                 
 				try
-                    dbQuery = strcat("SELECT `experiment_no`, `specimen_id`, `testRigId`, `description`, `comment`, CONVERT_TZ(`time_start`, ", obj.timezone_offset, ", @@SESSION.time_zone) AS 'time_start', CONVERT_TZ(`time_end`, ", obj.timezone_offset, ", @@SESSION.time_zone) AS 'time_end', `short`, `pressure_fluid`, `pressure_confining`, `assistant`, `pretest`, `const_head_diff` FROM experiments WHERE experiment_no = ",int2str(experimentNo));
+                    dbQuery = strcat("SELECT `experiment_no`, `specimen_id`, `testRigId`, `description`, `comment`, `time_start`, `time_end`, `short`, `pressure_fluid`, `pressure_confining`, `assistant`, `pretest`, `const_head_diff` FROM experiments WHERE experiment_no = ",int2str(experimentNo));
                     dbResult = select(dbConnection,dbQuery);
                     
+					%Set timezone of metadata
+					dbResult.time_start = datetime(dbResult.time_start, 'TimeZone', 'UTC');
+					dbResult.time_end = datetime(dbResult.time_end, 'TimeZone', 'UTC');
+					
                     if (isempty(dbResult))
                         warning('no metadata found for experiment!')
                     else
