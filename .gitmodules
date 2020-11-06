@@ -1,3 +1,6 @@
 [submodule "classes/water-properties"]
 	path = classes/water-properties
 	url = https://github.com/isantosruiz/water-properties
+[submodule "BrewerMap"]
+	path = classes/BrewerMap
+	url = https://github.com/DrosteEffect/BrewerMap
