@@ -7,6 +7,7 @@ classdef TriaxTestHandler < handle
         dbConnection; %Database connection
 		labelList;
 		waterProperties; %Struct for water properties from isantosruiz repo
+		brewermap;
 	end 
     
     %%
@@ -418,7 +419,8 @@ classdef TriaxTestHandler < handle
     methods
         function obj = TriaxTestHandler()
             import MeridDB.*
-            
+			%import BrewerMap/brewermap.*
+
             %Check if 'Curve Fitting Toolbox' is installed
             if ~license('test', 'Curve_Fitting_Toolbox')
                 error('%s: Curve fitting toolbox is not installed on this system. Please install ', ...
@@ -464,16 +466,30 @@ classdef TriaxTestHandler < handle
 			obj.labelList('fluidOutTemp') = 'Fluid Temperature Outflow';
 			obj.labelList('roomTemp') = 'Room Temperature';
 			
-			%Load submodule water-properties
+			% Load submodule water-properties
 			try
 				thisPath = fileparts(which([mfilename('class'),'.m'])); %Get the folder of the actual class file
 				submodulePath = [thisPath, '/water-properties'];
-				addpath(submodulePath) %Add sobmodule path
+				addpath(submodulePath)  % Add sobmodule path
 				obj.waterProperties = water_properties;
 				obj.waterProperties.density = obj.waterProperties.rho; %Load water properties as struct
 				obj.waterProperties.viscosity = obj.waterProperties.nu; %Load water properties as struct
             catch E
 				error('%s: Error while loading water_properties() from submodule water-properties/water-properties.m The submodule water-properties is missing. Get it from https://github.com/isantosruiz/water-properties \n(%s)', ...
+                    class(obj), E.message);
+			end
+			
+			% Load submodule BrewerMap
+			try
+				thisPath = fileparts(which([mfilename('class'),'.m'])); %Get the folder of the actual class file
+				submodulePath = [thisPath, '/BrewerMap'];
+				addpath(submodulePath)  % Add sobmodule path
+				%obj.brewermap = brewermap;
+				% obj.waterProperties = water_properties;
+				% obj.waterProperties.density = obj.waterProperties.rho; %Load water properties as struct
+				% obj.waterProperties.viscosity = obj.waterProperties.nu; %Load water properties as struct
+            catch E
+				error('%s: Error while loading BrewerMap from submodule BrewerMap/brewermap.m The submodule BrewerMap is missing. Get it from https://github.com/DrosteEffect/BrewerMap \n(%s)', ...
                     class(obj), E.message);
 			end
 			
