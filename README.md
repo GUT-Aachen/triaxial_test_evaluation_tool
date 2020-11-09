@@ -124,5 +124,4 @@ This project is licensed under the GNU General Public License v3.0 - see [LICENS
 ## Thanks
 
 [![isantosruiz for water-properties](https://img.shields.io/static/v1?label=isantosruiz&message=water-properties&color=blue&style=flat-square&logo=github)](https://github.com/isantosruiz/water-properties)
-
-
+[![DrosteEffect for BrewerMaP](https://img.shields.io/static/v1?label=isantosruiz&message=BrewerMap&color=blue&style=flat-square&logo=github)](https://github.com/DrosteEffect/BrewerMap)
