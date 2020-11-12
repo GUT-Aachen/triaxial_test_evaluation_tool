@@ -68,27 +68,27 @@ classdef TriaxTestHandler < handle
         
         
         function result = calcFlowMassData (obj, experimentNo, timestep)
-        %This function processes the incoming flow measurement data 
-        %(flowMass). It calculates the weight difference between two time 
-        %steps (flowMassDiff), the flow rate per time unit (flowRate), and 
-        %the accumulated weight (flowMassAcc) based on the corrected differences.
-        %A discontinuous system (scale with container or graduated pipette) 
-        %is used to measure the flow rate, which must be emptied several 
-        %times during the test period. The emptying causes jumps in the 
-        %course of the measurement, which have to be calculated out. The 
-        %elimination of the jumps is guaranteed by an outlier detection which 
-        %checks whether there are deviations from a 'percentile' [3%<x>97%] in 
-        %the measurement data. Since the flow rate remains relatively constant 
-        %over time and is not subject to major fluctuations, viewing a quartile 
-        %as an outlier provides perfect results.
-        %For verification purposes, the measured flow (flowMass) can be 
-        %compared with the accumulated flow (flowMassAcc). The course of 
-        %the two curves must not differ significantly. The same applies to 
-        %the difference per time step before and after smoothing.
+        % This function processes the incoming flow measurement data 
+        % (flowMass). It calculates the weight difference between two time 
+        % steps (flowMassDiff), the flow rate per time unit (flowRate), and 
+        % the accumulated weight (flowMassAcc) based on the corrected differences.
+        % A discontinuous system (scale with container) is used to measure the flow 
+		% rate, which must be emptied several times during the test period (only large
+		% triaxial test rig). The emptying causes jumps in the 
+        % course of the measurement, which have to be eliminated. The 
+        % elimination of the jumps is guaranteed by an outlier detection which 
+        % checks whether there are deviations from a 'percentile' [3%<x>97%] in 
+        % the measurement data. Since the flow rate remains relatively constant 
+        % over time and is not subject to major fluctuations, viewing a quartile 
+        % as an outlier provides perfect results.
+        % For verification purposes, the measured flow (flowMass) can be 
+        % compared with the accumulated flow (flowMassAcc). The course of 
+        % the two curves must not differ significantly. The same applies to 
+        % the difference per time step before and after smoothing.
         %
-        %Input parameters:
+        % Input parameters:
         %   experimentNo : number of the experiment
-        %Returns true to success
+        % Returns true to success
         
             disp([class(obj), ' - ', 'Calculating accumulated flow mass, flow mass difference per timestep and flow rate for experiment number ', int2str(experimentNo), ' (timestep = ', int2str(timestep), ').']);
 
@@ -98,27 +98,29 @@ classdef TriaxTestHandler < handle
 			if ~timestep == 0
 				start = dataTable.datetime(1);
 				time = [(start:minutes(timestep):dataTable.datetime(end)) dataTable.datetime(end)];
-				dataTable = retime(dataTable, time, 'linear');
-				% dataTable = retime(dataTable, time, 'linear', 'IncludedEdge', 'right');
+				dataTable = retime(dataTable, time);
 			end
 			
             %Calculating differences
-            dataTable.flowMassDiffOrig = [0; diff(dataTable.flowMass)]; %Calculate flowMass difference between to entrys
-            dataTable.timeDiff = [0;diff(dataTable.runtime)]; %Calculate time difference between to entrys
+            dataTable.flowMassDiffOrig = [NaN; diff(dataTable.flowMass)]; %Calculate flowMass difference between to entrys
+            dataTable.timeDiff = [NaN; diff(dataTable.runtime)]; %Calculate time difference between to entrys
 
-            %Identify the outliers
+            %Identify the outliers only for large triaxial tests
 			%Size of the percentiles depends on the length of the experiment. Following numbers are empirically determinded.
-			%
-			durationHours = hours(obj.experiment(experimentNo).metaData.timeEnd - obj.experiment(experimentNo).metaData.timeStart);
-			if durationHours > 150
-				percentiles = [1 99];
+			if obj.experiment(experimentNo).metaData.testRigData.id == 1
+				
+				durationHours = hours(obj.experiment(experimentNo).metaData.timeEnd - obj.experiment(experimentNo).metaData.timeStart);
+				if durationHours > 150
+					percentiles = [1 99];
+				else
+					percentiles = [5 95];
+				end
+				
+				dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiffOrig, 'linear', 'percentile', percentiles);
 			else
-				percentiles = [5 95];
+				dataTable.flowMassDiff = dataTable.flowMassDiffOrig;
 			end
 			
-            % dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiffOrig, 'linear', 'percentile', percentiles);
-			dataTable.flowMassDiff = dataTable.flowMassDiffOrig;
-            dataTable.flowMassDiff = fillmissing(dataTable.flowMassDiff, 'constant', 0);
             
             %Calculate comulated sum of mass differences
             dataTable.flowMassAcc = cumsum(dataTable.flowMassDiff, 'omitnan');
