@@ -55,7 +55,7 @@ classdef ExperimentsData < handle
                 vD.pump2PressureRel= 'continuous';
                 vD.pump3Volume= 'step';
                 vD.pump3PressureRel= 'continuous';
-                vD.flowMass= 'continuous';
+                vD.flowMass= 'step';
                 vD.runtime= 'continuous';
                 
                 %roomTemp: room temperatur
