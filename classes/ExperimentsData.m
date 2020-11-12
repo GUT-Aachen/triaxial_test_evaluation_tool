@@ -399,13 +399,13 @@ classdef ExperimentsData < handle
             try
 				if (sum(isnan(dataTable.confiningPressureAbs)) ~= length(dataTable.confiningPressureAbs)) %Check if all absolute data is NaN
 					dat = data.confiningPressureAbs;
-					dat = movmedian(dat, 7);
+					dat = movmedian(dat, 7, 'omitnan');
 					dataTable.confiningPressureAbs = round(dat, 2);
 				end
 				
 				if (sum(isnan(dataTable.confiningPressureRel)) ~= length(dataTable.confiningPressureRel)) %Check if all relative data is NaN
 					dat = data.confiningPressureRel;
-					dat = movmedian(dat, 7);
+					dat = movmedian(dat, 7, 'omitnan');
 					dataTable.confiningPressureRel = round(dat, 2);
 				end
 
@@ -416,7 +416,7 @@ classdef ExperimentsData < handle
             try
 				if (sum(isnan(dataTable.roomPressureAbs)) ~= length(dataTable.roomPressureAbs)) %Check if all data is NaN
 					dat = data.roomPressureAbs;
-					dat = movmedian(dat, 20);
+					dat = movmedian(dat, 20, 'omitnan');
 					dataTable.roomPressureAbs = round(dat, 4);
 				end
 
@@ -427,13 +427,13 @@ classdef ExperimentsData < handle
             try
 				if (sum(isnan(dataTable.hydrCylinderPressureAbs)) ~= length(dataTable.hydrCylinderPressureAbs)) %Check if all data is NaN
 					dat = data.hydrCylinderPressureAbs;
-					dat = movmedian(dat, 3);
+					dat = movmedian(dat, 3, 'omitnan');
 					dataTable.hydrCylinderPressureAbs = round(dat, 2);
 				end
 
 				if (sum(isnan(dataTable.hydrCylinderPressureRel)) ~= length(dataTable.hydrCylinderPressureRel)) %Check if all data is NaN
 					dat = data.hydrCylinderPressureRel;
-					dat = movmedian(dat, 3);
+					dat = movmedian(dat, 3, 'omitnan');
 					dataTable.hydrCylinderPressureRel = round(dat, 2);
 				end
 
@@ -444,13 +444,13 @@ classdef ExperimentsData < handle
             try
 				if (sum(isnan(dataTable.fluidPressureAbs)) ~= length(dataTable.fluidPressureAbs)) %Check if all data is NaN
 					dat = data.fluidPressureAbs;
-					dat =  movmedian(dat, 9);
+					dat =  movmedian(dat, 9, 'omitnan');
 					dataTable.fluidPressureAbs = round(dat, 4);
 				end
 				
 				if (sum(isnan(dataTable.fluidPressureRel)) ~= length(dataTable.fluidPressureRel)) %Check if all data is NaN
 					dat = data.fluidPressureRel;
-					dat = movmedian(dat, 9);
+					dat = movmedian(dat, 9, 'omitnan');
 					dataTable.fluidPressureRel = round(dat, 4);
 				end
 
@@ -467,7 +467,7 @@ classdef ExperimentsData < handle
 					dat = data.fluidInTemp;
 					dat = filloutliers(dat, 'nearest', 'movmedian', 180);
 					dat = fillmissing(dat, 'nearest');
-					dat = movmedian(dat, 600);
+					dat = movmedian(dat, 600, 'omitnan');
 					dataTable.fluidInTemp = round(dat, 2);
 				end
 
@@ -480,7 +480,7 @@ classdef ExperimentsData < handle
 					dat = data.fluidOutTemp;
 					dat = filloutliers(dat, 'nearest', 'movmedian', 180);
 					dat = fillmissing(dat, 'nearest');
-					dat = movmedian(dat, 600);
+					dat = movmedian(dat, 600, 'omitnan');
 					dataTable.fluidOutTemp = round(dat, 2);
 				end
 
@@ -493,7 +493,7 @@ classdef ExperimentsData < handle
 					dat = data.roomTemp;
 					dat = filloutliers(dat, 'nearest', 'movmedian', 180);
 					dat = fillmissing(dat, 'nearest');
-					dat = movmedian(dat, 600);
+					dat = movmedian(dat, 600, 'omitnan');
 					dataTable.roomTemp = round(dat, 2);
 				end
 
@@ -512,12 +512,12 @@ classdef ExperimentsData < handle
             % (nulled) value will be saved as rel.
             try
                 if (sum(isnan(dataTable.strainSensor1Pos)) == length(dataTable.strainSensor1Pos)) %Check if all absolute data is NaN
-                    dat = movmedian(data.strainSensor1Rel, 30);
+                    dat = movmedian(data.strainSensor1Rel, 30, 'omitnan');
                     dataTable.strainSensor1Pos = round(dat, 3);
                     
                     dataTable.strainSensor1Rel = round(dat - min(dat), 3);
                 else
-                    dat = movmedian(data.strainSensor1Pos, 30);
+                    dat = movmedian(data.strainSensor1Pos, 30, 'omitnan');
                     dataTable.strainSensor1Pos = round(dat, 3);
 
                     dataTable.strainSensor1Rel = round(dat - min(dat), 3);
@@ -529,12 +529,12 @@ classdef ExperimentsData < handle
             
             try
                 if (sum(isnan(dataTable.strainSensor2Pos)) == length(dataTable.strainSensor2Pos)) %Check if all absolute data is NaN
-                    dat = movmedian(data.strainSensor2Rel, 30);
+                    dat = movmedian(data.strainSensor2Rel, 30, 'omitnan');
                     dataTable.strainSensor2Pos = round(dat, 3);
                     
                     dataTable.strainSensor2Rel = round(dat - min(dat), 3);
                 else
-                    dat = movmedian(data.strainSensor2Pos, 30);
+                    dat = movmedian(data.strainSensor2Pos, 30, 'omitnan');
                     dataTable.strainSensor2Pos = round(dat, 3);
 
                     dataTable.strainSensor2Rel = round(dat - min(dat), 3);
