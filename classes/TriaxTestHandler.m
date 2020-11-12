@@ -97,8 +97,9 @@ classdef TriaxTestHandler < handle
 			%Retime if a particular timestep is given
 			if ~timestep == 0
 				start = dataTable.datetime(1);
-				time = (start:minutes(timestep):dataTable.datetime(end));
+				time = [(start:minutes(timestep):dataTable.datetime(end)) dataTable.datetime(end)];
 				dataTable = retime(dataTable, time, 'linear');
+				% dataTable = retime(dataTable, time, 'linear', 'IncludedEdge', 'right');
 			end
 			
             %Calculating differences
@@ -115,7 +116,8 @@ classdef TriaxTestHandler < handle
 				percentiles = [5 95];
 			end
 			
-            dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiffOrig, 'linear', 'percentile', percentiles);
+            % dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiffOrig, 'linear', 'percentile', percentiles);
+			dataTable.flowMassDiff = dataTable.flowMassDiffOrig;
             dataTable.flowMassDiff = fillmissing(dataTable.flowMassDiff, 'constant', 0);
             
             %Calculate comulated sum of mass differences
@@ -132,7 +134,7 @@ classdef TriaxTestHandler < handle
             dataTable.Properties.VariableUnits{'flowMassAcc'} = 'kg';
             dataTable.Properties.VariableDescriptions{'flowMassAcc'} = 'Accumulated fluid flow mass';
             dataTable.Properties.VariableUnits{'flowRate'} = 'm³/s';
-            dataTable.Properties.VariableDescriptions{'flowMassAcc'} = 'Flow rate through the sample';
+            dataTable.Properties.VariableDescriptions{'flowRate'} = 'Flow rate through the sample';
 			
 			%Save dataTable in object
             obj.experiment(experimentNo).calculatedData.flowMass.data = dataTable;
