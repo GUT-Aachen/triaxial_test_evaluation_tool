@@ -188,10 +188,7 @@ classdef MeridDB < handle
             %Extract the data, taking into account the maximum number of rows
             for i = 0:steps-1
 				if ~isempty(timeStart) && ~isempty(timeEnd)
-					dbQuery = char(strcat("SELECT * FROM `", tableName, "` WHERE `experiment_no`= ",int2str(experimentNo), " AND `time` BETWEEN STR_TO_DATE('", timeStart, "', '%Y/%m/%d %H:%i:%s') AND STR_TO_DATE('", timeEnd, "', '%Y/%m/%d %H:%i:%s') LIMIT ", int2str(i*selectionLimit) ,",", int2str(selectionLimit)));
-					% convert timeStart and timeEnd from UTC to MySQL system time to compare successfull to datetime values
-					% in table
-					%dbQuery = char(strcat("SELECT * FROM `", tableName, "` WHERE `experiment_no`= ",int2str(experimentNo), " AND `time` BETWEEN CONVERT_TZ(STR_TO_DATE('", timeStart, "', '%Y/%m/%d %H:%i:%s'), '+00:00', 'system') AND CONVERT_TZ(STR_TO_DATE('", timeEnd, "', '%Y/%m/%d %H:%i:%s'), '+00:00', 'system') LIMIT ", int2str(i*selectionLimit) ,",", int2str(selectionLimit)));
+					dbQuery = char(strcat("SELECT * FROM `", tableName, "` WHERE `experiment_no`= ",int2str(experimentNo), " LIMIT ", int2str(i*selectionLimit) ,",", int2str(selectionLimit)));
 					dbResult = select(dbConnection,dbQuery);
 				else
 					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
