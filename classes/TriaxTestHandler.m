@@ -147,7 +147,7 @@ classdef TriaxTestHandler < handle
 		
 		
 		
-		function result = catchGraphData(obj, experimentNo, label, timestep)
+		function result = catchGraphData(obj, experimentNo, label, range, timestep)
 		%Function catching a particular dataset and returning a struct of timetable, dataset label, dataset unit and a legend
 		%entry for a plot. The output timetable will be in the given timestep. A timestep is only necessary for permeability.
 		%In all other cases timestap is optional.
@@ -159,9 +159,12 @@ classdef TriaxTestHandler < handle
         %Returns a struct on success
 			
 			%Inputdata consistence checks            
-			if (nargin < 3 || nargin > 4)
+			if (nargin < 3 || nargin > 5)
 				error('%s: Not enough or too many input arguments. Two input parameters have to be handed over: experimentNo, label, timestep (optional)', class(obj));
 			elseif nargin == 3
+				range = [];
+				timestep = [];	
+			elseif nargin == 4
 				timestep = [];
 			end
 			
@@ -399,17 +402,18 @@ classdef TriaxTestHandler < handle
 					
 				end
 				
-				%Retime if a timestep is given
-% 				if ~isempty(timestep) && ~strcmp(result.label, 'NaN')
-% 					time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
-% 					result.data = retime(result.data, time, 'linear');
-% 					
-% 				elseif ~isempty(timestep) && strcmp(result.label, 'NaN')
-% 					time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
-% 					result.data = retime(result.data, time);
-% 					
-% 				end
-				
+
+				% Check if a timerange for the experiment shall be repsected
+				if ~isempty(range) && class(range) == "timerange"
+					result.data = result.data(range,:);
+					result.data.runtime = result.data.runtime - min(result.data.runtime);
+					
+					if label == "runtime"
+						result.data.runtime_1 = result.data.runtime_1 - min(result.data.runtime_1);
+					end
+					
+				end
+
 				result.legend = [result.label, ' [', result.unit,']'];
 				result.data.Properties.VariableNames = {'runtime', 'dataset'}; %renaming columns in result to be uniform
 			end
@@ -669,21 +673,32 @@ classdef TriaxTestHandler < handle
 			end
 		end
         
-		function result = getGraphData(obj, experimentNo, xValue, y1Value, y2Value, timestep)
+		function result = getGraphData(obj, experimentNo, xValue, y1Value, y2Value, timestep, fullRange)
 		%Returning a struct containing all necessary datasets and information for plotting a graph
 			%Inputdata consistence checks
 			%Check if there are two variables handed over
-			if nargin < 4 || nargin > 6
+			if nargin < 4 || nargin > 7
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
 			elseif nargin == 4
 				y2Value = [];
 				timestep = [];
+				fullRange = false;
 
 			elseif nargin == 5
 				timestep = [];
+				fullRange = false;
+				
+			elseif nargin == 6
+				fullRange = false;
 
 			end
-
+			
+			if fullRange			
+				range = [];
+			else
+				range = timerange(obj.experiment(experimentNo).metaData.timeStart, obj.experiment(experimentNo).metaData.timeEnd, 'closed');
+			end
+			
 			%Check if the variable experimentNo is valid
 			validateExpNo = obj.validateExperimentNoInput(experimentNo);
 			if ischar(validateExpNo)
@@ -691,7 +706,7 @@ classdef TriaxTestHandler < handle
 			end
 
 			if ~isempty(xValue) && ~strcmp(xValue, 'none')
-				xStruct = obj.catchGraphData(experimentNo, xValue, timestep);
+				xStruct = obj.catchGraphData(experimentNo, xValue, range, timestep);
 				result.x = xStruct;
 				result.x.data = xStruct.data.dataset;
 			else
@@ -699,7 +714,7 @@ classdef TriaxTestHandler < handle
 			end
 
 			if ~isempty(y1Value) && ~strcmp(y1Value, 'none')
-				y1Struct = obj.catchGraphData(experimentNo, y1Value, timestep);
+				y1Struct = obj.catchGraphData(experimentNo, y1Value, range, timestep);
 
 				result.y1 = y1Struct;
 				result.y1.data = y1Struct.data.dataset;
@@ -709,7 +724,7 @@ classdef TriaxTestHandler < handle
 			end
 
 			if ~isempty(y2Value) && ~strcmp(y2Value, 'none')
-				y2Struct = obj.catchGraphData(experimentNo, y2Value, timestep);
+				y2Struct = obj.catchGraphData(experimentNo, y2Value, range, timestep);
 
 				result.y2 = y2Struct;
 				result.y2.data = y2Struct.data.dataset;
