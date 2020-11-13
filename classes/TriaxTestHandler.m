@@ -626,41 +626,47 @@ classdef TriaxTestHandler < handle
         end
         
         
-        function result = loadExperiment(obj, experimentNo)
+        function result = loadExperiment(obj, experimentNoList)
         %Method to load a given experiment into the experiment struct.
         %
         %Input parameters:
         %   experimentNo : number of the experiment
         %Returns true if dataset is loaded
 			
-            %Check if the variable experimentNo is valid
-            validateExpNo = obj.validateExperimentNoInput(experimentNo);
-            if ischar(validateExpNo)
-                error('%s: %s is a string', class(obj), validateExpNo);
-            end
+			
+			for experimentNo = experimentNoList
+			
 		
-            try
-                %Load meta data
-                obj.experiment(experimentNo).metaData = obj.dbConnection.getMetaData(experimentNo);
-                %Load specimen data
-                specimenId = obj.experiment(experimentNo).metaData.specimenId;
-                obj.experiment(experimentNo).specimenData = obj.dbConnection.getSpecimenData(experimentNo, specimenId);
-                
-                %Load test data
-				%Limit test data to testing time from metadata
-				formatOut = 'yyyy/mm/dd HH:MM:SS';
-				timeStart = datestr(obj.experiment(experimentNo).metaData.timeStart, formatOut);
-				timeEnd = datestr(obj.experiment(experimentNo).metaData.timeEnd, formatOut);
-                obj.experiment(experimentNo).testData = obj.dbConnection.getExperimentData(experimentNo, timeStart, timeEnd); %, obj.experiment(experimentNo).metaData.timeStart, obj.experiment(experimentNo).metaData.timeEnd);
-                
-                %Set output variable to true if no error occured
-                result = true;
-            catch E
-                warning('%s: Experiment number %d cannot be loaded. An error accured while catching the dataset from database. \n(%s)', ...
-                    class(obj), experimentNo,  E.message);
-                
-                result = false;
-            end 
+				%Check if the variable experimentNo is valid
+				validateExpNo = obj.validateExperimentNoInput(experimentNo);
+				if ischar(validateExpNo)
+					error('%s: %s is a string', class(obj), validateExpNo);
+				end
+
+				try
+					%Load meta data
+					obj.experiment(experimentNo).metaData = obj.dbConnection.getMetaData(experimentNo);
+					%Load specimen data
+					specimenId = obj.experiment(experimentNo).metaData.specimenId;
+					obj.experiment(experimentNo).specimenData = obj.dbConnection.getSpecimenData(experimentNo, specimenId);
+
+					%Load test data
+					%Limit test data to testing time from metadata
+					formatOut = 'yyyy/mm/dd HH:MM:SS';
+					timeStart = datestr(obj.experiment(experimentNo).metaData.timeStart, formatOut);
+					timeEnd = datestr(obj.experiment(experimentNo).metaData.timeEnd, formatOut);
+					obj.experiment(experimentNo).testData = obj.dbConnection.getExperimentData(experimentNo, timeStart, timeEnd); %, obj.experiment(experimentNo).metaData.timeStart, obj.experiment(experimentNo).metaData.timeEnd);
+
+					%Set output variable to true if no error occured
+					result = true;
+				catch E
+					warning('%s: Experiment number %d cannot be loaded. An error accured while catching the dataset from database. \n(%s)', ...
+						class(obj), experimentNo,  E.message);
+
+					result = false;
+				end
+			
+			end
 		end
         
 		function result = getGraphData(obj, experimentNo, xValue, y1Value, y2Value, timestep)
