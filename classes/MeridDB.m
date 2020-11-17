@@ -150,7 +150,7 @@ classdef MeridDB < handle
         end
         
 
-        function result = catchFromDatabase(obj, experimentNo, tableName, timeStart, timeEnd)
+        function result = catchFromDatabase(obj, experimentNo, tableName)
         %Function reading data from database
         
             %Open connection to database
@@ -162,13 +162,8 @@ classdef MeridDB < handle
             selectionLimit = 50000; %maximum number of rows within one select query
 
             %Read the number of rows for the given experiment
-			if ~isempty(timeStart) && ~isempty(timeEnd)
-				dbQuery = ['SELECT COUNT(experiment_no) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo), ' AND `time` BETWEEN ''', timeStart, ''' AND ''', timeEnd, ''''];
-				dbResult = select(dbConnection,dbQuery);
-			else
-				dbQuery = strcat('SELECT COUNT(experiment_no) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo));
-				dbResult = select(dbConnection,dbQuery);
-			end
+			dbQuery = strcat('SELECT COUNT(experiment_no) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo));
+			dbResult = select(dbConnection,dbQuery);
 
             noRows = double(dbResult{1,1}); %total number of rows; cast as double for later calculation
 
@@ -187,13 +182,10 @@ classdef MeridDB < handle
 
             %Extract the data, taking into account the maximum number of rows
             for i = 0:steps-1
-				if ~isempty(timeStart) && ~isempty(timeEnd)
-					dbQuery = char(strcat("SELECT * FROM `", tableName, "` WHERE `experiment_no`= ",int2str(experimentNo), " LIMIT ", int2str(i*selectionLimit) ,",", int2str(selectionLimit)));
-					dbResult = select(dbConnection,dbQuery);
-				else
-					dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
-					dbResult = select(dbConnection,dbQuery);
-				end
+
+				dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
+				dbResult = select(dbConnection,dbQuery);
+
 
                 if (i == 0)
                     %Step 1: A data table is created
@@ -264,16 +256,10 @@ classdef MeridDB < handle
                         
         end
         
-        function result = getExperimentData(obj, experimentNo, timeStart, timeEnd)
+        function result = getExperimentData(obj, experimentNo)
         %Collect datasets from database, join and create object of
         %ExperimentsData-Class containing all datasets.
             import ExperimentsData.*
-            
-            %Check for correct input parameters     
-            if nargin == 2
-                timeStart = '';
-				timeEnd = '';
-            end
             
             if ~isnumeric(experimentNo)
                 error('%s: given experiment number is not numeric! Check if quotation marks used accidently.', class(obj));
@@ -283,9 +269,9 @@ classdef MeridDB < handle
             if (obj.experimentExists(experimentNo) == 0)
                 error('%s: selected experiment number (%d) does not exist', class(obj), experimentNo);
             else               
-                dataPeekel = obj.catchFromDatabase(experimentNo, 'peekel_data', timeStart, timeEnd);
-                dataScale = obj.catchFromDatabase(experimentNo, 'scale_fluid', timeStart, timeEnd);
-                dataPumps = obj.catchFromDatabase(experimentNo, 'pumps_sigma2-3', timeStart, timeEnd);
+                dataPeekel = obj.catchFromDatabase(experimentNo, 'peekel_data');
+                dataScale = obj.catchFromDatabase(experimentNo, 'scale_fluid');
+                dataPumps = obj.catchFromDatabase(experimentNo, 'pumps_sigma2-3');
                 
                 dataTable = obj.joinDataTables(dataPeekel, dataScale, dataPumps);
                 

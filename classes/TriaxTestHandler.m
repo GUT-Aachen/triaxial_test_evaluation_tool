@@ -147,7 +147,7 @@ classdef TriaxTestHandler < handle
 		
 		
 		
-		function result = catchGraphData(obj, experimentNo, label, range, timestep)
+		function result = catchGraphData(obj, experimentNo, label, timestep)
 		%Function catching a particular dataset and returning a struct of timetable, dataset label, dataset unit and a legend
 		%entry for a plot. The output timetable will be in the given timestep. A timestep is only necessary for permeability.
 		%In all other cases timestap is optional.
@@ -159,13 +159,10 @@ classdef TriaxTestHandler < handle
         %Returns a struct on success
 			
 			%Inputdata consistence checks            
-			if (nargin < 3 || nargin > 5)
+			if (nargin < 3 || nargin > 4)
 				error('%s: Not enough or too many input arguments. Two input parameters have to be handed over: experimentNo, label, timestep (optional)', class(obj));
 			elseif nargin == 3
-				range = [];
 				timestep = [];	
-			elseif nargin == 4
-				timestep = [];
 			end
 			
 			%Check if the variable experimentNo is valid
@@ -401,18 +398,6 @@ classdef TriaxTestHandler < handle
                 catch
 					
 				end
-				
-
-				% Check if a timerange for the experiment shall be repsected
-				if ~isempty(range) && class(range) == "timerange"
-					result.data = result.data(range,:);
-					result.data.runtime = result.data.runtime - min(result.data.runtime);
-					
-					if label == "runtime"
-						result.data.runtime_1 = result.data.runtime_1 - min(result.data.runtime_1);
-					end
-					
-				end
 
 				result.legend = [result.label, ' [', result.unit,']'];
 				result.data.Properties.VariableNames = {'runtime', 'dataset'}; %renaming columns in result to be uniform
@@ -503,6 +488,37 @@ classdef TriaxTestHandler < handle
 			
 		end
         
+		function result = setTimeRange(obj, experimentNo, range)
+			
+			if (nargin < 2 || nargin > 3)
+				error('%s: Not enough or too many input arguments. Two input parameters have to be handed over: experimentNo, range (optional)', class(obj));
+			elseif nargin == 1
+				range = "intern";	
+			end
+			
+			if ~isempty(range) && class(range) == "timerange"
+				obj.experiment(experimentNo).testData.updateDataTable(range);
+				result = true;
+				
+			elseif ~isempty(range) && isstring(range)
+				if range == "intern"
+					range = timerange(obj.experiment(experimentNo).metaData.timeStart, obj.experiment(experimentNo).metaData.timeEnd, 'closed');
+					obj.experiment(experimentNo).testData.updateDataTable(range);
+					result = true;
+				else
+					warn('%s: Unknown command for parameter range. Range can be "intern" or a timerange.', class(obj));
+					result = false;
+				end
+			
+			elseif isempty(range)
+				obj.experiment(experimentNo).testData.updateDataTable(range);
+				result = true;
+				
+			end
+			
+		end
+			
+		
 		function density = waterDensity(obj, temp)
         %Function to calculate the density of water at a specific temperature.
         %Input parameters:
@@ -654,13 +670,13 @@ classdef TriaxTestHandler < handle
 					specimenId = obj.experiment(experimentNo).metaData.specimenId;
 					obj.experiment(experimentNo).specimenData = obj.dbConnection.getSpecimenData(experimentNo, specimenId);
 
-					%Load test data
-					%Limit test data to testing time from metadata
-					formatOut = 'yyyy/mm/dd HH:MM:SS';
-					timeStart = datestr(obj.experiment(experimentNo).metaData.timeStart, formatOut);
-					timeEnd = datestr(obj.experiment(experimentNo).metaData.timeEnd, formatOut);
-					obj.experiment(experimentNo).testData = obj.dbConnection.getExperimentData(experimentNo, timeStart, timeEnd); %, obj.experiment(experimentNo).metaData.timeStart, obj.experiment(experimentNo).metaData.timeEnd);
-
+					%Load test data					
+					obj.experiment(experimentNo).testData = obj.dbConnection.getExperimentData(experimentNo); %, obj.experiment(experimentNo).metaData.timeStart, obj.experiment(experimentNo).metaData.timeEnd);
+					obj.setTimeRange(experimentNo, "intern");
+					
+					% Clear claculated data
+					obj.experiment(experimentNo).calculatedData = [];
+					
 					%Set output variable to true if no error occured
 					result = true;
 				catch E
@@ -673,30 +689,19 @@ classdef TriaxTestHandler < handle
 			end
 		end
         
-		function result = getGraphData(obj, experimentNo, xValue, y1Value, y2Value, timestep, fullRange)
+		function result = getGraphData(obj, experimentNo, xValue, y1Value, y2Value, timestep)
 		%Returning a struct containing all necessary datasets and information for plotting a graph
 			%Inputdata consistence checks
 			%Check if there are two variables handed over
-			if nargin < 4 || nargin > 7
-				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
+			if nargin < 4 || nargin > 6
+				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo, xValue, y1Value, y2Value, timestep', class(obj));
 			elseif nargin == 4
 				y2Value = [];
 				timestep = [];
-				fullRange = false;
 
 			elseif nargin == 5
 				timestep = [];
-				fullRange = false;
-				
-			elseif nargin == 6
-				fullRange = false;
 
-			end
-			
-			if fullRange			
-				range = [];
-			else
-				range = timerange(obj.experiment(experimentNo).metaData.timeStart, obj.experiment(experimentNo).metaData.timeEnd, 'closed');
 			end
 			
 			%Check if the variable experimentNo is valid
@@ -706,7 +711,7 @@ classdef TriaxTestHandler < handle
 			end
 
 			if ~isempty(xValue) && ~strcmp(xValue, 'none')
-				xStruct = obj.catchGraphData(experimentNo, xValue, range, timestep);
+				xStruct = obj.catchGraphData(experimentNo, xValue, timestep);
 				result.x = xStruct;
 				result.x.data = xStruct.data.dataset;
 			else
@@ -714,7 +719,7 @@ classdef TriaxTestHandler < handle
 			end
 
 			if ~isempty(y1Value) && ~strcmp(y1Value, 'none')
-				y1Struct = obj.catchGraphData(experimentNo, y1Value, range, timestep);
+				y1Struct = obj.catchGraphData(experimentNo, y1Value, timestep);
 
 				result.y1 = y1Struct;
 				result.y1.data = y1Struct.data.dataset;
@@ -724,7 +729,7 @@ classdef TriaxTestHandler < handle
 			end
 
 			if ~isempty(y2Value) && ~strcmp(y2Value, 'none')
-				y2Struct = obj.catchGraphData(experimentNo, y2Value, range, timestep);
+				y2Struct = obj.catchGraphData(experimentNo, y2Value, timestep);
 
 				result.y2 = y2Struct;
 				result.y2.data = y2Struct.data.dataset;

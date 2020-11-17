@@ -13,28 +13,36 @@ classdef ExperimentsData < handle
 	
     properties (SetAccess = immutable, GetAccess = private)
         originalData; %Dataset as timetable
-        filteredData; %Filtered dataset as timetable
     end
     
     properties (SetAccess = immutable)
         experimentNo; %Experiment number of the data
         rows;         %Number of entries on originalData/filteredData
+	end
+
+	properties (SetAccess = private, GetAccess = private)
+        filteredData; %Filtered dataset as timetable
     end
     
     methods (Access = private)
-        function dataTable = organizeTableData(obj, data)
+        function dataTable = organizeTableData(obj, data, range)
         %This function is used to have specific names for each column, even
         %if the names in the database and therefore in the incomming data
         %stream changed. Additionaly the units, names and descriptions of
-        %the columns will be added.
-        
+        %the columns will be added.		
+
             %Check if all columns are present and add units and description
             try
                 %Initializing the timetable
+				
+				if ~isempty(range) && class(range) == "timerange"
+					data = data(range,:);
+				end
+				
                 dataTable = timetable(data.time);
                 dataTable.Properties.DimensionNames{1} = 'datetime';  
                 dataTable.datetime.Format = ('yyyy-MM-dd HH:mm:ss.SSS');
-                
+				
                 vD.roomTemp = 'continuous';
                 vD.roomPressureAbs= 'continuous';
                 vD.fluidInTemp= 'continuous';
@@ -386,12 +394,22 @@ classdef ExperimentsData < handle
         end
         
         
-        function dataTable = filterTableData(obj, data)
+        function dataTable = filterTableData(obj, data, range)
         %This function is used to filter most of the data
             
             %Prepare input for return, changed in data like filtering are
             %going to update the data in dataTable
             dataTable = data;
+			
+			if (nargin < 2 || nargin > 3)
+				error('%s: Not enough or too many input arguments. Two input parameters have to be handed over: data, range (optional)', class(obj));
+			elseif nargin == 2
+				range = [];
+			end
+			
+			if ~isempty(range) && class(range) == "timerange"
+				dataTable.data = dataTable.data(range,:);
+			end
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %PRESSURE
@@ -585,19 +603,37 @@ classdef ExperimentsData < handle
                 
             %Organize all data in the table: adding units and desciptions
             %Convert from table to timetable
-			disp(strcat(class(obj), {' - '},  {'Reorganizing experiments data'}));
-            data = obj.organizeTableData(data);
-            
-            %Filter all data
-			disp(strcat(class(obj), {' - '},  {'Filtering experiments data'}));
-            obj.filteredData = obj.filterTableData(data);
+            obj.updateDataTable;
             
             %Saving variables in actual object
             obj.experimentNo = experimentNo; 
             obj.rows = height(data);
             
-        end
+		end
         
+		function result = updateDataTable(obj, range)
+			
+			if (nargin < 1 || nargin > 2)
+				error('%s: Not enough or too many input arguments. Two input parameters have to be handed over: range (optional)', class(obj));
+			elseif nargin == 1
+				range = [];	
+			end
+			
+			%Saving original data in object
+            dataTable = obj.originalData;
+                
+            %Organize all data in the table: adding units and desciptions
+            %Convert from table to timetable
+			disp(strcat(class(obj), {' - '},  {'Reorganizing experiments data'}));
+            dataTable = obj.organizeTableData(dataTable, range);
+			
+			%Filter all data
+			disp(strcat(class(obj), {' - '},  {'Filtering experiments data'}));
+            obj.filteredData = obj.filterTableData(dataTable);
+			
+			result = true;
+		end
+		
         function fig = showDebugPlotSingle(obj, columnName)
         %Function to plot a single rows data as original and filtered data
         %When columnName parameter is 'all' then all filtered columns will
