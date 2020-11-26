@@ -197,7 +197,7 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getFlowMassData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'runtime';
-					result.unit = 'hh:mm'; %'hh:mm';
+					result.unit = 'hh:mm';
 					
 				case 'permeabilityCoeff'
 					dataLabel = 'permeabilityCoeff';
@@ -210,7 +210,7 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'permeability';
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'permeability';
+					result.label = 'permeability K';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'permeabilityDarcy'
@@ -218,7 +218,7 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.permeability = result.data.permeability ./ 9.86923E-13 ./ 0.001;
-					result.label = 'permeability';
+					result.label = 'permeability K';
 					result.unit = 'mD';
                 
 				case 'strainSensor'
@@ -286,21 +286,21 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.axialPressureRelTonnes = result.data.axialPressureRelTonnes;
-					result.label = 'compaction force';
+					result.label = 'compaction force F';
 					result.unit = 't';
 				
 				case 'hydrCylinderPressure'
 					dataLabel = 'hydrCylinderPressureRel';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'hydr. cylinder \sigma_1';
+					result.label = 'hydr. cylinder \sigma_cyl';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 				
 				case 'hydrCylinderPressureT'
 					dataLabel = 'axialPressureRelTonnes';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'hydr. cylinder \sigma_1';
+					result.label = 'hydr. cylinder \sigma_cyl';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 				
 				case 'hydrCylinderPressureMPa'  %Change values from bar to MPa
@@ -308,14 +308,14 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.hydrCylinderPressureRel = result.data.hydrCylinderPressureRel * 0.1;
-					result.label = 'hydr. cylinder pressure \sigma_1';
+					result.label = 'hydr. cylinder pressure \sigma_cyl';
 					result.unit = 'MPa';
 					
 				case 'fluidPressure'
 					dataLabel = 'fluidPressureRel';
 					dataTable = obj.getFlowMassData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'fluid flow pressure';
+					result.label = 'fluid flow pressure \sigma_u';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'confiningPressure'
@@ -351,7 +351,7 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'flowMassAcc';
 					dataTable = obj.getFlowMassData(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'flow mass';
+					result.label = 'flow mass m_u';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'flowMassDiff'
