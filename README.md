@@ -6,12 +6,12 @@ The tool was developed as part of a joint project called MERID (Microstructural 
 This tool consists of a backend and a frontend both assembled in MathWorks Matlab.
 The backend creates a connection to a MySQL-Database where the results of all experiments stored.
 
-![License: GNU](https://img.shields.io/github/license/froido/triaxial_test_evaluation_tool?style=flat-square)
-![License: GNU](https://img.shields.io/github/release-date/froido/triaxial_test_evaluation_tool?style=flat-square)
-![License: GNU](https://img.shields.io/github/v/release/froido/triaxial_test_evaluation_tool?style=flat-square)
+[![License: GNU](https://img.shields.io/github/license/froido/triaxial_test_evaluation_tool?style=flat-square&color=red)](LICENSE.md)
+[![Release: Date](https://img.shields.io/github/release-date/froido/triaxial_test_evaluation_tool?style=flat-square)](https://github.com/froido/triaxial_test_evaluation_tool/releases)
+[![Release: Version](https://img.shields.io/github/v/release/froido/triaxial_test_evaluation_tool?style=flat-square)](https://github.com/froido/triaxial_test_evaluation_tool/releases)
 
-![MathWorks Matlab](https://img.shields.io/static/v1?label=Mathworks&message=Matlab&color=blue&style=flat-square&logo=mathworks)
-![MySQL](https://img.shields.io/static/v1?label=Oracle&message=MySQL&color=blue&style=flat-square&logo=mysql)
+[![MathWorks Matlab](https://img.shields.io/static/v1?label=Mathworks&message=Matlab&color=blue&style=flat-square&logo=mathworks)](https://mathworks.com/)
+[![MySQL](https://img.shields.io/static/v1?label=Oracle&message=MySQL&color=blue&style=flat-square&logo=mysql)](https://www.oracle.com/de/mysql/)
 
 ---
 
@@ -116,7 +116,7 @@ Reach out to me at one of the following places!
 
 ## License
 
-![License: GNU](https://img.shields.io/github/license/froido/triaxial_test_evaluation_tool?style=flat-square)
+[![License: GNU](https://img.shields.io/github/license/froido/triaxial_test_evaluation_tool?style=flat-square&color=red)](LICENSE.md)
 This project is licensed under the GNU General Public License v3.0 - see [LICENSE.md](LICENSE.md) file for details
 
 ---
