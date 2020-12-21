@@ -6,9 +6,11 @@ The tool was developed as part of a joint project called MERID (Microstructural 
 This tool consists of a backend and a frontend both assembled in MathWorks Matlab.
 The backend creates a connection to a MySQL-Database where the results of all experiments stored.
 
-[![License: GNU](https://img.shields.io/github/license/froido/triaxial_test_evaluation_tool?style=flat-square&color=red)](LICENSE.md)
-[![Release: Date](https://img.shields.io/github/release-date/froido/triaxial_test_evaluation_tool?style=flat-square)](https://github.com/froido/triaxial_test_evaluation_tool/releases)
-[![Release: Version](https://img.shields.io/github/v/release/froido/triaxial_test_evaluation_tool?style=flat-square)](https://github.com/froido/triaxial_test_evaluation_tool/releases)
+[![License: GNU](https://img.shields.io/github/license/froido/triaxial_test_evaluation_tool?style=flat-square&color=red)](LICENSE.md) 
+[![Release: Date](https://img.shields.io/github/release-date/froido/triaxial_test_evaluation_tool?style=flat-square)](https://github.com/froido/triaxial_test_evaluation_tool/releases) 
+[![Release: Version](https://img.shields.io/github/v/release/froido/triaxial_test_evaluation_tool?style=flat-square)](https://github.com/froido/triaxial_test_evaluation_tool/releases) 
+[![DOI](https://zenodo.org/badge/206527480.svg)](https://zenodo.org/badge/latestdoi/206527480) 
+
 
 [![MathWorks Matlab](https://img.shields.io/static/v1?label=Mathworks&message=Matlab&color=blue&style=flat-square&logo=mathworks)](https://mathworks.com/)
 [![MySQL](https://img.shields.io/static/v1?label=Oracle&message=MySQL&color=blue&style=flat-square&logo=mysql)](https://www.oracle.com/de/mysql/)
