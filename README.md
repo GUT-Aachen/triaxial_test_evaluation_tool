@@ -19,7 +19,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
 ### Frontend (GUI)
 
- - List and overview all experiments in database
+ - List and overview of all experiments in database
  - Keep rock/soil parameters always in view
  - Check experiment descriptions and additional comments
  - Get an overview of important parameters and their connection
@@ -41,7 +41,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
  - Class oriented programming in Matlab
  - Connection to MySQL database
  - Interface between frontend (GUI) and MySQL database
- - Separate classes for handling experiments meta data `ExperimentsMetaData`, measured values `ExperimentsData`, rock/soil related data `ExperimentsSpecimenData`, MySQL database connection `MeridDB`, interface to frontend (GUI) `TriaxTestHandler`
+ - Separate classes for handling experiments metadata `ExperimentsMetaData`, measured values `ExperimentsData`, rock/soil related data `ExperimentsSpecimenData`, MySQL database connection `MeridDB`, interface to frontend (GUI) `TriaxTestHandler`
  - Measured data cleansing like filtering NaN values
  - Calculating permeability and permeability coefficient according to fluid (water) properties with help of <a href="https://github.com/isantosruiz" target="_blank">isantosruiz'</a> <a href="https://github.com/isantosruiz/water-properties" target="_blank">`water-properties`</a> repository.
 
@@ -50,7 +50,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
 ## Requirements
 
- - Matlab Version 2019b or newer
+ - Matlab Version 2020a or newer
  - [Matlab Curve Fitting Toolbox](https://de.mathworks.com/products/curvefitting.html) for permeability calculations
  - [JDBC MySQL Connector](https://dev.mysql.com/downloads/connector/j/) included in Matlab `javaclasspath` (dynamic or static)
  - Configured MySQL database engine (a script creating the database skeleton is [attached](sample/database_generation_script.sql) in this repository) which includes all triaxial test data sets
@@ -61,7 +61,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
  - Have a running MathWorks Matlab 2019b or higher engine with installed curve fitting toolbox.
  - Have a running MySQL engine with a database according to the needs of this tool. To create a valid database you can use the [batch file](sample/database_generation_script.sql) in this repository.
- - Download [JDBC MySQL Connector](https://dev.mysql.com/downloads/connector/j/) (platform indipendent version) to your local machine.
+ - Download [JDBC MySQL Connector](https://dev.mysql.com/downloads/connector/j/) (platform independent version) to your local machine.
  - Add JDBC MySQL Connector to `javaclasspath` dynamic part
   ```matlab
   >> javaaddpath('/your_folder/mysql-connector-java-8.0.20.jar')
@@ -76,7 +76,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
     /your_folder/mysql-connector-java-8.0.20.jar
   ```
- - Download latest release of Triaxial Test Evaluation Tool to your local machine and include the submodule `water-properties` additionaly. As an alternative you can clone the reposetory via
+ - Download the latest release of Triaxial Test Evaluation Tool to your local machine and include the submodule `water-properties` additionally. As an alternative you can clone the repository via
  `git clone --recurse-submodules --remote-submodules https://github.com/froido/triaxial_test_evaluation_tool.git`
  - Run `GUI.mlapp`
  
@@ -94,7 +94,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
 ## Additional Hints
 
- - Matlab has often problems with the timezone set in Oracle MySQL database under windows systems. CEST (German: MESZ) is unknown for Matlab, which leads to an error. Set the timezone manually to e.g. `+02:00`.
+ - Matlab has often problems with the timezone set in Oracle MySQL database under Windows systems. CEST (German: MESZ) is unknown for Matlab, which leads to an error. Set the timezone manually to e.g. `+02:00`.
  ```mysql
  SET GLOBAL time_zone = '+02:00';
  ```
