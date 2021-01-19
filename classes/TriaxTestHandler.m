@@ -104,7 +104,7 @@ classdef TriaxTestHandler < handle
             %Calculating differences
             dataTable.flowMassDiffOrig = [NaN; diff(dataTable.flowMass)]; %Calculate flowMass difference between to entrys
             dataTable.timeDiff = [NaN; diff(dataTable.runtime)]; %Calculate time difference between to entrys
-
+						
             %Identify the outliers only for large triaxial tests
 			%Size of the percentiles depends on the length of the experiment. Following numbers are empirically determinded.
 			if obj.experiment(experimentNo).metaData.testRigData.id == 1
@@ -1076,11 +1076,19 @@ classdef TriaxTestHandler < handle
 				
                 dataTable = synchronize(flowMassData, strainData(:,'strainSensorsMean')); 
                 
-				%Check if fluid outflow temperature exists. Otherwise a standard temperature of 18°C will be used for further
-				%calculations.
+				%Check if fluid outflow temperature exists. Otherwise fluid inflow or a standard temperature of 18°C 
+				%will be used for further calculations.
                 if isnan(dataTable.fluidOutTemp)
-                    dataTable.fluidOutTemp = zeros(size(dataTable,1),1)+18;
-                    disp([class(obj), ' - ', 'Fluid outflow temperature set to 18°C.']);
+                    
+					if isnan(dataTable.fluidInTemp)
+						dataTable.fluidOutTemp = zeros(size(dataTable,1),1)+18;
+						disp([class(obj), ' - ', 'Fluid outflow temperature set to 18°C.']);
+						
+					else
+						dataTable.fluidOutTemp = dataTable.fluidInTemp;
+	                    disp([class(obj), ' - ', 'Fluid outflow temperature set to inflow temperature.']);
+						
+					end
                 end
                 dataTable.fluidDensity = obj.waterDensity(dataTable.fluidOutTemp); %get fluid (water) density
 				dataTable.fluidViscosity = obj.waterViscosity(dataTable.fluidOutTemp); %get fluid (water) viscosity
@@ -1122,7 +1130,7 @@ classdef TriaxTestHandler < handle
 					permeability = dataTable;
 				else
 					permeability = dataTable(:,{'runtime'});
-					
+
 					permeability.permeability = dataTable.permeability;
 					permeability.Properties.VariableUnits{'permeability'} = 'm²';
 					permeability.Properties.VariableDescriptions{'permeability'} = 'Permeability';
@@ -1134,6 +1142,7 @@ classdef TriaxTestHandler < handle
 					permeability.alphaValue = dataTable.alpha;
 					permeability.Properties.VariableUnits{'alphaValue'} = '-';
 					permeability.Properties.VariableDescriptions{'alphaValue'} = 'Rebalancing factor to compare permeabilitys depending on the fluid temperature';
+					
 				end
 				
 				result = permeability;
