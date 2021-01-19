@@ -17,6 +17,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
 ---
 
+
 ## Features
 
 ### Frontend (GUI)
