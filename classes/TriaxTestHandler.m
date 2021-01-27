@@ -1139,6 +1139,27 @@ classdef TriaxTestHandler < handle
 					permeability.Properties.VariableUnits{'permeabilityCoeff'} = 'm/s';
 					permeability.Properties.VariableDescriptions{'permeabilityCoeff'} = 'Coefficient of permeability alpha corrected to 10°C';
 
+					% If permeability or permeabilityCoeff is 0 (no flow) value is replaced by NaN. The first value after 
+					% the last 0 is set to NaN.
+					for i = 1:numel(permeability.permeabilityCoeff)-1
+						if permeability.permeabilityCoeff(i) == 0
+							permeability.permeabilityCoeff(i) = NaN;
+							
+							if permeability.permeabilityCoeff(i+1) ~= 0
+								permeability.permeabilityCoeff(i+1) = NaN;
+							end
+						end
+						
+						if permeability.permeability(i) == 0
+							permeability.permeability(i) = NaN;
+							
+							if permeability.permeability(i+1) ~= 0
+								permeability.permeability(i+1) = NaN;
+							end
+						end
+						
+					end 
+					
 					permeability.alphaValue = dataTable.alpha;
 					permeability.Properties.VariableUnits{'alphaValue'} = '-';
 					permeability.Properties.VariableDescriptions{'alphaValue'} = 'Rebalancing factor to compare permeabilitys depending on the fluid temperature';
