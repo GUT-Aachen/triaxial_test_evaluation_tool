@@ -812,6 +812,10 @@ classdef ExperimentsData < handle
             dataTable.Properties.VariableUnits{'fluidOutTemp'} = tempData.Properties.VariableUnits{'fluidOutTemp'};
             dataTable.Properties.VariableDescriptions{'fluidOutTemp'} = tempData.Properties.VariableDescriptions{'fluidOutTemp'};
             
+			dataTable.fluidInTemp = tempData.fluidInTemp;
+            dataTable.Properties.VariableUnits{'fluidInTemp'} = tempData.Properties.VariableUnits{'fluidInTemp'};
+            dataTable.Properties.VariableDescriptions{'fluidInTemp'} = tempData.Properties.VariableDescriptions{'fluidInTemp'};
+			
             tempData= obj.getAllPressureRelative;
             dataTable.fluidPressureRel = tempData.fluidPressureRel;
             dataTable.Properties.VariableUnits{'fluidPressureRel'} = tempData.Properties.VariableUnits{'fluidPressureRel'};
