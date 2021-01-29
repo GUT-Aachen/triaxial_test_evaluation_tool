@@ -113,7 +113,9 @@ The backend creates a connection to a MySQL-Database where the results of all ex
 
 Reach out to me at one of the following places!
 
-- Website at <a href="http://www.geotechnik.rwth-aachen.de/index.php?section=Biebricher_en" target="_blank">`www.geotechnik.rwth-aachen.de`</a>
+- Website at <a href="https://www.gut.rwth-aachen.de/cms/Geotechnik/Das-Institut/Team/~liwvr/Sven-Biebricher/?lidx=1" target="_blank">`www.gut.rwth-aachen.de`</a>
+- <a href="https://orcid.org/0000-0001-9018-3485" target="_blank">ORCID</a>
+- <a href="https://www.xing.com/profile/SvenF_Biebricher" target="_blank">XING</a>
 
 ---
 
