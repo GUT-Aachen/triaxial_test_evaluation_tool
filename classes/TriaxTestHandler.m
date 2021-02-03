@@ -254,7 +254,7 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'permeabilityRel';
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.permeability = result.data.permeabilityRel ./ 9.86923E-13 ./ 0.001;
+					result.data.permeabilityRel = result.data.permeabilityRel ./ 9.86923E-13 ./ 0.001;
 					result.label = 'permeability K';
 					result.unit = 'mD';
                 
@@ -1209,11 +1209,17 @@ classdef TriaxTestHandler < handle
 					permeability.Properties.VariableUnits{'alphaValue'} = '-';
 					permeability.Properties.VariableDescriptions{'alphaValue'} = 'Rebalancing factor to compare permeabilitys depending on the fluid temperature';
 					
-					permeability.permeabilityCoeffRel = permeability.permeabilityCoeff - permeability.permeabilityCoeff(1);
+					if ~isnan(obj.experiment(experimentNo).metaData.initPermCoeff)
+						initPermCoeff = obj.experiment(experimentNo).metaData.initPermCoeff;
+					else
+						initPermCoeff = permeability.permeabilityCoeff(1);
+					end
+					
+					permeability.permeabilityCoeffRel = permeability.permeabilityCoeff - initPermCoeff;
 					permeability.Properties.VariableUnits{'permeabilityCoeffRel'} = 'm/s';
 					permeability.Properties.VariableDescriptions{'permeabilityCoeffRel'} = 'Changes of coefficient of permeability alpha corrected to 10°C, related to initial value';
 					
-					permeability.permeabilityRel = permeability.permeability - permeability.permeability(1);
+					permeability.permeabilityRel = permeability.permeability - min(permeability.permeability);
 					permeability.Properties.VariableUnits{'permeabilityRel'} = 'm²';
 					permeability.Properties.VariableDescriptions{'permeabilityRel'} = 'Changes of permeability related to initial value';
 					
