@@ -221,6 +221,13 @@ classdef TriaxTestHandler < handle
 					result.label = 'permeability k_{f, 10°C}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
+				case 'permeabilityCoeffRel'
+					dataLabel = 'permeabilityCoeffRel';
+					dataTable = obj.getPermeability(experimentNo, timestep);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'permeability \Delta k_{f, 10°C}';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					
 				case 'permeability'
 					dataLabel = 'permeability';
 					dataTable = obj.getPermeability(experimentNo, timestep);
@@ -228,11 +235,26 @@ classdef TriaxTestHandler < handle
 					result.label = 'permeability K';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
+				case 'permeabilityRel'
+					dataLabel = 'permeabilityRel';
+					dataTable = obj.getPermeability(experimentNo, timestep);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'permeability \Delta K';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					
 				case 'permeabilityDarcy'
 					dataLabel = 'permeability';
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.permeability = result.data.permeability ./ 9.86923E-13 ./ 0.001;
+					result.label = 'permeability K';
+					result.unit = 'mD';
+					
+				case 'permeabilityDarcyRel'
+					dataLabel = 'permeabilityRel';
+					dataTable = obj.getPermeability(experimentNo, timestep);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.data.permeability = result.data.permeabilityRel ./ 9.86923E-13 ./ 0.001;
 					result.label = 'permeability K';
 					result.unit = 'mD';
                 
@@ -449,8 +471,11 @@ classdef TriaxTestHandler < handle
 			obj.labelList = containers.Map;
 			obj.labelList('runtime') = 'Runtime';
 			obj.labelList('permeabilityCoeff') = 'Permeability Coefficient [m/s]';
+			obj.labelList('permeabilityCoeffRel') = 'Permeability Coefficient (relative) [m/s]';
 			obj.labelList('permeability') = 'Permeability [m²]';
+			obj.labelList('permeabilityRel') = 'Permeability (relative) [m²]';
 			obj.labelList('permeabilityDarcy') = 'Permeability [mD]';
+			obj.labelList('permeabilityDarcyRel') = 'Permeability (relative) [mD]';
 			obj.labelList('strainSensor') = 'Deformation [mm]';
 			obj.labelList('deformationPercentage') = 'Deformation [%]';
 			obj.labelList('deformationPerMil') = 'Deformation [‰]';
@@ -1063,6 +1088,11 @@ classdef TriaxTestHandler < handle
 			
             if nargin == 3
                 debug = false;
+				% check if timestep is a number value. Otherwise set to default (5 minutes)
+				if ~isnumeric(timestep) || isempty(timestep)
+					warning('%s: Set timestep to default: 5 minutes', class(obj));
+					timestep = 5;
+				end
 			end
             
             if nargin < 2
@@ -1178,6 +1208,14 @@ classdef TriaxTestHandler < handle
 					permeability.alphaValue = dataTable.alpha;
 					permeability.Properties.VariableUnits{'alphaValue'} = '-';
 					permeability.Properties.VariableDescriptions{'alphaValue'} = 'Rebalancing factor to compare permeabilitys depending on the fluid temperature';
+					
+					permeability.permeabilityCoeffRel = permeability.permeabilityCoeff - permeability.permeabilityCoeff(1);
+					permeability.Properties.VariableUnits{'permeabilityCoeffRel'} = 'm/s';
+					permeability.Properties.VariableDescriptions{'permeabilityCoeffRel'} = 'Changes of coefficient of permeability alpha corrected to 10°C, related to initial value';
+					
+					permeability.permeabilityRel = permeability.permeability - permeability.permeability(1);
+					permeability.Properties.VariableUnits{'permeabilityRel'} = 'm²';
+					permeability.Properties.VariableDescriptions{'permeabilityRel'} = 'Changes of permeability related to initial value';
 					
 				end
 				
