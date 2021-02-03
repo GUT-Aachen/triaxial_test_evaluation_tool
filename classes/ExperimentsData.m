@@ -529,34 +529,34 @@ classdef ExperimentsData < handle
             %relative deformation will be saved as abs and the corected
             % (nulled) value will be saved as rel.
             try
-                if (sum(isnan(dataTable.strainSensor1Pos)) == length(dataTable.strainSensor1Pos)) %Check if all absolute data is NaN
-                    dat = movmedian(data.strainSensor1Rel, 30, 'omitnan');
-                    dataTable.strainSensor1Pos = round(dat, 3);
-                    
-                    dataTable.strainSensor1Rel = round(dat - min(dat), 3);
-                else
-                    dat = movmedian(data.strainSensor1Pos, 30, 'omitnan');
-                    dataTable.strainSensor1Pos = round(dat, 3);
+				if (sum(isnan(dataTable.strainSensor1Rel)) == length(dataTable.strainSensor1Rel)) %Check if all relative data is NaN
+					if ~(sum(isnan(dataTable.strainSensor1Pos)) == length(dataTable.strainSensor1Pos)) %Check if all absolute data is NaN
+						dat = movmedian(data.strainSensor1Pos, 30, 'omitnan');
+						dataTable.strainSensor1Pos = round(dat, 3);
 
-                    dataTable.strainSensor1Rel = round(dat - min(dat), 3);
-                end
+						dataTable.strainSensor1Rel = round(dat - min(dat), 3);
+					end
+				else
+					dat = movmedian(data.strainSensor1Rel, 30, 'omitnan');
+					dataTable.strainSensor1Rel = round(dat, 3);
+				end
                 
             catch
                 warning('%s: Error while filtering strainSensor1Pos/strainSensor1Rel', class(obj));
             end
             
             try
-                if (sum(isnan(dataTable.strainSensor2Pos)) == length(dataTable.strainSensor2Pos)) %Check if all absolute data is NaN
-                    dat = movmedian(data.strainSensor2Rel, 30, 'omitnan');
-                    dataTable.strainSensor2Pos = round(dat, 3);
-                    
-                    dataTable.strainSensor2Rel = round(dat - min(dat), 3);
-                else
-                    dat = movmedian(data.strainSensor2Pos, 30, 'omitnan');
-                    dataTable.strainSensor2Pos = round(dat, 3);
+				if (sum(isnan(dataTable.strainSensor2Rel)) == length(dataTable.strainSensor2Rel)) %Check if all relative data is NaN
+					if ~(sum(isnan(dataTable.strainSensor2Pos)) == length(dataTable.strainSensor2Pos)) %Check if all absolute data is NaN
+						dat = movmedian(data.strainSensor2Pos, 30, 'omitnan');
+						dataTable.strainSensor2Pos = round(dat, 3);
 
-                    dataTable.strainSensor2Rel = round(dat - min(dat), 3);
-                end
+						dataTable.strainSensor2Rel = round(dat - min(dat), 3);
+					end
+				else
+					dat = movmedian(data.strainSensor2Rel, 30, 'omitnan');
+					dataTable.strainSensor2Rel = round(dat, 3);
+				end
             catch
                 warning('%s: Error while filtering strainSensor2Pos/strainSensor2Rel', class(obj));
             end
