@@ -297,7 +297,7 @@ classdef MeridDB < handle
                 dbConnection = obj.openConnection(obj.dbTableRaw);
                 
 				try
-                    dbQuery = strcat("SELECT `experiment_no`, `specimen_id`, `testRigId`, `description`, `comment`, `time_start`, `time_end`, `short`, `pressure_fluid`, `pressure_confining`, `assistant`, `pretest`, `const_head_diff` FROM experiments WHERE experiment_no = ",int2str(experimentNo));
+                    dbQuery = strcat("SELECT `experiment_no`, `specimen_id`, `testRigId`, `description`, `comment`, `time_start`, `time_end`, `short`, `pressure_fluid`, `pressure_confining`, `assistant`, `pretest`, `const_head_diff`, `init_perm_coeff` FROM experiments WHERE experiment_no = ",int2str(experimentNo));
                     dbResult = select(dbConnection,dbQuery);
                     
 					%Set timezone of metadata
@@ -307,7 +307,7 @@ classdef MeridDB < handle
                     if (isempty(dbResult))
                         warning('no metadata found for experiment!')
                     else
-                        dbResult.Properties.VariableNames = {'experimentNo' 'specimenId' 'testRigId' 'description' 'comment' 'timeStart' 'timeEnd' 'short' 'pressureFluid' 'pressureConfining' 'assistant' 'pretest' 'constHeadDiff'}; %renaming columns in result table to match camelCase
+                        dbResult.Properties.VariableNames = {'experimentNo' 'specimenId' 'testRigId' 'description' 'comment' 'timeStart' 'timeEnd' 'short' 'pressureFluid' 'pressureConfining' 'assistant' 'pretest' 'constHeadDiff' 'initPermCoeff'}; %renaming columns in result table to match camelCase
                         metaData.setMetaDataAsTable(dbResult);
                     end
                     
