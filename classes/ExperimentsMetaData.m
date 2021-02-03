@@ -24,6 +24,7 @@ classdef ExperimentsMetaData < handle
         metaDataTable; %Table containing all metadata from database
         timelog; %Table containing the time log for the given experiment: experiment_no, retrospective, time, description
 		testRigData; %Table containing all test rig information from database
+		initPermCoeff; %Proxyvariable for initial permeability coefficient in metadata.
         
     end
     
@@ -71,6 +72,7 @@ classdef ExperimentsMetaData < handle
 					obj.testRigData.Properties.VariableUnits{'axialCylinderKgMax'} = 'kg';
 					obj.testRigData.Properties.VariableUnits{'axialCylinderPMax'} = 'N/m²';
 					obj.testRigData.Properties.VariableUnits{'confiningPMax'} = 'N/m²';
+					obj.testRigData.Properties.VariableUnits{'initPermCoeff'} = 'm/s';
 
                     disp([class(obj), ': ', 'Test rig data set sucessfully']);
 
@@ -179,6 +181,10 @@ classdef ExperimentsMetaData < handle
         
 		function testRigData = get.testRigData(obj) 
             testRigData = obj.testRigData;
+		end
+		
+		function initPermCoeff = get.initPermCoeff(obj) 
+            initPermCoeff = obj.metaDataTable.initPermCoeff;
 		end
 		
         function timelog = get.timelog(obj) 
