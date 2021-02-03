@@ -101,32 +101,47 @@ classdef TriaxTestHandler < handle
 				dataTable = retime(dataTable, time);
 			end
 			
+			%Check which fluid temp is available
+			%Use out temp if available, otherwise use in temp or fixed temp of 20°C
+			if ~isnan(dataTable.fluidOutTemp)
+				dataTable.fluidTemp = dataTable.fluidOutTemp;
+			elseif ~isnan(dataTable.fluidInTemp)
+				dataTable.fluidTemp = dataTable.fluidInTemp;
+			else
+				dataTable.fluidTemp(:) = 20;
+			end
+				
+			
             %Calculating differences
             dataTable.flowMassDiffOrig = [NaN; diff(dataTable.flowMass)]; %Calculate flowMass difference between to entrys
             dataTable.timeDiff = [NaN; diff(dataTable.runtime)]; %Calculate time difference between to entrys
-						
-            %Identify the outliers only for large triaxial tests
-			%Size of the percentiles depends on the length of the experiment. Following numbers are empirically determinded.
-			if obj.experiment(experimentNo).metaData.testRigData.id == 1
-				
-				durationHours = hours(obj.experiment(experimentNo).metaData.timeEnd - obj.experiment(experimentNo).metaData.timeStart);
-				if durationHours > 150
-					percentiles = [1 99];
-				else
-					percentiles = [5 95];
-				end
-				
-				dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiffOrig, 'linear', 'percentile', percentiles);
-			else
-				dataTable.flowMassDiff = dataTable.flowMassDiffOrig;
-			end
+			
+			%Identify and delete negative flow mass differences which indicate a reset of the water tank volume
+			dataTable.flowMassDiff = dataTable.flowMassDiffOrig;
+			dataTable.flowMassDiff(dataTable.flowMassDiff(:)<0)=nan;
+			
+%			%Identify the outliers only for large triaxial tests
+% 			%Size of the percentiles depends on the length of the experiment. Following numbers are empirically determinded.
+% 			if obj.experiment(experimentNo).metaData.testRigData.id == 1
+% 				
+% 				durationHours = hours(obj.experiment(experimentNo).metaData.timeEnd - obj.experiment(experimentNo).metaData.timeStart);
+% 				if durationHours > 150
+% 					percentiles = [1 99];
+% 				else
+% 					percentiles = [5 95];
+% 				end
+% 				
+% 				dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiffOrig, 'linear', 'percentile', percentiles);
+% 			else
+% 				dataTable.flowMassDiff = dataTable.flowMassDiffOrig;
+% 			end
 			
             
             %Calculate comulated sum of mass differences
             dataTable.flowMassAcc = cumsum(dataTable.flowMassDiff, 'omitnan');
 
             %Calculate flow rate
-            dataTable.flowRate = dataTable.flowMassDiff ./ obj.waterDensity(dataTable.fluidOutTemp) ./ seconds(dataTable.timeDiff);
+            dataTable.flowRate = dataTable.flowMassDiff ./ obj.waterDensity(dataTable.fluidTemp) ./ seconds(dataTable.timeDiff);
 
             %Create output timetable-variable
             dataTable.Properties.VariableUnits{'flowMassDiffOrig'} = 'kg';
