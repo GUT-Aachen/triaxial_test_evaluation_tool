@@ -49,7 +49,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
  - Separate classes for handling experiments metadata `ExperimentsMetaData`, measured values `ExperimentsData`, rock/soil related data `ExperimentsSpecimenData`, MySQL database connection `MeridDB`, interface to frontend (GUI) `TriaxTestHandler`
  - Measured data cleansing like filtering NaN values
  - Calculating permeability and permeability coefficient according to fluid (water) properties with help of <a href="https://github.com/isantosruiz" target="_blank">isantosruiz'</a> <a href="https://github.com/isantosruiz/water-properties" target="_blank">`water-properties`</a> repository.
- - Using [`BrewerMap`](https://github.com/DrosteEffect/BrewerMap) from [DrosteEffect](https://github.com/DrosteEffect) which provides all [ColorBrewer](https://colorbrewer2.org/) colorschemes (designed by[Cynthia A. Brewer](http://www.personal.psu.edu/cab38/)) for MATLAB.
+ - Using [`BrewerMap`](https://github.com/DrosteEffect/BrewerMap) from [DrosteEffect](https://github.com/DrosteEffect) which provides all [ColorBrewer](https://colorbrewer2.org/) colorschemes (designed by [Cynthia A. Brewer](http://www.personal.psu.edu/cab38/)) for MATLAB.
 
 
 ---
