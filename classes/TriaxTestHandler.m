@@ -504,9 +504,9 @@ classdef TriaxTestHandler < handle
 				thisPath = fileparts(which([mfilename('class'),'.m'])); %Get the folder of the actual class file
 				submodulePath = [thisPath, '/water-properties'];
 				addpath(submodulePath)  % Add sobmodule path
-				obj.waterProperties = water_properties;
-				obj.waterProperties.density = obj.waterProperties.rho; %Load water properties as struct
-				obj.waterProperties.viscosity = obj.waterProperties.nu; %Load water properties as struct
+				obj.waterProperties = water;
+				% obj.waterProperties.density = obj.waterProperties.rho; %Load water properties as struct
+				% obj.waterProperties.viscosity = obj.waterProperties.nu; %Load water properties as struct
             catch E
 				error('%s: Error while loading water_properties() from submodule water-properties/water-properties.m The submodule water-properties is missing. Get it from https://github.com/isantosruiz/water-properties \n(%s)', ...
                     class(obj), E.message);
