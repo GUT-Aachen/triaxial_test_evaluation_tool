@@ -4,3 +4,6 @@
 [submodule "BrewerMap"]
 	path = classes/BrewerMap
 	url = https://github.com/DrosteEffect/BrewerMap
+[submodule "classes/BrewerMap"]
+	path = classes/BrewerMap
+	url = https://github.com/DrosteEffect/BrewerMap
