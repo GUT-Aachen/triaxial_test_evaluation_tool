@@ -1,5 +1,7 @@
 # Triaxial Test Evaluation Tool
 
+<img align="left" src = "logo.png" height=280>
+
 > With this evaluation tool you can check and interpret the results of a modified <a href="https://en.wikipedia.org/wiki/Triaxial_shear_test" target="_blank">`geotechnical triaxial test`</a>.
 With this appliance it is possible to confine a probe, rise the axial stress and measure the permeability of the probe at all stages.
 The tool was developed as part of a joint project called MERID (Microstructural Influence on Reservoir Integrity at Variable Hydromechanical Conditions) funded by the German Federal Ministry of Education and Research as part of GEO:N Project ([Geoforschung für Nachhaltigkeit](https://www.bmbf.de/de/geoforschung-2398.html)) to evaluate the results of a special assembled large triaxial cell.
@@ -47,7 +49,7 @@ The backend creates a connection to a MySQL-Database where the results of all ex
  - Separate classes for handling experiments metadata `ExperimentsMetaData`, measured values `ExperimentsData`, rock/soil related data `ExperimentsSpecimenData`, MySQL database connection `MeridDB`, interface to frontend (GUI) `TriaxTestHandler`
  - Measured data cleansing like filtering NaN values
  - Calculating permeability and permeability coefficient according to fluid (water) properties with help of <a href="https://github.com/isantosruiz" target="_blank">isantosruiz'</a> <a href="https://github.com/isantosruiz/water-properties" target="_blank">`water-properties`</a> repository.
- - Using [`BrewerMap`](https://github.com/DrosteEffect/BrewerMap) from [DrosteEffect](https://github.com/DrosteEffect) which provides all [ColorBrewer](https://colorbrewer2.org/) colorschemes (designed by[Cynthia A. Brewer](http://www.personal.psu.edu/cab38/)) for MATLAB.
+ - Using [`BrewerMap`](https://github.com/DrosteEffect/BrewerMap) from [DrosteEffect](https://github.com/DrosteEffect) which provides all [ColorBrewer](https://colorbrewer2.org/) colorschemes (designed by [Cynthia A. Brewer](http://www.personal.psu.edu/cab38/)) for MATLAB.
 
 
 ---
