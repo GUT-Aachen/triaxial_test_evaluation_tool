@@ -225,7 +225,7 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'permeabilityCoeffRel';
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'permeability \Delta k_{f, 10°C}';
+					result.label = 'changes in permeability \Delta{k_{f, 10°C}}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'permeability'
@@ -239,7 +239,7 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'permeabilityRel';
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'permeability \Delta K';
+					result.label = 'changes in permeability \Delta{K}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'permeabilityDarcy'
@@ -255,7 +255,7 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.permeabilityRel = result.data.permeabilityRel ./ 9.86923E-13 ./ 0.001;
-					result.label = 'permeability K';
+					result.label = 'changes in permeability \Delta{K}';
 					result.unit = 'mD';
                 
 				case 'strainSensor'
