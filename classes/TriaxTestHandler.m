@@ -118,23 +118,20 @@ classdef TriaxTestHandler < handle
 			
 			%Identify and delete negative flow mass differences which indicate a reset of the water tank volume
 			dataTable.flowMassDiff = dataTable.flowMassDiffOrig;
-			dataTable.flowMassDiff(dataTable.flowMassDiff(:)<0)=nan;
+			dataTable.flowMassDiff(dataTable.flowMassDiff(:)<=0)=nan;
 			
-%			%Identify the outliers only for large triaxial tests
-% 			%Size of the percentiles depends on the length of the experiment. Following numbers are empirically determinded.
-% 			if obj.experiment(experimentNo).metaData.testRigData.id == 1
-% 				
-% 				durationHours = hours(obj.experiment(experimentNo).metaData.timeEnd - obj.experiment(experimentNo).metaData.timeStart);
-% 				if durationHours > 150
-% 					percentiles = [1 99];
-% 				else
-% 					percentiles = [5 95];
-% 				end
-% 				
-% 				dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiffOrig, 'linear', 'percentile', percentiles);
+			%Identify the outliers
+			%Size of the percentiles depends on the length of the experiment. Following numbers are empirically determinded.	
+% 			durationHours = hours(obj.experiment(experimentNo).metaData.timeEnd - obj.experiment(experimentNo).metaData.timeStart);
+% 			if durationHours > 150
+% 				percentiles = [1 99];
 % 			else
-% 				dataTable.flowMassDiff = dataTable.flowMassDiffOrig;
+% 				percentiles = [5 95];
 % 			end
+
+			dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiff, nan, 'grubb');
+			%dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiffOrig, 'linear', 'percentile', percentiles);
+
 			
             
             %Calculate comulated sum of mass differences
@@ -225,7 +222,7 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'permeabilityCoeffRel';
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'changes in permeability \Delta{k_{f, 10°C}}';
+					result.label = 'changes in permeability k_f / k_{f,0}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'permeability'
@@ -239,7 +236,7 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'permeabilityRel';
 					dataTable = obj.getPermeability(experimentNo, timestep);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'changes in permeability \Delta{K}';
+					result.label = 'changes in permeability K / K_0';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'permeabilityDarcy'
@@ -249,27 +246,19 @@ classdef TriaxTestHandler < handle
 					result.data.permeability = result.data.permeability ./ 9.86923E-13 ./ 0.001;
 					result.label = 'permeability K';
 					result.unit = 'mD';
-					
-				case 'permeabilityDarcyRel'
-					dataLabel = 'permeabilityRel';
-					dataTable = obj.getPermeability(experimentNo, timestep);
-					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.permeabilityRel = result.data.permeabilityRel ./ 9.86923E-13 ./ 0.001;
-					result.label = 'changes in permeability \Delta{K}';
-					result.unit = 'mD';
                 
 				case 'strainSensor'
 					dataLabel = 'strainSensorsMean';
 					dataTable = obj.getStrain(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'probe compaction \epsilon';
+					result.label = 'vertical strain \epsilon';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 				
 				case 'deformationPercentage'
 					dataLabel = 'deformationPercentage';
 					dataTable = obj.getStrain(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'probe compaction \epsilon';
+					result.label = 'vertical strain \epsilon';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'deformationPerMil'
@@ -277,28 +266,28 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getStrain(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.deformationPercentage = result.data.deformationPercentage * 10;
-					result.label = 'probe compaction \epsilon';
+					result.label = 'vertical strain \epsilon';
 					result.unit = '‰';
 					
 				case 'strainSensor1'
 					dataLabel = 'strainSensor1Rel';
 					dataTable = obj.getStrain(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'deformation sensor 1 \epsilon_1';
+					result.label = 'strain sensor 1 \epsilon_1';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 				
 				case 'strainSensor2'
 					dataLabel = 'strainSensor2Rel';
 					dataTable = obj.getStrain(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'deformation sensor 2 \epsilon_2';
+					result.label = 'strain sensor 2 \epsilon_2';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);				
 				
 				case 'axialPressure'
 					dataLabel = 'axialPressureRel';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'compaction pressure \sigma_1';
+					result.label = 'vertical stress \sigma_1';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 				
 				case 'axialPressureMPa'
@@ -306,7 +295,7 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.axialPressureRel = result.data.axialPressureRel * 10^-6;
-					result.label = 'compaction pressure \sigma_1';
+					result.label = 'vertical stress \sigma_1';
 					result.unit = 'MPa';
 					
 				case 'axialPressureBar'
@@ -314,7 +303,7 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.axialPressureRel = result.data.axialPressureRel * 10^-5;
-					result.label = 'compaction pressure \sigma_1';
+					result.label = 'vertical stress \sigma_1';
 					result.unit = 'bar';
 					
 					
@@ -325,6 +314,14 @@ classdef TriaxTestHandler < handle
 					result.data.axialPressureRelTonnes = result.data.axialPressureRelTonnes;
 					result.label = 'compaction force F';
 					result.unit = 't';
+					
+				case 'deviatoricStressMPa'
+					dataLabel = 'deviatoricStress';
+					dataTable = obj.getPressureData(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.data.deviatoricStress = result.data.deviatoricStress * 10^-6;
+					result.label = 'deviatoric stress (\sigma_1-\sigma_3)/2';
+					result.unit = 'MPa';
 				
 				case 'hydrCylinderPressure'
 					dataLabel = 'hydrCylinderPressureRel';
@@ -359,7 +356,7 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'confiningPressureRel';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'confining Pressure \sigma_{2/3}';
+					result.label = 'confining pressure \sigma_{2/3}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'confiningPressureMPa' %Change values from bar to MPa
@@ -367,7 +364,7 @@ classdef TriaxTestHandler < handle
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.confiningPressureRel = result.data.confiningPressureRel * 0.1;
-					result.label = 'confining Pressure \sigma_{2/3}';
+					result.label = 'confining pressure \sigma_{2/3}';
 					result.unit = 'MPa';
 					
 				case 'confiningPumpVolume'
@@ -471,19 +468,19 @@ classdef TriaxTestHandler < handle
 			obj.labelList = containers.Map;
 			obj.labelList('runtime') = 'Runtime';
 			obj.labelList('permeabilityCoeff') = 'Permeability Coefficient [m/s]';
-			obj.labelList('permeabilityCoeffRel') = 'Permeability Coefficient (relative) [m/s]';
+			obj.labelList('permeabilityCoeffRel') = 'Permeability Coefficient (relative) [-]';
 			obj.labelList('permeability') = 'Permeability [m²]';
-			obj.labelList('permeabilityRel') = 'Permeability (relative) [m²]';
+			obj.labelList('permeabilityRel') = 'Permeability (relative) [-]';
 			obj.labelList('permeabilityDarcy') = 'Permeability [mD]';
-			obj.labelList('permeabilityDarcyRel') = 'Permeability (relative) [mD]';
 			obj.labelList('strainSensor') = 'Deformation [mm]';
-			obj.labelList('deformationPercentage') = 'Deformation [%]';
-			obj.labelList('deformationPerMil') = 'Deformation [‰]';
+			obj.labelList('deformationPercentage') = 'Strain [%]';
+			obj.labelList('deformationPerMil') = 'Strain [‰]';
 			obj.labelList('strainSensor1') = 'Strain Sensor 1';
 			obj.labelList('strainSensor2') = 'Strain Sensor 2';
-			obj.labelList('axialPressure') = 'Compaction Pressure [kN/m^2]';
-			obj.labelList('axialPressureMPa') = 'Compaction Pressure [Mpa]';
-			obj.labelList('axialPressureBar') = 'Compaction Pressure [bar]';
+			obj.labelList('deviatoricStressMPa') = 'Deviatoric Stress [MPa]';
+			obj.labelList('axialPressure') = 'Vertical Stress [kN/m^2]';
+			obj.labelList('axialPressureMPa') = 'Vertical Stress [Mpa]';
+			obj.labelList('axialPressureBar') = 'Vertical Stress [bar]';
 			obj.labelList('axialForceT') = 'Compaction Force [t]';
 			obj.labelList('hydrCylinderPressure') = 'Hydr. Cylinder Pressure [bar]';
 			obj.labelList('hydrCylinderPressureMPa') = 'Hydr. Cylinder Pressure [MPa]';
@@ -764,7 +761,7 @@ classdef TriaxTestHandler < handle
 				result.y1 = y1Struct;
 				result.y1.data = y1Struct.data.dataset;
 
-				result.dataset = synchronize(xStruct.data(:,{'dataset'}), y1Struct.data(:,{'dataset'}), 'intersection');
+				result.dataset = synchronize(xStruct.data(:,{'dataset'}), y1Struct.data(:,{'dataset'}), 'intersection', 'fillwithmissing');
 				result.dataset.Properties.VariableNames = {'x', 'y1'}; %renaming columns in result to be uniform
 			end
 
@@ -1003,12 +1000,17 @@ classdef TriaxTestHandler < handle
 			
 			dataTable.axialPressureRel = (axialCylinderKgMax * 9.81 / axialCylinderPMax * dataTable.hydrCylinderPressureRel) ./ A;
 			dataTable.axialPressureRelTonnes = axialCylinderKgMax / axialCylinderPMax * dataTable.hydrCylinderPressureRel ./ 1000;
-
+			
+			dataTable.deviatoricStress = max((dataTable.axialPressureRel - dataTable.confiningPressureRel .* 0.1 .* 10^6) ./ 2, 0);  % hydrCylinderPressureRel
+			
 			dataTable.Properties.VariableUnits{'axialPressureRel'} = 'N/m^2';
-			dataTable.Properties.VariableDescriptions{'axialPressureRel'} = 'Axial pressure on probe';
+			dataTable.Properties.VariableDescriptions{'axialPressureRel'} = 'Axial pressure on sample';
 			
 			dataTable.Properties.VariableUnits{'axialPressureRelTonnes'} = 't';
-			dataTable.Properties.VariableDescriptions{'axialPressureRelTonnes'} = 'Axial force on probe in tonnes';
+			dataTable.Properties.VariableDescriptions{'axialPressureRelTonnes'} = 'Axial force on sample in tonnes';
+			
+			dataTable.Properties.VariableUnits{'deviatoricStress'} = 'N/m^2';
+			dataTable.Properties.VariableDescriptions{'deviatoricStress'} = 'Deviatoric stress on sample';
 		end
 		
 		function dataTable = getBassinPumpData(obj, experimentNo) 
@@ -1162,7 +1164,7 @@ classdef TriaxTestHandler < handle
 				
 				dataTable.permCoeff = ((dataTable.fluidFlowVolume ./ seconds(dataTable.timeDiff)) ... %calculate permeability coefficient
 					.* dataTable.probeHeigth) ./ (dataTable.deltaPressureHeight .* crossSecArea); 
-				dataTable.permCoeff = max(0, dataTable.permCoeff);
+				dataTable.permCoeff = max(0, dataTable.permCoeff);  % delete values smaller 0
 
 				%Normalize permeability to a reference temperature of 10 °C
 				dataTable.Itest = (0.02414 * 10.^((ones(size(dataTable.permCoeff)) * 247.8) ./ (dataTable.fluidOutTemp + 133)));
@@ -1211,16 +1213,21 @@ classdef TriaxTestHandler < handle
 					
 					if ~isnan(obj.experiment(experimentNo).metaData.initPermCoeff)
 						initPermCoeff = obj.experiment(experimentNo).metaData.initPermCoeff;
+						initPerm = initPermCoeff * dataTable.fluidViscosity(1);
 					else
 						initPermCoeff = permeability.permeabilityCoeff(1);
+						initPerm = initPermCoeff * dataTable.fluidViscosity(1);
 					end
 					
-					permeability.permeabilityCoeffRel = permeability.permeabilityCoeff - initPermCoeff;
-					permeability.Properties.VariableUnits{'permeabilityCoeffRel'} = 'm/s';
+					
+					
+					
+					permeability.permeabilityCoeffRel = permeability.permeabilityCoeff ./ initPermCoeff;
+					permeability.Properties.VariableUnits{'permeabilityCoeffRel'} = '-'; 
 					permeability.Properties.VariableDescriptions{'permeabilityCoeffRel'} = 'Changes of coefficient of permeability alpha corrected to 10°C, related to initial value';
 					
-					permeability.permeabilityRel = permeability.permeability - min(permeability.permeability);
-					permeability.Properties.VariableUnits{'permeabilityRel'} = 'm²';
+					permeability.permeabilityRel = permeability.permeability ./ initPerm;
+					permeability.Properties.VariableUnits{'permeabilityRel'} = '-';
 					permeability.Properties.VariableDescriptions{'permeabilityRel'} = 'Changes of permeability related to initial value';
 					
 				end
