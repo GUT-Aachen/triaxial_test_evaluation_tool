@@ -44,14 +44,10 @@ classdef ExperimentsData < handle
                 dataTable.datetime.Format = ('yyyy-MM-dd HH:mm:ss.SSS');
 				
                 vD.roomTemp = 'continuous';
-                vD.roomPressureAbs= 'continuous';
                 vD.fluidInTemp= 'continuous';
                 vD.fluidOutTemp= 'continuous';
-                vD.fluidPressureAbs= 'continuous';
                 vD.fluidPressureRel= 'continuous';
-                vD.hydrCylinderPressureAbs= 'continuous';
                 vD.hydrCylinderPressureRel= 'continuous';
-                vD.confiningPressureAbs= 'continuous';
                 vD.confiningPressureRel= 'continuous';
                 vD.strainSensor1Pos= 'step';
                 vD.strainSensor1Rel= 'step';
@@ -79,20 +75,6 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'roomTemp'} = '°C';
                 dataTable.Properties.VariableDescriptions{'roomTemp'} = 'Ambient air temperature';
                 
-                
-                %roomPressureAbs: air pressure
-                if ismember('room_p_abs', data.Properties.VariableNames)
-                    dataTable.roomPressureAbs = data.room_p_abs;
-                else
-                    dataTable.roomPressureAbs = NaN(size(data,1),1);
-                    warning('%s: Air pressure (roomPressureAbs) data missing. Added column filled with NaN.', class(obj));
-                end
-                if sum(isnan(dataTable.roomPressureAbs)) == size(data,1) 
-                    vD.roomPressureAbs = 'unset';
-                end
-                dataTable.Properties.VariableUnits{'roomPressureAbs'} = 'bar';
-                dataTable.Properties.VariableDescriptions {'roomPressureAbs'} = 'Atmospheric pressure';
-
                 %fluidInTemp: inflow fluid temperature
                 if ismember('fluid_in_t', data.Properties.VariableNames)
                     dataTable.fluidInTemp = data.fluid_in_t;
@@ -119,22 +101,10 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'fluidOutTemp'} = '°C';
                 dataTable.Properties.VariableDescriptions {'fluidOutTemp'} = 'Temperature of the fluid after flowing through, meassured on the scale.';
 
-                %fluidPressureAbs: abslute fluid pressure
-                if ismember('fluid_p_abs', data.Properties.VariableNames)
-                    dataTable.fluidPressureAbs = data.fluid_p_abs;
-                else
-                    dataTable.fluidPressureAbs = NaN(size(data,1),1);
-                    warning('%s: Fluid flow absolute pressure (fluidPressureAbs) data missing. Added column filled with NaN.', class(obj));
-                end
-                if sum(isnan(dataTable.fluidPressureAbs)) == size(data,1) 
-                    vD.fluidPressureAbs = 'unset';
-                end
-                dataTable.Properties.VariableUnits{'fluidPressureAbs'} = 'bar';
-                dataTable.Properties.VariableDescriptions {'fluidPressureAbs'} = 'Inflow pressure specimen (absolute value)';
 
                 %fluidPressureRel: relative fluid pressure
-                if ismember('fluid_p_rel', data.Properties.VariableNames)
-                    dataTable.fluidPressureRel = data.fluid_p_rel;
+                if ismember('fluid_in_p_rel', data.Properties.VariableNames)
+                    dataTable.fluidPressureRel = data.fluid_in_p_rel;
                 else
                     dataTable.fluidPressureRel = NaN(size(data,1),1);
                 end
@@ -144,19 +114,6 @@ classdef ExperimentsData < handle
                 end
                 dataTable.Properties.VariableUnits{'fluidPressureRel'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'fluidPressureRel'} = 'Inflow pressure specimen (relative value)';
-                
-                %hydrCylinderPressureAbs: absolute hydraulic cylinder pressure
-                if ismember('hydrCylinder_p_abs', data.Properties.VariableNames)
-                    dataTable.hydrCylinderPressureAbs = data.hydrCylinder_p_abs;
-                else
-                    dataTable.hydrCylinderPressureAbs = NaN(size(data,1),1);
-                    warning('%s: Hydraulic cynlinder absolute pressure (hydrCylinderPressureAbs) data missing. Added column filled with NaN.', class(obj));
-                end
-                if sum(isnan(dataTable.hydrCylinderPressureAbs)) == size(data,1) 
-                    vD.hydrCylinderPressureAbs = 'unset';
-                end
-                dataTable.Properties.VariableUnits{'hydrCylinderPressureAbs'} = 'bar';
-                dataTable.Properties.VariableDescriptions {'hydrCylinderPressureAbs'} = 'Operating pressure of the hydraulic cylinder (absolue value)';
 
                 %hydrCylinderPressureRel: relative hydraulic cylinder pressure
                 if ismember('hydrCylinder_p_rel', data.Properties.VariableNames)
@@ -170,29 +127,13 @@ classdef ExperimentsData < handle
                 end
                 dataTable.Properties.VariableUnits{'hydrCylinderPressureRel'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'hydrCylinderPressureRel'} = 'Operating pressure of the hydraulic cylinder (relative value)';
-                
-                %confiningPressureAbs: absolute confining pressure
-				%Sometimes the database returns the column name with an additional _1. This error is caught here.
-                if ismember('sigma2_3_p_abs', data.Properties.VariableNames)
-                    dataTable.confiningPressureAbs = data.sigma2_3_p_abs;
-				elseif ismember('sigma2_3_p_abs_1', data.Properties.VariableNames)
-                    dataTable.confiningPressureAbs = data.sigma2_3_p_abs_1;
-                else
-                    dataTable.confiningPressureAbs = NaN(size(data,1),1);
-                    warning('%s: Confining absolute pressure (confiningPressureAbs) data missing. Added column filled with NaN.', class(obj));
-                end
-                if sum(isnan(dataTable.confiningPressureAbs)) == size(data,1) 
-                    vD.confiningPressureAbs = 'unset';
-                end
-                dataTable.Properties.VariableUnits{'confiningPressureAbs'} = 'bar';
-                dataTable.Properties.VariableDescriptions {'confiningPressureAbs'} = 'Confining pressure in the bassin. Meassured at the inflow pipe (absolute value)';
 
                 %confiningPressureRel: relative confining pressure
 				%Sometimes the database returns the column name with an additional _1. This error is caught here.
-                if ismember('sigma2_3_p_rel', data.Properties.VariableNames) 
-                    dataTable.confiningPressureRel = data.sigma2_3_p_rel;
-				elseif ismember('sigma2_3_p_rel_1', data.Properties.VariableNames) 
-                    dataTable.confiningPressureRel = data.sigma2_3_p_rel_1;
+                if ismember('confining_p_rel', data.Properties.VariableNames) 
+                    dataTable.confiningPressureRel = data.confining_p_rel;
+				elseif ismember('confining_p_rel_1', data.Properties.VariableNames) % TODO: WHAT IS HAPPENING HERE?
+                    dataTable.confiningPressureRel = data.confining_p_rel_1;
                 else
                     dataTable.confiningPressureRel = NaN(size(data,1),1);
                     warning('%s: Confining relative pressure (confiningPressureRel) data missing. Added column filled with NaN.', class(obj));
@@ -373,9 +314,10 @@ classdef ExperimentsData < handle
                 %deformation related meassurements are stepwise
                 %volume in pumps is stepwise
                 %flowMass on scale is stepwise
-                dataTable.Properties.VariableContinuity = { vD.roomTemp ,vD.roomPressureAbs , ...
-                    vD.fluidInTemp ,vD.fluidOutTemp ,vD.fluidPressureAbs ,vD.fluidPressureRel , ...
-                    vD.hydrCylinderPressureAbs ,vD.hydrCylinderPressureRel ,vD.confiningPressureAbs ,vD.confiningPressureRel , ...
+				
+				dataTable.Properties.VariableContinuity = { vD.roomTemp , ...
+                    vD.fluidInTemp ,vD.fluidOutTemp ,vD.fluidPressureRel , ...
+                    vD.hydrCylinderPressureRel ,vD.confiningPressureRel , ...
                     vD.strainSensor1Pos ,vD.strainSensor1Rel ,vD.strainSensor2Pos , ...
                     vD.strainSensor2Rel ,vD.pump1Volume ,vD.pump1PressureRel ,vD.pump2Volume ,vD.pump2PressureRel , ...
                     vD.pump3Volume ,vD.pump3PressureRel ,vD.flowMass};
@@ -414,13 +356,7 @@ classdef ExperimentsData < handle
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %PRESSURE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            try
-				if (sum(isnan(dataTable.confiningPressureAbs)) ~= length(dataTable.confiningPressureAbs)) %Check if all absolute data is NaN
-					dat = data.confiningPressureAbs;
-					dat = movmedian(dat, 7, 'omitnan');
-					dataTable.confiningPressureAbs = round(dat, 2);
-				end
-				
+            try				
 				if (sum(isnan(dataTable.confiningPressureRel)) ~= length(dataTable.confiningPressureRel)) %Check if all relative data is NaN
 					dat = data.confiningPressureRel;
 					dat = movmedian(dat, 7, 'omitnan');
@@ -428,27 +364,11 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning('%s: error while filtering confiningPressureAbs/confiningPressureRel', class(obj));
-            end
+                warning('%s: error while filtering confiningPressureRel', class(obj));
+			end
+
             
             try
-				if (sum(isnan(dataTable.roomPressureAbs)) ~= length(dataTable.roomPressureAbs)) %Check if all data is NaN
-					dat = data.roomPressureAbs;
-					dat = movmedian(dat, 20, 'omitnan');
-					dataTable.roomPressureAbs = round(dat, 4);
-				end
-
-            catch
-                warning('%s: error while filtering roomPressureAbs', class(obj));
-            end
-            
-            try
-				if (sum(isnan(dataTable.hydrCylinderPressureAbs)) ~= length(dataTable.hydrCylinderPressureAbs)) %Check if all data is NaN
-					dat = data.hydrCylinderPressureAbs;
-					dat = movmedian(dat, 3, 'omitnan');
-					dataTable.hydrCylinderPressureAbs = round(dat, 2);
-				end
-
 				if (sum(isnan(dataTable.hydrCylinderPressureRel)) ~= length(dataTable.hydrCylinderPressureRel)) %Check if all data is NaN
 					dat = data.hydrCylinderPressureRel;
 					dat = movmedian(dat, 3, 'omitnan');
@@ -456,16 +376,10 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning('%s: Error while filtering hydrCylinderPressureAbs/hydrCylinderPressureRel', class(obj));
+                warning('%s: Error while filtering hydrCylinderPressureRel', class(obj));
             end
             
-            try
-				if (sum(isnan(dataTable.fluidPressureAbs)) ~= length(dataTable.fluidPressureAbs)) %Check if all data is NaN
-					dat = data.fluidPressureAbs;
-					dat =  movmedian(dat, 9, 'omitnan');
-					dataTable.fluidPressureAbs = round(dat, 4);
-				end
-				
+            try				
 				if (sum(isnan(dataTable.fluidPressureRel)) ~= length(dataTable.fluidPressureRel)) %Check if all data is NaN
 					dat = data.fluidPressureRel;
 					dat = movmedian(dat, 9, 'omitnan');
@@ -473,7 +387,7 @@ classdef ExperimentsData < handle
 				end
 
             catch
-                warning('%s: Error while filtering fluidPressureAbs/fluidPressureRel', class(obj));
+                warning('%s: Error while filtering fluidPressureRel', class(obj));
             end
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -753,15 +667,7 @@ classdef ExperimentsData < handle
             dataTable = obj.createTable();
             dataTable = [dataTable obj.filteredData(:,{'fluidPressureRel', 'hydrCylinderPressureRel', 'confiningPressureRel'})];
         end
-        
-        
-        function dataTable = getAllPressureAbsolute(obj)
-        %Returns a timetable containing all absolute pressure data: time, runtime
-        %fluidPressureAbs, hydrCylinderPressureAbs, confiningPressureAbs
-            dataTable = obj.createTable();
-            dataTable = [dataTable obj.filteredData(:,{'roomPressureAbs', 'fluidPressureAbs', 'hydrCylinderPressureAbs', 'confiningPressureAbs'})];
-		end
-        
+                
 		
         function dataTable = getDeformationRelative(obj)
         %Returns a timetable containing deformation data of the specimen: time, runtime
