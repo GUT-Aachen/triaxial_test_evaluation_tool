@@ -296,8 +296,8 @@ classdef TriaxTestHandler < handle
 					result.unit = 'bar';
 					
 					
-				case 'axialForceT'
-					dataLabel = 'axialPressureTonnes';
+				case 'axialForce'
+					dataLabel = 'axialForce';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.data.axialPressureTonnes = result.data.axialPressureTonnes;
@@ -314,13 +314,6 @@ classdef TriaxTestHandler < handle
 				
 				case 'hydrCylinderPressure'
 					dataLabel = 'hydrCylinderPressure';
-					dataTable = obj.getPressureData(experimentNo);
-					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'hydr. cylinder \sigma_cyl';
-					result.unit = dataTable.Properties.VariableUnits(dataLabel);
-				
-				case 'hydrCylinderPressureT'
-					dataLabel = 'axialPressureTonnes';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'hydr. cylinder \sigma_cyl';
@@ -477,10 +470,9 @@ classdef TriaxTestHandler < handle
 			obj.labelList('axialPressure') = 'Vertical Stress [kN/m^2]';
 			obj.labelList('axialPressureMPa') = 'Vertical Stress [Mpa]';
 			obj.labelList('axialPressureBar') = 'Vertical Stress [bar]';
-			obj.labelList('axialForceT') = 'Compaction Force [t]';
+			obj.labelList('axialForce') = 'Compaction Force [t]';
 			obj.labelList('hydrCylinderPressure') = 'Hydr. Cylinder Pressure [bar]';
 			obj.labelList('hydrCylinderPressureMPa') = 'Hydr. Cylinder Pressure [MPa]';
-% 			obj.labelList('hydrCylinderPressureT') = 'Hydr. Cylinder Force [t]';
 			obj.labelList('fluidInPressure') = 'Fluid Inflow Pressure';
 			obj.labelList('fluidOutPressure') = 'Fluid Outflow Pressure';
 			obj.labelList('confiningPressure') = 'Confining Pressure [bar]';
@@ -996,16 +988,26 @@ classdef TriaxTestHandler < handle
 			axialCylinderKgMax = obj.experiment(experimentNo).metaData.testRigData.axialCylinderKgMax;
 			axialCylinderPMax = obj.experiment(experimentNo).metaData.testRigData.axialCylinderPMax / 100000;
 			
-			dataTable.axialPressure = (axialCylinderKgMax * 9.81 / axialCylinderPMax * dataTable.hydrCylinderPressure) ./ A;
-			dataTable.axialPressureTonnes = axialCylinderKgMax / axialCylinderPMax * dataTable.hydrCylinderPressure ./ 1000;
+			
+            % TODO: TEST AXIAL FORCE
+            % distinction: use axial force if meassured, otherwise
+            % calculate from axial pressure
+            if sum(isnan(dataTable.axialForce) == size(dataTable.axialForce)
+                dataTable.axialForce = axialCylinderKgMax / axialCylinderPMax * dataTable.hydrCylinderPressure ./ 1000;                
+                dataTable.axialPressure = (axialCylinderKgMax * 9.81 / axialCylinderPMax * dataTable.hydrCylinderPressure) ./ A;
+            else
+                % keep axialForce and calculate axialPressure from
+                % axialForce
+                dataTable.axialPressure = axialForce ./ A;
+            end
 			
 			dataTable.deviatoricStress = max((dataTable.axialPressure - dataTable.confiningPressure .* 0.1 .* 10^6) ./ 2, 0);  % hydrCylinderPressure
 			
 			dataTable.Properties.VariableUnits{'axialPressure'} = 'N/m^2';
 			dataTable.Properties.VariableDescriptions{'axialPressure'} = 'Axial pressure on sample';
 			
-			dataTable.Properties.VariableUnits{'axialPressureTonnes'} = 't';
-			dataTable.Properties.VariableDescriptions{'axialPressureTonnes'} = 'Axial force on sample in tonnes';
+			dataTable.Properties.VariableUnits{'axialForce'} = 'N';
+			dataTable.Properties.VariableDescriptions{'axialForce'} = 'Axial force on sample in Newton';
 			
 			dataTable.Properties.VariableUnits{'deviatoricStress'} = 'N/m^2';
 			dataTable.Properties.VariableDescriptions{'deviatoricStress'} = 'Deviatoric stress on sample';

@@ -154,7 +154,7 @@ classdef ExperimentsData < handle
                     vD.axialForce = 'unset';
                 end
                 dataTable.Properties.VariableUnits{'axialForce'} = 'N';
-                dataTable.Properties.VariableDescriptions {'axialForce'} = 'Operating force of the hydraulic cylinder';
+                dataTable.Properties.VariableDescriptions {'axialForce'} = 'Axial force on sample in Newton';
 
                 
                 % confiningPressure:  confining pressure
