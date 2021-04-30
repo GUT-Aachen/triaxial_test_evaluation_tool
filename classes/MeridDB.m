@@ -1,22 +1,22 @@
 classdef MeridDB < handle
-    %Class to connect to the MERID MySQL Database with a JDBC Connector. It
-    %is mandatory to use the JDBC Connector, as the method 
-    %'runstoredprocedure' cannot be used with the ODBC Connector.
-	% All datetime values querried from the mysql database are UTC!
+% Class to connect to the MERID MySQL Database with a JDBC Connector. It
+% is mandatory to use the JDBC Connector, as the method 
+% 'runstoredprocedure' cannot be used with the ODBC Connector.
+%  All datetime values querried from the mysql database are UTC!
     
     properties (Constant = true)
-        dbTableRaw = 'data_raw';  %databasename for raw data
-        dbVendor = 'MySQL';  %database vendor for example MySQL or Oracle
+        dbTableRaw = 'data_raw';  % databasename for raw data
+        dbVendor = 'MySQL';  % database vendor for example MySQL or Oracle
     end
     
     properties (SetAccess = immutable)
-        dbUsername;  %username
-        dbServer;  %server adress
-        dbServerPort;  %server port        
+        dbUsername;  % username
+        dbServer;  % server adress
+        dbServerPort;  % server port        
     end
     
     properties (SetAccess = immutable, GetAccess = private)
-        dbPasswort;  %passwort
+        dbPasswort;  % passwort
     end
     
     properties (SetAccess = private)
@@ -27,8 +27,8 @@ classdef MeridDB < handle
     
     methods
         function obj = MeridDB(user, pass, ip, port)
-        %Constructor to establish a connection to the database.
-        %Credentials will be checked and connection tested.
+        % Constructor to establish a connection to the database.
+        % Credentials will be checked and connection tested.
            if (nargin == 4)
                
                obj.dbUsername = user;
@@ -36,7 +36,7 @@ classdef MeridDB < handle
                obj.dbServer = ip;
                obj.dbServerPort = port; 
                
-               %Try to connect to database
+               % Try to connect to database
                try
                    obj.dbConnectionRaw = obj.openConnection(obj.dbTableRaw);
                    obj.closeConnection(obj.dbConnectionRaw);
@@ -52,14 +52,14 @@ classdef MeridDB < handle
         
         %%
         function connection = openConnection(obj, dbTable)
-        %Method to open a particular database connection and check if
-        %the connection could be established. Otherwise a error is thrown
+        % Method to open a particular database connection and check if
+        % the connection could be established. Otherwise a error is thrown
         
             connection = database(dbTable,obj.dbUsername, ...
                        obj.dbPasswort,'Vendor',obj.dbVendor, 'Server',obj.dbServer, ...
                        'PortNumber',obj.dbServerPort);
             
-            %Check if the connection is established succesfull
+            % Check if the connection is established succesfull
             if (isopen(connection))
                 disp([class(obj), ': ', 'Connection established to: ', dbTable]);
 	                		
@@ -88,7 +88,7 @@ classdef MeridDB < handle
         end
         
         function closeConnection(obj, dbConnection)
-        %Method to close a particular database connection
+        % Method to close a particular database connection
             close(dbConnection);
             if (isopen(dbConnection))
                 error('%s: connection cannot be closed.', class(obj));
@@ -99,8 +99,8 @@ classdef MeridDB < handle
         
         %%
         function result = getExperiments(obj)           
-        %Method to get information about all existing experiments in the
-        %database.
+        % Method to get information about all existing experiments in the
+        % database.
             obj.dbConnectionRaw = obj.openConnection(obj.dbTableRaw);
         
             try
@@ -117,20 +117,20 @@ classdef MeridDB < handle
                 warning('%s: getExperiments without success \n(%s)', class(obj), E.message);
             end
             
-            %Close connection
+            % Close connection
             obj.closeConnection(obj.dbConnectionRaw);
             
         end
         
         
         function result = experimentExists(obj,experimentNo)
-        %Method to check if a experiment Exists in the MERID Database
+        % Method to check if a experiment Exists in the MERID Database
             disp([class(obj), ': ', 'Check if experiment exists'])
         
-            %Establish connection
+            % Establish connection
             obj.dbConnectionRaw = obj.openConnection(obj.dbTableRaw);
             
-            %Try to check if the experiment exists
+            % Try to check if the experiment exists
             try
                 dbQuery = strcat('SELECT experiment_no FROM experiments WHERE experiment_no= ',int2str(experimentNo));
                 dbResult = select(obj.dbConnectionRaw,dbQuery);
@@ -145,34 +145,34 @@ classdef MeridDB < handle
                 throw (E);
             end
             
-            %Close connection
+            % Close connection
             obj.closeConnection(obj.dbConnectionRaw);
         end
         
 
         function result = catchFromDatabase(obj, experimentNo, tableName)
-        %Function reading data from database
+        % Function reading data from database
         
-            %Open connection to database
+            % Open connection to database
             dbConnection = obj.openConnection(obj.dbTableRaw);
 
-            %Experiments data have to be read in sequences of maximum
-            %50000 rows. Otherwise the connection will be shut down by
-            %matlab.
-            selectionLimit = 50000; %maximum number of rows within one select query
+            % Experiments data have to be read in sequences of maximum
+            % 50000 rows. Otherwise the connection will be shut down by
+            % matlab.
+            selectionLimit = 50000; % maximum number of rows within one select query
 
-            %Read the number of rows for the given experiment
+            % Read the number of rows for the given experiment
 			dbQuery = strcat('SELECT COUNT(experiment_no) FROM `', tableName , '` WHERE `experiment_no`=',int2str(experimentNo));
 			dbResult = select(dbConnection,dbQuery);
 
             noRows = double(dbResult{1,1}); %total number of rows; cast as double for later calculation
 
-            %Calculate the steps. Sometimes there is a problem when there
-            %are too few lines. For this reason, you must check whether
-            %the number of steps required is at least 1. Besides
-            %noRows has to be casted as non integer. Otherwise the
-            %division will be automatically round mathematically correct
-            %and ceil() is useless.
+            % Calculate the steps. Sometimes there is a problem when there
+            % are too few lines. For this reason, you must check whether
+            % the number of steps required is at least 1. Besides
+            % noRows has to be casted as non integer. Otherwise the
+            % division will be automatically round mathematically correct
+            % and ceil() is useless.
             steps = ceil(noRows/selectionLimit);
             if (steps == 0)
                 steps = 1;
@@ -180,7 +180,7 @@ classdef MeridDB < handle
 
             disp([class(obj), ': ', '(#', int2str(experimentNo) ,') Fetching data from `', tableName, '` in ', int2str(steps), ' steps (', int2str(noRows) , ' rows).']);
 
-            %Extract the data, taking into account the maximum number of rows
+            % Extract the data, taking into account the maximum number of rows
             for i = 0:steps-1
 
 				dbQuery = char(strcat('SELECT * FROM `', tableName, '` WHERE `experiment_no`= ',int2str(experimentNo), ' LIMIT ',{' '}, int2str(i*selectionLimit) ,',', int2str(selectionLimit)));
@@ -188,17 +188,17 @@ classdef MeridDB < handle
 
 
                 if (i == 0)
-                    %Step 1: A data table is created
+                    % Step 1: A data table is created
                     dataTable = dbResult;
                 else
-                    %Step X: The dataTable is extended by the new data
+                    % Step X: The dataTable is extended by the new data
                     dataTable = union(dataTable, dbResult);
                 end
 
                 disp([class(obj), ': ', 'Fetching data - Step ', int2str(i+1), ' finished']);
             end
             
-            %Close connection to database
+            % Close connection to database
             obj.closeConnection(dbConnection);
             
             result = dataTable;            
@@ -206,11 +206,11 @@ classdef MeridDB < handle
 
         
         function result = joinDataTables(obj, dataPeekel, dataScale, dataPumps)
-        %Recast data from table to timetable and join them without data loss
+        % Recast data from table to timetable and join them without data loss
             
             syncable = 0;
         
-            %Check if table is not empty. Otherwise a recast would fail
+            % Check if table is not empty. Otherwise a recast would fail
             if ~isempty(dataPeekel)
                 dataPeekel.time = datetime(dataPeekel.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS', 'TimeZone', 'UTC');
                 dataPeekel = removevars(dataPeekel, 'experiment_no');
@@ -257,15 +257,15 @@ classdef MeridDB < handle
         end
         
         function result = getExperimentData(obj, experimentNo)
-        %Collect datasets from database, join and create object of
-        %ExperimentsData-Class containing all datasets.
+        % Collect datasets from database, join and create object of
+        % ExperimentsData-Class containing all datasets.
             import ExperimentsData.*
             
             if ~isnumeric(experimentNo)
                 error('%s: given experiment number is not numeric! Check if quotation marks used accidently.', class(obj));
             end
             
-            %Check if the given experiment exists
+            % Check if the given experiment exists
             if (obj.experimentExists(experimentNo) == 0)
                 error('%s: selected experiment number (%d) does not exist', class(obj), experimentNo);
             else               
@@ -282,25 +282,25 @@ classdef MeridDB < handle
         end
         
         function result = getMetaData(obj, experimentNo)
-        %Function to get experiment data from database
+        % Function to get experiment data from database
             import ExperimentsMetaData.*
             
-            %Check if the given experiment exists
+            % Check if the given experiment exists
             if (obj.experimentExists(experimentNo) == 0)
                 result = 0;
                 warning('%s: No metadata for the experiment found', class(obj));
             else
-                %Create metaData object
+                % Create metaData object
                 metaData = ExperimentsMetaData(experimentNo);  
                 
-                %Open connection to database
+                % Open connection to database
                 dbConnection = obj.openConnection(obj.dbTableRaw);
                 
 				try
                     dbQuery = strcat("SELECT `experiment_no`, `specimen_id`, `testRigId`, `description`, `comment`, `time_start`, `time_end`, `short`, `pressure_fluid`, `pressure_confining`, `assistant`, `pretest`, `const_head_diff`, `init_perm_coeff` FROM experiments WHERE experiment_no = ",int2str(experimentNo));
                     dbResult = select(dbConnection,dbQuery);
                     
-					%Set timezone of metadata
+					% Set timezone of metadata
 					dbResult.time_start = datetime(dbResult.time_start, 'TimeZone', 'UTC');
 					dbResult.time_end = datetime(dbResult.time_end, 'TimeZone', 'UTC');
 					
@@ -353,19 +353,19 @@ classdef MeridDB < handle
                     
                 result = metaData;
 
-                %Close connection to database
+                % Close connection to database
                 obj.closeConnection(dbConnection);
             end
         end
         
         function result = getSpecimenData(obj, experimentNo, specimenId)
-        %Function to get specimen and rock data from database
+        % Function to get specimen and rock data from database
             import ExperimentsSpecimenData.*
             
-            %Open connection to database
+            % Open connection to database
             dbConnection = obj.openConnection(obj.dbTableRaw);
 
-            %Create specimenData object
+            % Create specimenData object
             specimenData = ExperimentsSpecimenData(experimentNo);  
 
             try
@@ -390,7 +390,7 @@ classdef MeridDB < handle
 
             result = specimenData;
 
-            %Close connection to database
+            % Close connection to database
             obj.closeConnection(dbConnection);
 
 		end

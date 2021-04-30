@@ -1,54 +1,54 @@
 classdef ExperimentsSpecimenData < handle
-%Class to handle the rock data of MERID triaxial experiments. The
-%experiment number has to be given while creating the class object.
-%All metadata information like start and end time, comments or a
-%description can be read directly from the class.
-%Within the class the data will be saved in a table (metaDataTable). All
-%depending variables like (description, short, etc.) are empty. They are some kind of
-%proxy values to be able to work with the values as if they where saved in
-%the variables.
+% Class to handle the rock data of MERID triaxial experiments. The
+% experiment number has to be given while creating the class object.
+% All metadata information like start and end time, comments or a
+% description can be read directly from the class.
+% Within the class the data will be saved in a table (metaDataTable). All
+% depending variables like (description, short, etc.) are empty. They are some kind of
+% proxy values to be able to work with the values as if they where saved in
+% the variables.
     
     properties (SetAccess = immutable)
-        experimentNo; %Number of the experiment the data in this object contains to.
+        experimentNo;  % Number of the experiment the data in this object contains to.
     end
     
     properties (SetAccess = private)
-        specimen; %Proxyvariable for name of specimen in rockdata. Data is only saved in rockDataTable.
-        rockType; %Proxyvariable for name of rock in rockdata. Data is only saved in rockDataTable.
-        rockDescription; %Proxyvariable for rock description in rockdata. Data is only saved in rockDataTable.
-        height; %Proxyvariable for height of specimen in rockdata. Data is only saved in rockDataTable.
-        diameter; %Proxyvariable for diameter of specimen in rockdata. Data is only saved in rockDataTable.
-        massSaturated; %Proxyvariable for mass of saturated specimen in rockdata. Data is only saved in rockDataTable.
-        massWet; %Proxyvariable for mass of wet specimen in rockdata. Data is only saved in rockDataTable.
-        massDry; %Proxyvariable for mass of dry specimen in rockdata. Data is only saved in rockDataTable.
-        rockDensityWet; %Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
-        rockDensitySaturated; %Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
-        rockDensityDry; %Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
-        rockDensityGrain; %Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
+        specimen;  % Proxyvariable for name of specimen in rockdata. Data is only saved in rockDataTable.
+        rockType;  % Proxyvariable for name of rock in rockdata. Data is only saved in rockDataTable.
+        rockDescription;  % Proxyvariable for rock description in rockdata. Data is only saved in rockDataTable.
+        height;  % Proxyvariable for height of specimen in rockdata. Data is only saved in rockDataTable.
+        diameter;  % Proxyvariable for diameter of specimen in rockdata. Data is only saved in rockDataTable.
+        massSaturated;  % Proxyvariable for mass of saturated specimen in rockdata. Data is only saved in rockDataTable.
+        massWet;  % Proxyvariable for mass of wet specimen in rockdata. Data is only saved in rockDataTable.
+        massDry;  % Proxyvariable for mass of dry specimen in rockdata. Data is only saved in rockDataTable.
+        rockDensityWet;  % Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
+        rockDensitySaturated;  % Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
+        rockDensityDry;  % Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
+        rockDensityGrain;  % Proxyvariable for wet rock density in rockdata. Data is only saved in rockDataTable.
         densityDry;
         densitySaturated;
-        permeabilityCoefficient; %Proxyvariable for permeability coefficient of rock in rockdata. Data is only saved in rockDataTable.
-        porosity; %Proxyvariable for porosity of rock in rockdata. Data is only saved in rockDataTable.
-        voidRatio; %Proxyvariable for void ratio of rock in rockdata. Data is only saved in rockDataTable.
-        uniAxialCompressiveStrength; %Proxyvariable for uni axial compressive strength of rock in rockdata. Data is only saved in rockDataTable.
-        uniAxialEModulus; %Proxyvariable for e module of uni axial compressive strength test of rock in rockdata. Data is only saved in rockDataTable.
+        permeabilityCoefficient;  % Proxyvariable for permeability coefficient of rock in rockdata. Data is only saved in rockDataTable.
+        porosity;  % Proxyvariable for porosity of rock in rockdata. Data is only saved in rockDataTable.
+        voidRatio;  % Proxyvariable for void ratio of rock in rockdata. Data is only saved in rockDataTable.
+        uniAxialCompressiveStrength;  % Proxyvariable for uni axial compressive strength of rock in rockdata. Data is only saved in rockDataTable.
+        uniAxialEModulus;  % Proxyvariable for e module of uni axial compressive strength test of rock in rockdata. Data is only saved in rockDataTable.
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
-		dataTable; %Table containing all rockdata from database
+		dataTable;  % Table containing all rockdata from database
 	end
     
     methods
         function obj = ExperimentsSpecimenData(experimentNo)
-        %The experiment number (immutable) has to be set int the constructor and can
-        %not be changed later.
+        % The experiment number (immutable) has to be set int the constructor and can
+        % not be changed later.
             obj.experimentNo = experimentNo;
         end
         
-        %SETTER
+        % SETTER
         function obj = setDataAsTable(obj, dataTable)
-        %Set all metadata for the experiment into the object.
-        %Input parameter: table with rockData
+        % Set all metadata for the experiment into the object.
+        % Input parameter: table with rockData
             obj.dataTable = dataTable;
             
             obj.dataTable.Properties.VariableUnits{'height'} = 'cm';
@@ -70,7 +70,7 @@ classdef ExperimentsSpecimenData < handle
             disp([class(obj), ': ', 'Data set sucessfully']);
         end
         
-        %GETTER
+        % GETTER
         function experimentNo = get.experimentNo(obj) 
             experimentNo = single(obj.experimentNo);
         end
@@ -187,8 +187,8 @@ classdef ExperimentsSpecimenData < handle
 		end
         
 		function dataTable = getDataTable(obj)
-		%Return a table containing two columns. First column contains Name and Units. Seconds column contains values. All
-		%data saved in this class will be spit out.
+		% Return a table containing two columns. First column contains Name and Units. Seconds column contains values. All
+		% data saved in this class will be spit out.
 			
 			dataTable = table();
 			
