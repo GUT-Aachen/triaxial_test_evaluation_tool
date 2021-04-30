@@ -50,6 +50,7 @@ classdef ExperimentsData < handle
                 vD.fluidOutTemp= 'continuous';
                 vD.fluidOutPressure= 'continuous';
                 vD.hydrCylinderPressure= 'continuous';
+                vD.axialForce= 'continuous';
                 vD.confiningPressure= 'continuous';
                 vD.strainSensor1Pos= 'step';
                 vD.strainSensor1Rel= 'step';
@@ -130,18 +131,32 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableDescriptions {'fluidOutPressure'} = 'Inflow pressure specimen';
 
                 % hydrCylinderPressure: hydraulic cylinder pressure
-                if ismember('hydrCylinder_p', data.Properties.VariableNames)
-                    dataTable.hydrCylinderPressure = data.hydrCylinder_p;
+                if ismember('axial_p', data.Properties.VariableNames)
+                    dataTable.hydrCylinderPressure = data.axial_p;
                 else
                     dataTable.hydrCylinderPressure = NaN(size(data,1),1);
-                    warning('%s: Hydraulic cynlinder pressure (hydrCylinderPressureRel) data missing. Added column filled with NaN.', class(obj));
+                    warning('%s: Hydraulic cylinder pressure (hydrCylinderPressure) data missing. Added column filled with NaN.', class(obj));
                 end
                 if sum(isnan(dataTable.hydrCylinderPressure)) == size(data,1) 
                     vD.hydrCylinderPressure = 'unset';
                 end
                 dataTable.Properties.VariableUnits{'hydrCylinderPressure'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'hydrCylinderPressure'} = 'Operating pressure of the hydraulic cylinder';
+                
+                % hydrCylinderPressure: hydraulic cylinder pressure
+                if ismember('axial_F', data.Properties.VariableNames)
+                    dataTable.axialForce = data.axial_F;
+                else
+                    dataTable.axialForce = NaN(size(data,1),1);
+                    warning('%s: Hydraulic cylinder force (axialForce) data missing. Added column filled with NaN.', class(obj));
+                end
+                if sum(isnan(dataTable.axialForce)) == size(data,1) 
+                    vD.axialForce = 'unset';
+                end
+                dataTable.Properties.VariableUnits{'axialForce'} = 'N';
+                dataTable.Properties.VariableDescriptions {'axialForce'} = 'Operating force of the hydraulic cylinder';
 
+                
                 % confiningPressure:  confining pressure
 				% Sometimes the database returns the column name with an additional _1. This error is caught here.
                 if ismember('confining_p', data.Properties.VariableNames) 
@@ -333,7 +348,7 @@ classdef ExperimentsData < handle
 				
 				dataTable.Properties.VariableContinuity = { vD.roomTemp, ...
                     vD.fluidInTemp, vD.fluidOutTemp, vD.fluidInPressure, ...
-                    vD.fluidOutPressure, vD.hydrCylinderPressure, vD.confiningPressure, ...
+                    vD.fluidOutPressure, vD.hydrCylinderPressure, vD.axialForce, vD.confiningPressure, ...
                     vD.strainSensor1Pos, vD.strainSensor1Rel, vD.strainSensor2Pos, ...
                     vD.strainSensor2Rel, vD.pump1Volume, vD.pump1Pressure, vD.pump2Volume, vD.pump2Pressure, ...
                     vD.pump3Volume, vD.pump3Pressure, vD.flowMass};
@@ -370,7 +385,7 @@ classdef ExperimentsData < handle
 			end
             
             % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % PRESSURE
+            % PRESSURE/FORCE
             % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             try				
 				if (sum(isnan(dataTable.confiningPressure)) ~= length(dataTable.confiningPressure)) %Check if all data is NaN
@@ -381,7 +396,7 @@ classdef ExperimentsData < handle
 
             catch
                 warning('%s: error while filtering confiningPressure', class(obj));
-			end
+            end
 
             
             try
@@ -393,7 +408,19 @@ classdef ExperimentsData < handle
 
             catch
                 warning('%s: Error while filtering hydrCylinderPressure', class(obj));
-			end
+            end
+            
+            
+            try
+				if (sum(isnan(dataTable.axialForce)) ~= length(dataTable.axialForce)) %Check if all data is NaN
+					dat = data.axialForce;
+					dat = movmedian(dat, 3, 'omitnan');
+					dataTable.axialForce = round(dat, 2);
+				end
+
+            catch
+                warning('%s: Error while filtering hydrCylinderPressure', class(obj));
+            end
             
 			
             try		
@@ -551,7 +578,7 @@ classdef ExperimentsData < handle
         
 		function result = updateDataTable(obj, range)
 			
-			if (nargin < 1 || nargin > 2)
+            if (nargin < 1 || nargin > 2)
 				error('%s: Not enough or too many input arguments. Two input parameters have to be handed over: range (optional)', class(obj));
 			elseif nargin == 1
 				range = [];	
@@ -686,7 +713,7 @@ classdef ExperimentsData < handle
         % Returns a timetable containing all pressure data: time, runtime
         % fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
             dataTable = obj.createTable();
-            dataTable = [dataTable obj.filteredData(:,{'fluidInPressure', 'fluidOutPressure', 'hydrCylinderPressure', 'confiningPressure'})];
+            dataTable = [dataTable obj.filteredData(:,{'fluidInPressure', 'fluidOutPressure', 'hydrCylinderPressure', 'axialForce', 'confiningPressure'})];
         end
                 
 		
@@ -701,9 +728,9 @@ classdef ExperimentsData < handle
         function dataTable = getConfiningPressure(obj)
         % Returns a timetable containing confing pressure data: time, runtime, confiningPressure
             dataTable = obj.createTable();  
-            dataTable.confiningPressure = obj.getAllPressureRelative.confiningPressure;
-            dataTable.Properties.VariableUnits{'confiningPressure'} = obj.getAllPressureRelative.Properties.VariableUnits{'confiningPressure'};
-            dataTable.Properties.VariableDescriptions{'confiningPressure'} = obj.getAllPressureRelative.Properties.VariableDescriptions{'confiningPressure'};
+            dataTable.confiningPressure = obj.getAllPressure.confiningPressure;
+            dataTable.Properties.VariableUnits{'confiningPressure'} = obj.getAllPressure.Properties.VariableUnits{'confiningPressure'};
+            dataTable.Properties.VariableDescriptions{'confiningPressure'} = obj.getAllPressure.Properties.VariableDescriptions{'confiningPressure'};
         end
         
         
