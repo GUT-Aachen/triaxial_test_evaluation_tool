@@ -345,11 +345,18 @@ classdef TriaxTestHandler < handle
 					result.label = 'hydr. cylinder pressure \sigma_cyl';
 					result.unit = 'MPa';
 					
-				case 'fluidPressure'
-					dataLabel = 'fluidPressure';
+				case 'fluidInPressure'
+					dataLabel = 'fluidInPressure';
 					dataTable = obj.getFlowMassData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.label = 'fluid flow pressure \sigma_u';
+					result.label = 'fluid inflow pressure \sigma_{u, in}';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					
+				case 'fluidOutPressure'
+					dataLabel = 'fluidOutPressure';
+					dataTable = obj.getFlowMassData(experimentNo);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'fluid outflow pressure \sigma_{u, out}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'confiningPressure'
@@ -485,7 +492,8 @@ classdef TriaxTestHandler < handle
 			obj.labelList('hydrCylinderPressure') = 'Hydr. Cylinder Pressure [bar]';
 			obj.labelList('hydrCylinderPressureMPa') = 'Hydr. Cylinder Pressure [MPa]';
 % 			obj.labelList('hydrCylinderPressureT') = 'Hydr. Cylinder Force [t]';
-			obj.labelList('fluidPressure') = 'Flow Pressure';
+			obj.labelList('fluidInPressure') = 'Flow Inflow Pressure';
+			obj.labelList('fluidOutPressure') = 'Flow Outflow Pressure';
 			obj.labelList('confiningPressure') = 'Confining Pressure [bar]';
 			obj.labelList('confiningPressureMPa') = 'Confining Pressure [MPa]';
 			obj.labelList('confiningPumpVolume') = 'Volume in Pumps';
@@ -977,7 +985,7 @@ classdef TriaxTestHandler < handle
 		
 		function dataTable = getPressureData(obj, experimentNo) 
         %Returns a timetable containing all pressure data: time, runtime
-        %fluidPressure, hydrCylinderPressure, confiningPressure
+        %fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
 			%Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
@@ -1015,7 +1023,7 @@ classdef TriaxTestHandler < handle
 		
 		function dataTable = getBassinPumpData(obj, experimentNo) 
         %Returns a timetable containing all pressure data: time, runtime
-        %fluidPressure, hydrCylinderPressure, confiningPressure
+        %fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
 			%Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));

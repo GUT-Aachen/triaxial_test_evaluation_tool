@@ -45,8 +45,10 @@ classdef ExperimentsData < handle
 				
                 vD.roomTemp = 'continuous';
                 vD.fluidInTemp= 'continuous';
+				vD.fluidInPressure= 'continuous';
                 vD.fluidOutTemp= 'continuous';
-                vD.fluidPressure= 'continuous';
+                vD.fluidOutPressure= 'continuous';
+				vD.fluidPressure= 'continuous';
                 vD.hydrCylinderPressure= 'continuous';
                 vD.confiningPressure= 'continuous';
                 vD.strainSensor1Pos= 'step';
@@ -101,8 +103,8 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'fluidOutTemp'} = '°C';
                 dataTable.Properties.VariableDescriptions {'fluidOutTemp'} = 'Temperature of the fluid after flowing through, meassured on the scale.';
 
-
-                %fluidPressure: fluid pressure
+				%DEPRECATED
+                %fluidPressure: fluid inflow pressure
                 if ismember('fluid_in_p', data.Properties.VariableNames)
                     dataTable.fluidPressure = data.fluid_in_p;
                 else
@@ -114,6 +116,32 @@ classdef ExperimentsData < handle
                 end
                 dataTable.Properties.VariableUnits{'fluidPressure'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'fluidPressure'} = 'Inflow pressure specimen';
+				
+				%fluidInPressure: fluid inflow pressure
+                if ismember('fluid_in_p', data.Properties.VariableNames)
+                    dataTable.fluidInPressure = data.fluid_in_p;
+                else
+                    dataTable.fluidInPressure = NaN(size(data,1),1);
+                end
+                if sum(isnan(dataTable.fluidInPressure)) == size(data,1)
+                    vD.fluidInPressure = 'unset';
+                    warning('%s: Fluid inflow  pressure (fluidInPressure) data missing. Permeability calculation not possible!', class(obj));
+                end
+                dataTable.Properties.VariableUnits{'fluidInPressure'} = 'bar';
+                dataTable.Properties.VariableDescriptions {'fluidInPressure'} = 'Inflow pressure specimen';
+				
+				%fluidOutPressure: fluid outflow pressure
+                if ismember('fluid_out_p', data.Properties.VariableNames)
+                    dataTable.fluidOutPressure = data.fluid_in_p;
+                else
+                    dataTable.fluidOutPressure = NaN(size(data,1),1);
+                end
+                if sum(isnan(dataTable.fluidOutPressure)) == size(data,1)
+                    vD.fluidOutPressure = 'unset';
+                    warning('%s: Fluid outflow  pressure (fluidOutPressure) data missing. Permeability calculation not precisly!', class(obj));
+                end
+                dataTable.Properties.VariableUnits{'fluidOutPressure'} = 'bar';
+                dataTable.Properties.VariableDescriptions {'fluidOutPressure'} = 'Inflow pressure specimen';
 
                 %hydrCylinderPressure: hydraulic cylinder pressure
                 if ismember('hydrCylinder_p', data.Properties.VariableNames)
@@ -315,12 +343,12 @@ classdef ExperimentsData < handle
                 %volume in pumps is stepwise
                 %flowMass on scale is stepwise
 				
-				dataTable.Properties.VariableContinuity = { vD.roomTemp , ...
-                    vD.fluidInTemp ,vD.fluidOutTemp ,vD.fluidPressure, ...
-                    vD.hydrCylinderPressure ,vD.confiningPressure , ...
-                    vD.strainSensor1Pos ,vD.strainSensor1Rel ,vD.strainSensor2Pos , ...
-                    vD.strainSensor2Rel ,vD.pump1Volume ,vD.pump1Pressure ,vD.pump2Volume ,vD.pump2Pressure , ...
-                    vD.pump3Volume ,vD.pump3Pressure ,vD.flowMass};
+				dataTable.Properties.VariableContinuity = { vD.roomTemp, ...
+                    vD.fluidInTemp, vD.fluidInPressure, vD.fluidOutTemp, vD.fluidOutPressure, ...
+                    vD.fluidPressure, vD.hydrCylinderPressure, vD.confiningPressure, ...
+                    vD.strainSensor1Pos, vD.strainSensor1Rel, vD.strainSensor2Pos, ...
+                    vD.strainSensor2Rel, vD.pump1Volume, vD.pump1Pressure, vD.pump2Volume, vD.pump2Pressure, ...
+                    vD.pump3Volume, vD.pump3Pressure, vD.flowMass};
                 dataTable = retime(dataTable, 'secondly', 'endvalues', NaN);
                 
                 %Calculate runtime
@@ -377,17 +405,30 @@ classdef ExperimentsData < handle
 
             catch
                 warning('%s: Error while filtering hydrCylinderPressure', class(obj));
-            end
+			end
             
+			
             try				
 				if (sum(isnan(dataTable.fluidPressure)) ~= length(dataTable.fluidPressure)) %Check if all data is NaN
 					dat = data.fluidPressure;
 					dat = movmedian(dat, 9, 'omitnan');
 					dataTable.fluidPressure = round(dat, 4);
 				end
+				
+				if (sum(isnan(dataTable.fluidInPressure)) ~= length(dataTable.fluidInPressure)) %Check if all data is NaN
+					dat = data.fluidInPressure;
+					dat = movmedian(dat, 9, 'omitnan');
+					dataTable.fluidInPressure = round(dat, 4);
+				end
+				
+				if (sum(isnan(dataTable.fluidOutPressure)) ~= length(dataTable.fluidOutPressure)) %Check if all data is NaN
+					dat = data.fluidOutPressure;
+					dat = movmedian(dat, 9, 'omitnan');
+					dataTable.fluidOutPressure = round(dat, 4);
+				end
 
             catch
-                warning('%s: Error while filtering fluidPressure', class(obj));
+                warning('%s: Error while filtering fluidInPressure/fluidOutPressure', class(obj));
             end
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -668,9 +709,9 @@ classdef ExperimentsData < handle
 		
         function dataTable = getAllPressure(obj)
         %Returns a timetable containing all pressure data: time, runtime
-        %fluidPressureRel, hydrCylinderPressureRel, confiningPressureRel
+        %fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
             dataTable = obj.createTable();
-            dataTable = [dataTable obj.filteredData(:,{'fluidPressure', 'hydrCylinderPressure', 'confiningPressure'})];
+            dataTable = [dataTable obj.filteredData(:,{'fluidInPressure', 'fluidOutPressure', 'fluidPressure', 'hydrCylinderPressure', 'confiningPressure'})];
         end
                 
 		
@@ -715,7 +756,7 @@ classdef ExperimentsData < handle
         
         function dataTable = getFlowData(obj)
         %Returns a timetable containing all flow data relevant data: time, runtime
-        %flowMass, fluidPressureRel, fluidOutTemp,
+        %flowMass, fluidInPressure, fluidOutPressure, fluidOutTemp,
             dataTable = [obj.createTable() obj.filteredData(:,{'flowMass'})];
             
             tempData = obj.getAllTemperatures;
@@ -731,6 +772,14 @@ classdef ExperimentsData < handle
             dataTable.fluidPressure = tempData.fluidPressure;
             dataTable.Properties.VariableUnits{'fluidPressure'} = tempData.Properties.VariableUnits{'fluidPressure'};
             dataTable.Properties.VariableDescriptions{'fluidPressure'} = tempData.Properties.VariableDescriptions{'fluidPressure'};
+			
+			dataTable.fluidInPressure = tempData.fluidInPressure;
+            dataTable.Properties.VariableUnits{'fluidInPressure'} = tempData.Properties.VariableUnits{'fluidInPressure'};
+            dataTable.Properties.VariableDescriptions{'fluidInPressure'} = tempData.Properties.VariableDescriptions{'fluidInPressure'};
+			
+			dataTable.fluidOutPressure = tempData.fluidOutPressure;
+            dataTable.Properties.VariableUnits{'fluidOutPressure'} = tempData.Properties.VariableUnits{'fluidOutPressure'};
+            dataTable.Properties.VariableDescriptions{'fluidOutPressure'} = tempData.Properties.VariableDescriptions{'fluidOutPressure'};
 		end
 
     end
