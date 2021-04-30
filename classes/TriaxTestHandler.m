@@ -284,34 +284,34 @@ classdef TriaxTestHandler < handle
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);				
 				
 				case 'axialPressure'
-					dataLabel = 'axialPressureRel';
+					dataLabel = 'axialPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'vertical stress \sigma_1';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 				
 				case 'axialPressureMPa'
-					dataLabel = 'axialPressureRel';
+					dataLabel = 'axialPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.axialPressureRel = result.data.axialPressureRel * 10^-6;
+					result.data.axialPressure = result.data.axialPressure * 10^-6;
 					result.label = 'vertical stress \sigma_1';
 					result.unit = 'MPa';
 					
 				case 'axialPressureBar'
-					dataLabel = 'axialPressureRel';
+					dataLabel = 'axialPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.axialPressureRel = result.data.axialPressureRel * 10^-5;
+					result.data.axialPressure = result.data.axialPressure * 10^-5;
 					result.label = 'vertical stress \sigma_1';
 					result.unit = 'bar';
 					
 					
 				case 'axialForceT'
-					dataLabel = 'axialPressureRelTonnes';
+					dataLabel = 'axialPressureTonnes';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.axialPressureRelTonnes = result.data.axialPressureRelTonnes;
+					result.data.axialPressureTonnes = result.data.axialPressureTonnes;
 					result.label = 'compaction force F';
 					result.unit = 't';
 					
@@ -324,46 +324,46 @@ classdef TriaxTestHandler < handle
 					result.unit = 'MPa';
 				
 				case 'hydrCylinderPressure'
-					dataLabel = 'hydrCylinderPressureRel';
+					dataLabel = 'hydrCylinderPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'hydr. cylinder \sigma_cyl';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 				
 				case 'hydrCylinderPressureT'
-					dataLabel = 'axialPressureRelTonnes';
+					dataLabel = 'axialPressureTonnes';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'hydr. cylinder \sigma_cyl';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 				
 				case 'hydrCylinderPressureMPa'  %Change values from bar to MPa
-					dataLabel = 'hydrCylinderPressureRel';
+					dataLabel = 'hydrCylinderPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.hydrCylinderPressureRel = result.data.hydrCylinderPressureRel * 0.1;
+					result.data.hydrCylinderPressure = result.data.hydrCylinderPressure * 0.1;
 					result.label = 'hydr. cylinder pressure \sigma_cyl';
 					result.unit = 'MPa';
 					
 				case 'fluidPressure'
-					dataLabel = 'fluidPressureRel';
+					dataLabel = 'fluidPressure';
 					dataTable = obj.getFlowMassData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'fluid flow pressure \sigma_u';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'confiningPressure'
-					dataLabel = 'confiningPressureRel';
+					dataLabel = 'confiningPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
 					result.label = 'confining pressure \sigma_{2/3}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 				case 'confiningPressureMPa' %Change values from bar to MPa
-					dataLabel = 'confiningPressureRel';
+					dataLabel = 'confiningPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.confiningPressureRel = result.data.confiningPressureRel * 0.1;
+					result.data.confiningPressure = result.data.confiningPressure * 0.1;
 					result.label = 'confining pressure \sigma_{2/3}';
 					result.unit = 'MPa';
 					
@@ -976,8 +976,8 @@ classdef TriaxTestHandler < handle
 		
 		
 		function dataTable = getPressureData(obj, experimentNo) 
-        %Returns a timetable containing all relative pressure data: time, runtime
-        %fluidPressureRel, hydrCylinderPressureRel, confiningPressureRel
+        %Returns a timetable containing all pressure data: time, runtime
+        %fluidPressure, hydrCylinderPressure, confiningPressure
 			%Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
@@ -989,7 +989,7 @@ classdef TriaxTestHandler < handle
                 error('%s: %s is a string', class(obj), validateExpNo);
 			end
 			
-			dataTable = obj.experiment(experimentNo).testData.getAllPressureRelative;
+			dataTable = obj.experiment(experimentNo).testData.getAllPressure;
 			
 			%Calculate axial pressure and distinct between 250mm and 8mm probe
 			diameter = obj.experiment(experimentNo).specimenData.diameter.value;
@@ -998,24 +998,24 @@ classdef TriaxTestHandler < handle
 			axialCylinderKgMax = obj.experiment(experimentNo).metaData.testRigData.axialCylinderKgMax;
 			axialCylinderPMax = obj.experiment(experimentNo).metaData.testRigData.axialCylinderPMax / 100000;
 			
-			dataTable.axialPressureRel = (axialCylinderKgMax * 9.81 / axialCylinderPMax * dataTable.hydrCylinderPressureRel) ./ A;
-			dataTable.axialPressureRelTonnes = axialCylinderKgMax / axialCylinderPMax * dataTable.hydrCylinderPressureRel ./ 1000;
+			dataTable.axialPressure = (axialCylinderKgMax * 9.81 / axialCylinderPMax * dataTable.hydrCylinderPressure) ./ A;
+			dataTable.axialPressureTonnes = axialCylinderKgMax / axialCylinderPMax * dataTable.hydrCylinderPressure ./ 1000;
 			
-			dataTable.deviatoricStress = max((dataTable.axialPressureRel - dataTable.confiningPressureRel .* 0.1 .* 10^6) ./ 2, 0);  % hydrCylinderPressureRel
+			dataTable.deviatoricStress = max((dataTable.axialPressure - dataTable.confiningPressure .* 0.1 .* 10^6) ./ 2, 0);  % hydrCylinderPressure
 			
-			dataTable.Properties.VariableUnits{'axialPressureRel'} = 'N/m^2';
-			dataTable.Properties.VariableDescriptions{'axialPressureRel'} = 'Axial pressure on sample';
+			dataTable.Properties.VariableUnits{'axialPressure'} = 'N/m^2';
+			dataTable.Properties.VariableDescriptions{'axialPressure'} = 'Axial pressure on sample';
 			
-			dataTable.Properties.VariableUnits{'axialPressureRelTonnes'} = 't';
-			dataTable.Properties.VariableDescriptions{'axialPressureRelTonnes'} = 'Axial force on sample in tonnes';
+			dataTable.Properties.VariableUnits{'axialPressureTonnes'} = 't';
+			dataTable.Properties.VariableDescriptions{'axialPressureTonnes'} = 'Axial force on sample in tonnes';
 			
 			dataTable.Properties.VariableUnits{'deviatoricStress'} = 'N/m^2';
 			dataTable.Properties.VariableDescriptions{'deviatoricStress'} = 'Deviatoric stress on sample';
 		end
 		
 		function dataTable = getBassinPumpData(obj, experimentNo) 
-        %Returns a timetable containing all relative pressure data: time, runtime
-        %fluidPressureRel, hydrCylinderPressureRel, confiningPressureRel
+        %Returns a timetable containing all pressure data: time, runtime
+        %fluidPressure, hydrCylinderPressure, confiningPressure
 			%Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
@@ -1156,7 +1156,7 @@ classdef TriaxTestHandler < handle
 
 				gravity = 9.81; %Gravity m/s² or N/kg
 
-				dataTable.deltaPressureHeight = (dataTable.fluidPressureRel .* 100000) ./ (dataTable.fluidDensity .* gravity); %Pressure difference h between inflow and outflow in m
+				dataTable.deltaPressureHeight = (dataTable.fluidPressure .* 100000) ./ (dataTable.fluidDensity .* gravity); %Pressure difference h between inflow and outflow in m
 				dataTable.fluidFlowVolume = (dataTable.flowMassDiff ./ dataTable.fluidDensity); %water flow volume Q in m³
 				
 				dataTable.permeability = ((dataTable.fluidFlowVolume ./ seconds(dataTable.timeDiff)) ... %calculate permeability
