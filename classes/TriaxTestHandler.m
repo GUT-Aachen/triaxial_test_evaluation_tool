@@ -1,12 +1,12 @@
 classdef TriaxTestHandler < handle
     % This class creates the connection between the data sets and the GUI.
     
-    properties %(GetAccess = private, SetAccess = private)
+    properties  %(GetAccess = private, SetAccess = private)
 		listExperimentNo;
-        experiment = struct('metaData', [], 'specimenData', [], 'testData', [], 'calculatedData', []); %Struct handling all experiments
-        dbConnection; %Database connection
+        experiment = struct('metaData', [], 'specimenData', [], 'testData', [], 'calculatedData', []);  % Struct handling all experiments
+        dbConnection;  % Database connection
 		labelList;
-		waterProperties; %Struct for water properties from isantosruiz repo
+		waterProperties;  % Struct for water properties from isantosruiz repo
 		brewermap;
 	end 
     
@@ -15,17 +15,17 @@ classdef TriaxTestHandler < handle
     methods (Static)
 		
 		function result = isinteger(value)
-		%Check wether the input value is an integer or nor
-		%Input parameters:
+		% Check wether the input value is an integer or nor
+		% Input parameters:
         %   value : any value
-        %Returns true if value is an integer.
+        % Returns true if value is an integer.
 		
 			try
-				%Experiment number is an numeric-value?
+				% Experiment number is an numeric-value?
 				if ~isnumeric(value)
 					result = false;
 
-				%Experiment number is an integer-value?
+				% Experiment number is an integer-value?
 				elseif ~mod(value,1) == 0
 					result = false;
 
@@ -46,22 +46,22 @@ classdef TriaxTestHandler < handle
     
     methods (Access = private)
         function result = validateExperimentNoInput(obj, experimentNo)
-        %Check if the variable experimentNo is an integer and if the
-        %experiment number exists and is loaded allready.
+        % Check if the variable experimentNo is an integer and if the
+        % experiment number exists and is loaded allready.
         
-            %Experiment number is an numeric-value?
+            % Experiment number is an numeric-value?
 			if ~obj.isinteger(experimentNo)
                 result = ['Input "experimentNo" must consider a integer-variable. Handed variable is class of: ',class(experimentNo)];
 				return
 			end
 
-			%Experiment exists in database?
+			% Experiment exists in database?
 			if ~sum(ismember(obj.listExperimentNo, experimentNo))
 				result = ['Experiment number ', int2str(experimentNo), ' does not exist within the database.'];
 				return
 			end
             
-            %Result true, if the test passes successfully
+            % Result true, if the test passes successfully
             result = true;
             
 		end
@@ -121,18 +121,7 @@ classdef TriaxTestHandler < handle
 			dataTable.flowMassDiff(dataTable.flowMassDiff(:)<=0)=nan;
 			
 			%Identify the outliers
-			%Size of the percentiles depends on the length of the experiment. Following numbers are empirically determinded.	
-% 			durationHours = hours(obj.experiment(experimentNo).metaData.timeEnd - obj.experiment(experimentNo).metaData.timeStart);
-% 			if durationHours > 150
-% 				percentiles = [1 99];
-% 			else
-% 				percentiles = [5 95];
-% 			end
-
-			dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiff, nan, 'grubb');
-			%dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiffOrig, 'linear', 'percentile', percentiles);
-
-			
+			dataTable.flowMassDiff = filloutliers(dataTable.flowMassDiff, nan, 'grubb');			
             
             %Calculate comulated sum of mass differences
             dataTable.flowMassAcc = cumsum(dataTable.flowMassDiff, 'omitnan');
@@ -492,8 +481,8 @@ classdef TriaxTestHandler < handle
 			obj.labelList('hydrCylinderPressure') = 'Hydr. Cylinder Pressure [bar]';
 			obj.labelList('hydrCylinderPressureMPa') = 'Hydr. Cylinder Pressure [MPa]';
 % 			obj.labelList('hydrCylinderPressureT') = 'Hydr. Cylinder Force [t]';
-			obj.labelList('fluidInPressure') = 'Flow Inflow Pressure';
-			obj.labelList('fluidOutPressure') = 'Flow Outflow Pressure';
+			obj.labelList('fluidInPressure') = 'Fluid Inflow Pressure';
+			obj.labelList('fluidOutPressure') = 'Fluid Outflow Pressure';
 			obj.labelList('confiningPressure') = 'Confining Pressure [bar]';
 			obj.labelList('confiningPressureMPa') = 'Confining Pressure [MPa]';
 			obj.labelList('confiningPumpVolume') = 'Volume in Pumps';
@@ -565,13 +554,13 @@ classdef TriaxTestHandler < handle
 			
 		
 		function density = waterDensity(obj, temp)
-        %Function to calculate the density of water at a specific temperature.
-        %Input parameters:
+        % Function to calculate the density of water at a specific temperature.
+        % Input parameters:
         %   temp : temperature in °C
-        %Returns a double containing the water density.
+        % Returns a double containing the water density.
         %
-        %If loopup table for density is not loaded the water density will be approximated by a parabolic function:
-		%999.972-7E-3(T-4)^2
+        % If loopup table for density is not loaded the water density will 
+        % be approximated by a parabolic function: 999.972-7E-3(T-4)^2
         
             if (nargin ~= 2)
                 error('%s: Not enough input arguments. One input parameter needed in °C as numeric or float.', class(obj));
@@ -592,17 +581,18 @@ classdef TriaxTestHandler < handle
 		
 		
 		function viscosity = waterViscosity(obj, temp)
-		%Function returning the viscosity of water at a specific temperature. Viscosity is saved by lookup table in the
-		%variable waterProperties.
-		%Input parameters:
+		% Function returning the viscosity of water at a specific 
+        % temperature. Viscosity is saved by lookup table in the
+		% variable waterProperties.
+		% Input parameters:
 		%   temp : temperature in °C
-		%Returns a double containing the water viscosity.
+		% Returns a double containing the water viscosity.
         
             if (nargin ~= 2)
                 error('%s: Not enough input arguments. One input parameter needed in °C as numeric or float.', class(obj))
             end
 
-            %Check if the variable experimentNo is numeric
+            % Check if the variable experimentNo is numeric
 			if ~isnumeric(temp)
                 error('%s: Input parameter temperature needed in °C as numeric or float. Handed variable is class of: ',class(obj), class(temp))
 			end
@@ -616,16 +606,16 @@ classdef TriaxTestHandler < handle
 		end
 		
 		function result = isExperimentLoaded(obj, experimentNo)
-        %Function checks, if the input experiment number is allready loaded
-        %into this class.
+        % Function checks, if the input experiment number is allready loaded
+        % into this class.
         %
-        %Input parameters:
+        % Input parameters:
         %   experimentNo : number of the experiment
-        %Returns true if dataset is loaded
+        % Returns true if dataset is loaded
         
             try
-                %Method to check if a particular experiment is allready loaded
-                %into the experiment struct.
+                % Method to check if a particular experiment is allready 
+                % loaded into the experiment struct.
                 if isa(obj.experiment(experimentNo).metaData, 'ExperimentsMetaData') && ...
                     isa(obj.experiment(experimentNo).specimenData, 'ExperimentsSpecimenData') && ...
                     isa(obj.experiment(experimentNo).testData, 'ExperimentsData')
@@ -643,7 +633,7 @@ classdef TriaxTestHandler < handle
 		
 		
 		function result = getLabelList(obj)
-		%Returns a list of all available datasets to be plotted into a graph
+		% Returns a list of all available datasets to be plotted into a graph
 			
 			result = obj.labelList;
 		end
@@ -659,19 +649,19 @@ classdef TriaxTestHandler < handle
 		
 		
         function result = getExperimentOverview(obj)
-        %Method loading all listed experiments from the database and
-        %returning a list of all experiments including number, duration
-        %and name
+        % Method loading all listed experiments from the database and
+        % returning a list of all experiments including number, duration
+        % and name
             result = obj.dbConnection.getExperiments;
         end
         
         function result = experimentExists(obj, experimentNo)
-        %Method checking if an experiment with the given experiment
-        %number exists.
+        % Method checking if an experiment with the given experiment
+        % number exists.
         %
-        %Input parameters:
+        % Input parameters:
         %   experimentNo : number of the experiment
-        %Returns true if experiment exists
+        % Returns true if experiment exists
             
             result = obj.dbConnection.experimentExists(experimentNo);
         end
@@ -679,7 +669,7 @@ classdef TriaxTestHandler < handle
         
         
         function result = getLoadedExperiments(obj)
-        %Returns a list of all loaded experiments
+        % Returns a list of all loaded experiments
             
             result = [];
             
@@ -692,37 +682,37 @@ classdef TriaxTestHandler < handle
         
         
         function result = loadExperiment(obj, experimentNoList)
-        %Method to load a given experiment into the experiment struct.
+        % Method to load a given experiment into the experiment struct.
         %
-        %Input parameters:
+        % Input parameters:
         %   experimentNo : number of the experiment
-        %Returns true if dataset is loaded
+        % Returns true if dataset is loaded
 			
 			
 			for experimentNo = experimentNoList
 			
 		
-				%Check if the variable experimentNo is valid
+				% Check if the variable experimentNo is valid
 				validateExpNo = obj.validateExperimentNoInput(experimentNo);
 				if ischar(validateExpNo)
 					error('%s: %s is a string', class(obj), validateExpNo);
 				end
 
 				try
-					%Load meta data
+					% Load meta data
 					obj.experiment(experimentNo).metaData = obj.dbConnection.getMetaData(experimentNo);
-					%Load specimen data
+					% Load specimen data
 					specimenId = obj.experiment(experimentNo).metaData.specimenId;
 					obj.experiment(experimentNo).specimenData = obj.dbConnection.getSpecimenData(experimentNo, specimenId);
 
-					%Load test data					
+					% Load test data					
 					obj.experiment(experimentNo).testData = obj.dbConnection.getExperimentData(experimentNo); %, obj.experiment(experimentNo).metaData.timeStart, obj.experiment(experimentNo).metaData.timeEnd);
 					obj.setTimeRange(experimentNo, "intern");
 					
 					% Clear claculated data
 					obj.experiment(experimentNo).calculatedData = [];
 					
-					%Set output variable to true if no error occured
+					% Set output variable to true if no error occured
 					result = true;
 				catch E
 					warning('%s: Experiment number %d cannot be loaded. An error accured while catching the dataset from database. \n(%s)', ...
@@ -735,9 +725,9 @@ classdef TriaxTestHandler < handle
 		end
         
 		function result = getGraphData(obj, experimentNo, xValue, y1Value, y2Value, timestep)
-		%Returning a struct containing all necessary datasets and information for plotting a graph
-			%Inputdata consistence checks
-			%Check if there are two variables handed over
+		% Returning a struct containing all necessary datasets and information for plotting a graph
+			% Inputdata consistence checks
+			% Check if there are two variables handed over
 			if nargin < 4 || nargin > 6
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo, xValue, y1Value, y2Value, timestep', class(obj));
 			elseif nargin == 4
@@ -749,7 +739,7 @@ classdef TriaxTestHandler < handle
 
 			end
 			
-			%Check if the variable experimentNo is valid
+			% Check if the variable experimentNo is valid
 			validateExpNo = obj.validateExperimentNoInput(experimentNo);
 			if ischar(validateExpNo)
 				error('%s: %s is a string', class(obj), validateExpNo);
@@ -798,15 +788,15 @@ classdef TriaxTestHandler < handle
 		
 		
         function result = getFlowMassData(obj, experimentNo, timestep, reCalc)
-        %Returns a table containing all flow mass datasets
+        % Returns a table containing all flow mass datasets
         %
-        %Input parameters:
+        % Input parameters:
         %   experimentNo : number of the experiment
         %   reCalc: trigger to recalculate the flow mass dataset
-        %Returns true if dataset is loaded
+        % Returns true if dataset is loaded
         
-            %Inputdata consistence checks
-            %Check if there are two variables handed over
+            % Inputdata consistence checks
+            % Check if there are two variables handed over
 			if nargin == 2
 				timestep = 0;
                 reCalc = false;
@@ -820,41 +810,41 @@ classdef TriaxTestHandler < handle
                 error('%s: Not enough input arguments. One input parameter have to be handed over: experimentNo (reCalc optional)', class(obj));
             end
 
-            %Check if the variable experimentNo is valid
+            % Check if the variable experimentNo is valid
             validateExpNo = obj.validateExperimentNoInput(experimentNo);
             if ischar(validateExpNo)
                 error('%s: %s is a string', class(obj), validateExpNo);
             end
 
-            %Check if the variable recalc is true/false
+            % Check if the variable recalc is true/false
             if ~islogical(reCalc)
                 error('%s: Input "reCalc" must consider a logical-value. Handed variable is class of: %s', class(obj), class(reCalc))
             end
 			
-			%Check if the variable recalc is true/false
+			% Check if the variable recalc is true/false
             if ~obj.isinteger(timestep)
 				error('%s: Input "timestep" must consider a positive integer-value. Handed variable is class of: %s', class(obj), class(reCalc));
 			elseif timestep < 0
 				error('%s: Input "timestep" must consider a positive integer-value. Handed variable is class of: %s', class(obj) ,class(reCalc));
             end
         
-            %Check if experiment is allready loaded
+            % Check if experiment is allready loaded
             if ~obj.isExperimentLoaded(experimentNo)
                 warning('%s: Experiment number %d has not been loaded yet.', class(obj), experimentNo);
                 result = [];
                 return;
             end
 
-            %Check if flowmass for given experiment has allready been
-            %calculated
+            % Check if flowmass for given experiment has allready been
+            % calculated
             if ~isfield(obj.experiment(experimentNo).calculatedData, 'flowMass') || reCalc
-                %Calculate flow mass stuff
+                % Calculate flow mass stuff
 				disp([class(obj), ' - ', 'FlowMass recalculation necessary: no data available or recalculation forced']);
                 obj.calcFlowMassData(experimentNo, timestep);
 				
-			%Check if the timestep corresponds to the given timestep
+			% Check if the timestep corresponds to the given timestep
 			elseif obj.experiment(experimentNo).calculatedData.flowMass.timestep ~= timestep
-				%Calculate flow mass stuff
+				% Calculate flow mass stuff
 				disp([class(obj), ' - ', 'FlowMass recalculation necessary: timestep (', int2str(obj.experiment(experimentNo).calculatedData.flowMass.timestep), ') does not match (', int2str(timestep), ')']);
                 obj.calcFlowMassData(experimentNo, timestep);
             end
@@ -864,35 +854,35 @@ classdef TriaxTestHandler < handle
         end
         
         function result = getRockDataTableContent(obj, experimentNo)
-        %Preparing rock and specimen specific data to be printed into a
-        %table in the gui. Names, values and units will be shown.
-        %Input parameters:
+        % Preparing rock and specimen specific data to be printed into a
+        % table in the gui. Names, values and units will be shown.
+        % Input parameters:
         %   experimentNo : number of the experiment
-        %Returns a table containing all specimen and rock data
+        % Returns a table containing all specimen and rock data
             
-            %Inputdata consistence checks            
+            % Inputdata consistence checks            
             if (nargin ~= 2)
                 error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
             end
 
-            %Check if the variable experimentNo is valid
+            % Check if the variable experimentNo is valid
             validateExpNo = obj.validateExperimentNoInput(experimentNo);
             if ischar(validateExpNo)
                 error('%s: %s is a string', class(obj), validateExpNo);
             end
         
-            %Check whether the experiment has already been loaded.
+            % Check whether the experiment has already been loaded.
             if ~obj.isExperimentLoaded(experimentNo)
                 warning('%s: Experiment number %d has not been loaded yet.', class(obj), experimentNo);
                 result = [];
                 return;
             end
             
-            %Loading rock data table
+            % Loading rock data table
             specimenData = obj.experiment(experimentNo).specimenData;
             dataTable = table();
             
-            %Creating the output table [name, value + unit]            
+            % Creating the output table [name, value + unit]            
             dataTable = [dataTable; {'Experiment Number', num2str(specimenData.experimentNo)}];
             dataTable = [dataTable; {'Specimen Name', specimenData.specimen}];
             
@@ -922,8 +912,8 @@ classdef TriaxTestHandler < handle
         end
             
         function result = clearExperimentCache(obj)
-        %Deleting all loaded experiments from the cache.
-		%Returns true on success
+        % Deleting all loaded experiments from the cache.
+		% Returns true on success
             try
                 obj.experiment = struct('metaData', [], 'specimenData', [], 'testData', [], 'calculatedData', []);
                 result = true;
@@ -934,13 +924,13 @@ classdef TriaxTestHandler < handle
 		end 
         
 		function dataTable = getFilteredDataTable(obj, experimentNo)
-		%Returns a timetable containing all available datasets for the given experiment number
-			%Inputdata consistence checks            
+		% Returns a timetable containing all available datasets for the given experiment number
+			% Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
 			end
 		
-			%Check if the variable experimentNo is valid
+			% Check if the variable experimentNo is valid
             validateExpNo = obj.validateExperimentNoInput(experimentNo);
 			if ischar(validateExpNo)
                 error('%s: %s is a string', class(obj), validateExpNo);
@@ -951,13 +941,13 @@ classdef TriaxTestHandler < handle
 		
 		
 		function dataTable = getOriginalDataTable(obj, experimentNo)
-		%Returns a timetable containing all available datasets for the given experiment number (without filtering)
-			%Inputdata consistence checks            
+		% Returns a timetable containing all available datasets for the given experiment number (without filtering)
+			% Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
 			end
 		
-			%Check if the variable experimentNo is valid
+			% Check if the variable experimentNo is valid
             validateExpNo = obj.validateExperimentNoInput(experimentNo);
 			if ischar(validateExpNo)
                 error('%s: %s is a string', class(obj), validateExpNo);
@@ -967,13 +957,13 @@ classdef TriaxTestHandler < handle
 		end
 		
 		function dataTable = getTemperatures(obj, experimentNo)
-        %Returns a timetable containing all temperature data.
-			%Inputdata consistence checks            
+        % Returns a timetable containing all temperature data.
+			% Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
 			end
 			
-			%Check if the variable experimentNo is valid
+			% Check if the variable experimentNo is valid
             validateExpNo = obj.validateExperimentNoInput(experimentNo);
 			if ischar(validateExpNo)
                 error('%s: %s is a string', class(obj), validateExpNo);
@@ -984,14 +974,14 @@ classdef TriaxTestHandler < handle
 		
 		
 		function dataTable = getPressureData(obj, experimentNo) 
-        %Returns a timetable containing all pressure data: time, runtime
-        %fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
-			%Inputdata consistence checks            
+        % Returns a timetable containing all pressure data: time, runtime
+        % fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
+			% Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
 			end
 		
-			%Check if the variable experimentNo is valid
+			% Check if the variable experimentNo is valid
             validateExpNo = obj.validateExperimentNoInput(experimentNo);
 			if ischar(validateExpNo)
                 error('%s: %s is a string', class(obj), validateExpNo);
@@ -999,7 +989,7 @@ classdef TriaxTestHandler < handle
 			
 			dataTable = obj.experiment(experimentNo).testData.getAllPressure;
 			
-			%Calculate axial pressure and distinct between 250mm and 8mm probe
+			% Calculate axial pressure and distinct between 250mm and 8mm probe
 			diameter = obj.experiment(experimentNo).specimenData.diameter.value;
 			A = (0.5 * 0.01 * diameter)^2 * pi();
 			
@@ -1022,14 +1012,14 @@ classdef TriaxTestHandler < handle
 		end
 		
 		function dataTable = getBassinPumpData(obj, experimentNo) 
-        %Returns a timetable containing all pressure data: time, runtime
-        %fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
-			%Inputdata consistence checks            
+        % Returns a timetable containing all pressure data: time, runtime
+        % fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
+			% Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
 			end
 		
-			%Check if the variable experimentNo is valid
+			% Check if the variable experimentNo is valid
             validateExpNo = obj.validateExperimentNoInput(experimentNo);
 			if ischar(validateExpNo)
                 error('%s: %s is a string', class(obj), validateExpNo);
@@ -1039,24 +1029,24 @@ classdef TriaxTestHandler < handle
 		end
 		
 		function dataTable = getStrain(obj, experimentNo)
-        %Returns a timetable containing deformation data of the specimen: time, runtime
-        %strainSensor1Rel, strainSensor2Rel, strainSensorMean
-		%Input parameters:
+        % Returns a timetable containing deformation data of the specimen: time, runtime
+        % strainSensor1Rel, strainSensor2Rel, strainSensorMean
+		% Input parameters:
         %   experimentNo : number of the experiment
-		%Returns a table containing all strain data
+		% Returns a table containing all strain data
 		
-            %Inputdata consistence checks            
+            % Inputdata consistence checks            
 			if (nargin ~= 2)
 				error('%s: Not enough or too many input arguments. One input parameter have to be handed over: experimentNo', class(obj));
 			end
 
-            %Check if the variable experimentNo is valid
+            % Check if the variable experimentNo is valid
             validateExpNo = obj.validateExperimentNoInput(experimentNo);
 			if ischar(validateExpNo)
                 error('%s: %s is a string', class(obj), validateExpNo);
 			end
 			
-			%Check whether the experiment has already been loaded.
+			% Check whether the experiment has already been loaded.
             if ~obj.isExperimentLoaded(experimentNo)
                 warning('%s: Experiment number %d has not been loaded yet.', class(obj), experimentNo);
                 dataTable = [];
@@ -1065,8 +1055,8 @@ classdef TriaxTestHandler < handle
 		
 			dataTable = obj.experiment(experimentNo).testData.getDeformationRelative();    
 
-            %Calculating the mean deformation influenced by deformatoin
-            %sensor 1 and 2. NaN entrys will be ignored.
+            % Calculating the mean deformation influenced by deformatoin
+            % sensor 1 and 2. NaN entrys will be ignored.
             dataTable.strainSensorsMean = mean([dataTable.strainSensor1Rel, dataTable.strainSensor2Rel], 2, 'omitnan');
             dataTable.Properties.VariableUnits{'strainSensorsMean'} = 'mm';
             dataTable.Properties.VariableDescriptions {'strainSensorsMean'} = 'Mean relative deformation from sensor 1 and 2, zeroed at the beginning of the experiment';
@@ -1077,19 +1067,19 @@ classdef TriaxTestHandler < handle
 		end
 		
         function result = getPermeability(obj, experimentNo, timestep, debug)
-        %This function calculates the permeability and returns a
-        %timetable containing the permeability and runtime. Alpha is included.
-        %Input parameters:
+        % This function calculates the permeability and returns a
+        % timetable containing the permeability and runtime. Alpha is included.
+        % Input parameters:
         %   experimentNo : number of the experiment
         %   timestep: timestep between to calculation point of perm
-        %Returns a table containing permeability
+        % Returns a table containing permeability
 			
-			%Inputdata consistence checks      
+			% Inputdata consistence checks      
 			if (nargin < 2 || nargin > 4)
 				error('%s: Not enough or too many input arguments.', class(obj));
 			end
 		
-            %Check for correct input parameters
+            % Check for correct input parameters
 			if nargin == 2
                 warning('%s: Set timestep to default: 5 minutes', class(obj));
                 timestep = 5;
@@ -1109,13 +1099,13 @@ classdef TriaxTestHandler < handle
                 error('%s: Not enough input arguments. One input parameter have to be handed over: experimentNo', class(obj));
             end
 
-            %Check if the variable experimentNo is valid
+            % Check if the variable experimentNo is valid
             validateExpNo = obj.validateExperimentNoInput(experimentNo);
             if ischar(validateExpNo)
                 error('%s: %s is a string', class(obj), validateExpNo);
             end
         
-            %Check whether the experiment has already been loaded.
+            % Check whether the experiment has already been loaded.
             if ~obj.isExperimentLoaded(experimentNo)
                 warning('%s: Experiment number %d has not been loaded yet.', class(obj), experimentNo);
                 result = [];
@@ -1123,7 +1113,7 @@ classdef TriaxTestHandler < handle
             end
             
             try
-                %Catch all relevant data as timetable
+                % Catch all relevant data as timetable
                 flowMassData = obj.getFlowMassData(experimentNo, timestep); % flow mass
 				strainData = obj.getStrain(experimentNo); % probe deformation
 				probeInitHeight = obj.experiment(experimentNo).specimenData.height.value/100; % probe height in m
@@ -1131,8 +1121,9 @@ classdef TriaxTestHandler < handle
 				
                 dataTable = synchronize(flowMassData, strainData(:,'strainSensorsMean')); 
                 
-				%Check if fluid outflow temperature exists. Otherwise fluid inflow or a standard temperature of 18°C 
-				%will be used for further calculations.
+				% Check if fluid outflow temperature exists. Otherwise
+                % fluid inflow or a standard temperature of 18°C 
+				% will be used for further calculations.
                 if isnan(dataTable.fluidOutTemp)
                     
 					if isnan(dataTable.fluidInTemp)
@@ -1148,11 +1139,11 @@ classdef TriaxTestHandler < handle
                 dataTable.fluidDensity = obj.waterDensity(dataTable.fluidOutTemp); %get fluid (water) density
 				dataTable.fluidViscosity = obj.waterViscosity(dataTable.fluidOutTemp); %get fluid (water) viscosity
 
-                %Retime the dataTable to given timestep
+                % Retime the dataTable to given timestep
                 time = (dataTable.datetime(1) : minutes(timestep) : dataTable.datetime(end));
                 dataTable = retime(dataTable,time,'linear');
 				
-				%Add probeHeight (variable) and crosssection area (constant)
+				% Add probeHeight (variable) and crosssection area (constant)
 				if isnan(dataTable.strainSensorsMean)
 					dataTable.probeHeigth = zeros(size(dataTable,1),1) + probeInitHeight;
 					disp([class(obj), ' - ', 'Due to missing deformation data the initial height of the sample is used.']);
@@ -1160,11 +1151,21 @@ classdef TriaxTestHandler < handle
 					dataTable.probeHeigth = probeInitHeight - (dataTable.strainSensorsMean ./ 1000);
 				end
                 crossSecArea = ((probeDiameter) / 2)^2 * pi; %crosssection
-
-
+                
 				gravity = 9.81; %Gravity m/s² or N/kg
-
-				dataTable.deltaPressureHeight = (dataTable.fluidPressure .* 100000) ./ (dataTable.fluidDensity .* gravity); %Pressure difference h between inflow and outflow in m
+                
+                % Distinction if the outflow pressure is meassured. If no
+                % measurement is available it is assumed, that the pressure
+                % on the outflow is zero. Otherwise the meassured data will
+                % be used to calculate the pressure difference h between
+                % inflow and outflow
+                if sum(isnan(dataTable.fluidOutPressure)) == sum(~isnan(dataTable.fluidInPressure))
+                    dataTable.deltaPressureHeight = (dataTable.fluidInPressure .* 100000) ./ (dataTable.fluidDensity .* gravity); %Pressure difference h between inflow and outflow (zero) in m
+                    disp([class(obj), ' - ', 'Missing outflow pressure measurement: pressure is assumed to be zero.']);
+                else
+                    dataTable.deltaPressureHeight = ((dataTable.fluidInPressure - dataTable.fluidOutPressure) .* 100000) ./ (dataTable.fluidDensity .* gravity); %Pressure difference h between inflow and outflow in m
+                end
+                
 				dataTable.fluidFlowVolume = (dataTable.flowMassDiff ./ dataTable.fluidDensity); %water flow volume Q in m³
 				
 				dataTable.permeability = ((dataTable.fluidFlowVolume ./ seconds(dataTable.timeDiff)) ... %calculate permeability
@@ -1174,13 +1175,13 @@ classdef TriaxTestHandler < handle
 					.* dataTable.probeHeigth) ./ (dataTable.deltaPressureHeight .* crossSecArea); 
 				dataTable.permCoeff = max(0, dataTable.permCoeff);  % delete values smaller 0
 
-				%Normalize permeability to a reference temperature of 10 °C
+				% Normalize permeability to a reference temperature of 10 °C
 				dataTable.Itest = (0.02414 * 10.^((ones(size(dataTable.permCoeff)) * 247.8) ./ (dataTable.fluidOutTemp + 133)));
 				dataTable.IT = (0.02414 * 10.^((ones(size(dataTable.permCoeff)) * 247.8) ./ (10 + 133)));%Using reference temperature of 10 °C
 				dataTable.alpha = dataTable.Itest ./ dataTable.IT;
 				dataTable.permCoeffAlphaCorr = dataTable.permCoeff .* dataTable.alpha;
 				
-				%Create result table
+				% Create result table
 				if debug
 					permeability = dataTable;
 				else
@@ -1226,9 +1227,6 @@ classdef TriaxTestHandler < handle
 						initPermCoeff = permeability.permeabilityCoeff(1);
 						initPerm = initPermCoeff * dataTable.fluidViscosity(1);
 					end
-					
-					
-					
 					
 					permeability.permeabilityCoeffRel = permeability.permeabilityCoeff ./ initPermCoeff;
 					permeability.Properties.VariableUnits{'permeabilityCoeffRel'} = '-'; 

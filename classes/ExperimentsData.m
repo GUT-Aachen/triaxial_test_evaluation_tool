@@ -1,39 +1,40 @@
 classdef ExperimentsData < handle
-    %Class for handling experiment data from an MERID triaxial experiment. The class
-    %is able to get a database dump directly from the MySQL database and
-    %handle it.
-    %IMPORTANT:
-    %This class is directly dependent on the structure of the database. The 
-    %names of the table columns are accessed so that they must not be
-    %changed. If the names are changed the function organizeTableData() has
-    %to be adapted with new names.
+    % Class for handling experiment data from an MERID triaxial experiment. The class
+    % is able to get a database dump directly from the MySQL database and
+    % handle it.
+    % IMPORTANT:
+    % This class is directly dependent on the structure of the database. The 
+    % names of the table columns are accessed so that they must not be
+    % changed. If the names are changed the function organizeTableData() has
+    % to be adapted with new names.
     %
-    %It is possible to get specific experiment data instead of the whole
-    %table.
+    % It is possible to get specific experiment data instead of the whole
+    % table.
 	
     properties (SetAccess = immutable, GetAccess = private)
         originalData; %Dataset as timetable
     end
     
     properties (SetAccess = immutable)
-        experimentNo; %Experiment number of the data
-        rows;         %Number of entries on originalData/filteredData
+        experimentNo; % Experiment number of the data
+        rows;         % Number of entries on originalData/filteredData
 	end
 
 	properties (SetAccess = private, GetAccess = private)
-        filteredData; %Filtered dataset as timetable
+        filteredData; % Filtered dataset as timetable
     end
+    
     
     methods (Access = private)
         function dataTable = organizeTableData(obj, data, range)
-        %This function is used to have specific names for each column, even
-        %if the names in the database and therefore in the incomming data
-        %stream changed. Additionaly the units, names and descriptions of
-        %the columns will be added.		
+        % This function is used to have specific names for each column, even
+        % if the names in the database and therefore in the incomming data
+        % stream changed. Additionaly the units, names and descriptions of
+        % the columns will be added.		
 
-            %Check if all columns are present and add units and description
+            % Check if all columns are present and add units and description
             try
-                %Initializing the timetable
+                % Initializing the timetable
 				
 				if ~isempty(range) && class(range) == "timerange"
 					data = data(range,:);
@@ -48,7 +49,6 @@ classdef ExperimentsData < handle
 				vD.fluidInPressure= 'continuous';
                 vD.fluidOutTemp= 'continuous';
                 vD.fluidOutPressure= 'continuous';
-				vD.fluidPressure= 'continuous';
                 vD.hydrCylinderPressure= 'continuous';
                 vD.confiningPressure= 'continuous';
                 vD.strainSensor1Pos= 'step';
@@ -64,7 +64,7 @@ classdef ExperimentsData < handle
                 vD.flowMass= 'step';
                 vD.runtime= 'continuous';
                 
-                %roomTemp: room temperatur
+                % roomTemp: room temperatur
                 if ismember('room_t', data.Properties.VariableNames)
                     dataTable.roomTemp = data.room_t;
                 else
@@ -77,7 +77,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'roomTemp'} = '°C';
                 dataTable.Properties.VariableDescriptions{'roomTemp'} = 'Ambient air temperature';
                 
-                %fluidInTemp: inflow fluid temperature
+                % fluidInTemp: inflow fluid temperature
                 if ismember('fluid_in_t', data.Properties.VariableNames)
                     dataTable.fluidInTemp = data.fluid_in_t;
                 else
@@ -90,7 +90,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'fluidInTemp'} = '°C';
                 dataTable.Properties.VariableDescriptions {'fluidInTemp'} = 'Temperature of the fluid before flowing the specimen.';
 
-                %fluidOutTemp: outflow fluid temperature
+                % fluidOutTemp: outflow fluid temperature
                 if ismember('fluid_out_t', data.Properties.VariableNames)
                     dataTable.fluidOutTemp = data.fluid_out_t;
                 else
@@ -102,22 +102,8 @@ classdef ExperimentsData < handle
                 end
                 dataTable.Properties.VariableUnits{'fluidOutTemp'} = '°C';
                 dataTable.Properties.VariableDescriptions {'fluidOutTemp'} = 'Temperature of the fluid after flowing through, meassured on the scale.';
-
-				%DEPRECATED
-                %fluidPressure: fluid inflow pressure
-                if ismember('fluid_in_p', data.Properties.VariableNames)
-                    dataTable.fluidPressure = data.fluid_in_p;
-                else
-                    dataTable.fluidPressure = NaN(size(data,1),1);
-                end
-                if sum(isnan(dataTable.fluidPressure)) == size(data,1)
-                    vD.fluidPressure = 'unset';
-                    warning('%s: Fluid flow  pressure (fluidPressure) data missing. Permeability calculation not possible!', class(obj));
-                end
-                dataTable.Properties.VariableUnits{'fluidPressure'} = 'bar';
-                dataTable.Properties.VariableDescriptions {'fluidPressure'} = 'Inflow pressure specimen';
 				
-				%fluidInPressure: fluid inflow pressure
+				% fluidInPressure: fluid inflow pressure
                 if ismember('fluid_in_p', data.Properties.VariableNames)
                     dataTable.fluidInPressure = data.fluid_in_p;
                 else
@@ -130,7 +116,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'fluidInPressure'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'fluidInPressure'} = 'Inflow pressure specimen';
 				
-				%fluidOutPressure: fluid outflow pressure
+				% fluidOutPressure: fluid outflow pressure
                 if ismember('fluid_out_p', data.Properties.VariableNames)
                     dataTable.fluidOutPressure = data.fluid_out_p;
                 else
@@ -143,7 +129,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'fluidOutPressure'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'fluidOutPressure'} = 'Inflow pressure specimen';
 
-                %hydrCylinderPressure: hydraulic cylinder pressure
+                % hydrCylinderPressure: hydraulic cylinder pressure
                 if ismember('hydrCylinder_p', data.Properties.VariableNames)
                     dataTable.hydrCylinderPressure = data.hydrCylinder_p;
                 else
@@ -156,12 +142,14 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'hydrCylinderPressure'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'hydrCylinderPressure'} = 'Operating pressure of the hydraulic cylinder';
 
-                %confiningPressure:  confining pressure
-				%Sometimes the database returns the column name with an additional _1. This error is caught here.
+                % confiningPressure:  confining pressure
+				% Sometimes the database returns the column name with an additional _1. This error is caught here.
                 if ismember('confining_p', data.Properties.VariableNames) 
                     dataTable.confiningPressure = data.confining_p;
-				elseif ismember('confining_p_1', data.Properties.VariableNames) % TODO: WHAT IS HAPPENING HERE?
-                    dataTable.confiningPressure = data.confining_p_1;
+				% elseif ismember('confining_p_1',
+				% data.Properties.VariableNames) % TODO: WHAT IS HAPPENING
+				% HERE? DELETE IF STILL UNCLEAR (04.2021)
+                %     dataTable.confiningPressure = data.confining_p_1;
                 else
                     dataTable.confiningPressure = NaN(size(data,1),1);
                     warning('%s: Confining pressure (confiningPressure) data missing. Added column filled with NaN.', class(obj));
@@ -172,7 +160,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'confiningPressure'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'confiningPressure'} = 'Confining pressure in the bassin. Meassured at the inflow pipe';
                 
-                %strainSensor1Pos: absolute deformation sensor 1
+                % strainSensor1Pos: absolute deformation sensor 1
                 if ismember('deformation_1_s_abs', data.Properties.VariableNames)
                     dataTable.strainSensor1Pos = data.deformation_1_s_abs;
                 else
@@ -185,7 +173,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'strainSensor1Pos'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'strainSensor1Pos'} = 'Absolute deformation derived from the voltage';
                 
-                %strainSensor1Rel: relative deformation sensor 1
+                % strainSensor1Rel: relative deformation sensor 1
                 if ismember('deformation_1_s_rel', data.Properties.VariableNames)
                     dataTable.strainSensor1Rel = data.deformation_1_s_rel;
 				else
@@ -202,7 +190,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'strainSensor1Rel'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'strainSensor1Rel'} = 'Relative deformation, zeroed at the beginning of the experiment';
                                 
-                %strainSensor2Pos: absolute deformation sensor 2
+                % strainSensor2Pos: absolute deformation sensor 2
                 if ismember('deformation_2_s_abs', data.Properties.VariableNames)
                     dataTable.strainSensor2Pos = data.deformation_2_s_abs;
                 else
@@ -215,7 +203,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'strainSensor2Pos'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'strainSensor2Pos'} = 'Absolute deformation derived from the voltage';
                 
-                %strainSensor2Rel: relative deformation sensor 2
+                % strainSensor2Rel: relative deformation sensor 2
                 if ismember('deformation_2_s_rel', data.Properties.VariableNames)
                     dataTable.strainSensor2Rel = data.deformation_2_s_rel;
 				else
@@ -232,12 +220,12 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'strainSensor2Rel'} = 'mm';
                 dataTable.Properties.VariableDescriptions {'strainSensor2Rel'} = 'Relative deformation, zeroed at the beginning of the experiment';
                 
-                %Check if any relative deformation is given
+                % Check if any relative deformation is given
                 if sum(isnan(dataTable.strainSensor1Rel)) == size(data,1) && sum(isnan(dataTable.strainSensor2Rel)) == size(data,1)
                     warning('%s: Deformation relative data missing (strainSensor1Rel and strainSensor2Rel) data missing. Permeability calculation not possible!', class(obj));
                 end
 
-                %pump1Volume: volume pump 1
+                % pump1Volume: volume pump 1
                 if ismember('pump_1_V', data.Properties.VariableNames)
                     dataTable.pump1Volume = data.pump_1_V;
                 else
@@ -250,7 +238,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'pump1Volume'} = 'ml';
                 dataTable.Properties.VariableDescriptions {'pump1Volume'} = 'Liquid present in the pump';
 
-                %pump1Pressure: pressure pump 1
+                % pump1Pressure: pressure pump 1
                 if ismember('pump_1_V', data.Properties.VariableNames)
                     dataTable.pump1Pressure = data.pump_1_V;
                 else
@@ -263,7 +251,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'pump1Pressure'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'pump1Pressure'} = 'Pressure measured internally in the pump';
 
-                %pump2Volume: volume pump 2
+                % pump2Volume: volume pump 2
                 if ismember('pump_2_V', data.Properties.VariableNames)
                     dataTable.pump2Volume = data.pump_2_V;
                 else
@@ -276,7 +264,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'pump2Volume'} = 'ml';
                 dataTable.Properties.VariableDescriptions {'pump2Volume'} = 'Liquid present in the pump';
 
-                %pump2Pressure: pressure pump 2
+                % pump2Pressure: pressure pump 2
                 if ismember('pump_2_p', data.Properties.VariableNames)
                     dataTable.pump2Pressure = data.pump_2_p;
                 else
@@ -289,7 +277,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'pump2Pressure'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'pump2Pressure'} = 'Pressure measured internally in the pump';
 
-                %pump3Volume: volume pump 3
+                % pump3Volume: volume pump 3
                 if ismember('pump_3_V', data.Properties.VariableNames)
                     dataTable.pump3Volume = data.pump_3_V;
                 else
@@ -302,7 +290,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'pump3Volume'} = 'ml';
                 dataTable.Properties.VariableDescriptions {'pump3Volume'} = 'Liquid present in the pump';
 
-                %pump3Pressure: pressure pump 3
+                % pump3Pressure: pressure pump 3
                 if ismember('pump_3_p', data.Properties.VariableNames)
                     dataTable.pump3Pressure = data.pump_3_p;
                 else
@@ -315,7 +303,7 @@ classdef ExperimentsData < handle
                 dataTable.Properties.VariableUnits{'pump3Pressure'} = 'bar';
                 dataTable.Properties.VariableDescriptions {'pump3Pressure'} = 'Pressure measured internally in the pump';
                 
-                %flowMass: flowMass of the water
+                % flowMass: flowMass of the water
                 if ismember('weight', data.Properties.VariableNames)
                     dataTable.flowMass = data.weight;
                 else
@@ -333,18 +321,18 @@ classdef ExperimentsData < handle
                 error('%s: The given dataset is missing a column or properties can not be added. Please control the given data to be complete.', class(obj));
             end
             
-            %Recast time-String to datetime, calculate time dependend
-            %variables like runtime and convert to timetable
+            % Recast time-String to datetime, calculate time dependend
+            % variables like runtime and convert to timetable
             try
-                %Set variable continuity for synchronizing data
-                %time is unset, should not be filled
-                %pressure and temperature are continious
-                %deformation related meassurements are stepwise
-                %volume in pumps is stepwise
-                %flowMass on scale is stepwise
+                % Set variable continuity for synchronizing data
+                % time is unset, should not be filled
+                % pressure and temperature are continious
+                % deformation related meassurements are stepwise
+                % volume in pumps is stepwise
+                % flowMass on scale is stepwise
 				
 				dataTable.Properties.VariableContinuity = { vD.roomTemp, ...
-                    vD.fluidInTemp, vD.fluidOutTemp, vD.fluidPressure, vD.fluidInPressure, ...
+                    vD.fluidInTemp, vD.fluidOutTemp, vD.fluidInPressure, ...
                     vD.fluidOutPressure, vD.hydrCylinderPressure, vD.confiningPressure, ...
                     vD.strainSensor1Pos, vD.strainSensor1Rel, vD.strainSensor2Pos, ...
                     vD.strainSensor2Rel, vD.pump1Volume, vD.pump1Pressure, vD.pump2Volume, vD.pump2Pressure, ...
@@ -365,10 +353,10 @@ classdef ExperimentsData < handle
         
         
         function dataTable = filterTableData(obj, data, range)
-        %This function is used to filter most of the data
+        % This function is used to filter most of the data
             
-            %Prepare input for return, changed in data like filtering are
-            %going to update the data in dataTable
+            % Prepare input for return, changed in data like filtering are
+            % going to update the data in dataTable
             dataTable = data;
 			
 			if (nargin < 2 || nargin > 3)
@@ -381,9 +369,9 @@ classdef ExperimentsData < handle
 				dataTable.data = dataTable.data(range,:);
 			end
             
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %PRESSURE
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % PRESSURE
+            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             try				
 				if (sum(isnan(dataTable.confiningPressure)) ~= length(dataTable.confiningPressure)) %Check if all data is NaN
 					dat = data.confiningPressure;
@@ -408,13 +396,7 @@ classdef ExperimentsData < handle
 			end
             
 			
-            try				
-				if (sum(isnan(dataTable.fluidPressure)) ~= length(dataTable.fluidPressure)) %Check if all data is NaN
-					dat = data.fluidPressure;
-					dat = movmedian(dat, 9, 'omitnan');
-					dataTable.fluidPressure = round(dat, 4);
-				end
-				
+            try		
 				if (sum(isnan(dataTable.fluidInPressure)) ~= length(dataTable.fluidInPressure)) %Check if all data is NaN
 					dat = data.fluidInPressure;
 					dat = movmedian(dat, 9, 'omitnan');
@@ -431,10 +413,10 @@ classdef ExperimentsData < handle
                 warning('%s: Error while filtering fluidInPressure/fluidOutPressure', class(obj));
             end
             
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %TEMPERATURES
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %PT100 Temperatures as filtered by movmedian
+            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % TEMPERATURES
+            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % i.e. PT100 Temperatures as filtered by movmedian
             try
 				if (sum(isnan(dataTable.fluidInTemp)) ~= length(dataTable.fluidInTemp)) %Check if all data is NaN
 					dat = data.fluidInTemp;
@@ -475,13 +457,13 @@ classdef ExperimentsData < handle
             end
             
             
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %DEFORMATION
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %Filtering of deformation must be used carefully, as we have a
-            %changed deformation meassurement system
-            %Check if a absulote deformation is given. Otherwise the
-            %relative deformation will be saved as abs and the corected
+            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % DEFORMATION
+            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Filtering of deformation must be used carefully, as we have a
+            % changed deformation meassurement system
+            % Check if a absulote deformation is given. Otherwise the
+            % relative deformation will be saved as abs and the corected
             % (nulled) value will be saved as rel.
             try
 				if (sum(isnan(dataTable.strainSensor1Rel)) == length(dataTable.strainSensor1Rel)) %Check if all relative data is NaN
@@ -518,8 +500,9 @@ classdef ExperimentsData < handle
             
         end
         
+        
         function dataTable = createTable(obj)
-        %Function to create a timetable constisting of the runtime only
+        % Function to create a timetable constisting of the runtime only
             dataTable = obj.filteredData(:,{'runtime'}); 
         end
         
@@ -527,40 +510,40 @@ classdef ExperimentsData < handle
     
     methods
         function obj = ExperimentsData(experimentNo, data)
-            %Input parameters are the experiment number and a table
-            %containing all experiments data. The handed over data is a
-            %class of table, will be converted into a timetable and saved
-            %in this object.
+        % Input parameters are the experiment number and a table
+        % containing all experiments data. The handed over data is a
+        % class of table, will be converted into a timetable and saved
+        % in this object.
+
+            % Inputdata consistence checks
+            % Check if there are two variables handed over
+            if (nargin ~= 2)
+                error('%s: Not enough input arguments. Two input parameters have to be handed over: experimentNo as Integer and data as timetable.', class(obj))
+            end
+
+            % Check if the variable experimentNo is numeric
+            if ~isnumeric(experimentNo)
+                error('%s: Input "experimentNo" must consider a numeric-variable. Handed variable is class of: %s',class(obj), class(experimentNo))
+            end
+
+            % Check if the variable data is a table
+            if ~istimetable(data)
+                error('%s: Input "data" must consider a timetable-variable. Handed variable is class of: %s',class(obj), class(data))
+            end
+
+            % Check if the data table is empty
+            if height(data) == 0
+                error('%s: data table for the experiment is empty', class(obj))
+            end
             
-            %Inputdata consistence checks
-                %Check if there are two variables handed over
-                if (nargin ~= 2)
-                    error('%s: Not enough input arguments. Two input parameters have to be handed over: experimentNo as Integer and data as timetable.', class(obj))
-                end
-
-                %Check if the variable experimentNo is numeric
-                if ~isnumeric(experimentNo)
-                    error('%s: Input "experimentNo" must consider a numeric-variable. Handed variable is class of: %s',class(obj), class(experimentNo))
-                end
-
-                %Check if the variable data is a table
-                if ~istimetable(data)
-                    error('%s: Input "data" must consider a timetable-variable. Handed variable is class of: %s',class(obj), class(data))
-                end
-
-                %Check if the data table is empty
-                if height(data) == 0
-                    error('%s: data table for the experiment is empty', class(obj))
-                end
-            
-            %Saving original data in object
+            % Saving original data in object
             obj.originalData = data;
                 
-            %Organize all data in the table: adding units and desciptions
-            %Convert from table to timetable
+            % Organize all data in the table: adding units and desciptions
+            % Convert from table to timetable
             obj.updateDataTable;
             
-            %Saving variables in actual object
+            % Saving variables in actual object
             obj.experimentNo = experimentNo; 
             obj.rows = height(data);
             
@@ -572,17 +555,17 @@ classdef ExperimentsData < handle
 				error('%s: Not enough or too many input arguments. Two input parameters have to be handed over: range (optional)', class(obj));
 			elseif nargin == 1
 				range = [];	
-			end
+            end
 			
-			%Saving original data in object
+			% Saving original data in object
             dataTable = obj.originalData;
                 
-            %Organize all data in the table: adding units and desciptions
-            %Convert from table to timetable
+            % Organize all data in the table: adding units and desciptions
+            % Convert from table to timetable
 			disp(strcat(class(obj), {' - '},  {'Reorganizing experiments data'}));
             dataTable = obj.organizeTableData(dataTable, range);
 			
-			%Filter all data
+			% Filter all data
 			disp(strcat(class(obj), {' - '},  {'Filtering experiments data'}));
             obj.filteredData = obj.filterTableData(dataTable);
 			
@@ -590,10 +573,10 @@ classdef ExperimentsData < handle
 		end
 		
         function fig = showDebugPlotSingle(obj, columnName)
-        %Function to plot a single rows data as original and filtered data
-        %When columnName parameter is 'all' then all filtered columns will
-        %be shown in a seperate figure. Otherwise the given columnName will
-        %be shown.
+        % Function to plot a single rows data as original and filtered data
+        % When columnName parameter is 'all' then all filtered columns will
+        % be shown in a seperate figure. Otherwise the given columnName will
+        % be shown.
             try
                 if (columnName == "all")
 
@@ -644,8 +627,8 @@ classdef ExperimentsData < handle
         end
         
         function plot = showDebugPlot(obj)
-        %Function to plot all data in dataTable within a stacked plot, to
-        %get a short overview over all existing data
+        % Function to plot all data in dataTable within a stacked plot, to
+        % get a short overview over all existing data
             plot = stackedplot(obj.originalData,'-x');
         end
         
@@ -676,20 +659,20 @@ classdef ExperimentsData < handle
         
         
         function dataTable = getRoomTemperature(obj)
-        %Returns a timetable with the following columns: runtime, timestamp, timeDiff, roomTemp
+        % Returns a timetable with the following columns: runtime, timestamp, timeDiff, roomTemp
             dataTable = obj.createTable();
             dataTable = [dataTable obj.filteredData(:,{'roomTemp'})];
         end
         
         
         function dataTable = getAllTemperatures(obj)
-        %Returns a timetable containing all temperature data. Missing
-        %temperature datasets will be filled by linear interpolation
-        %between the next neighboor.
+        % Returns a timetable containing all temperature data. Missing
+        % temperature datasets will be filled by linear interpolation
+        % between the next neighboor.
             colNames = ''; %Variable for output-message containing column Names
             dataTable = obj.createTable;
             
-            %Searching for all variables containing temperature data (°C)
+            % Searching for all variables containing temperature data (°C)
             for i=1:width(obj.filteredData)
                 if (strcmp(char(obj.filteredData(:,i).Properties.VariableUnits),'°C'))
                     colNames = strcat(colNames, obj.filteredData(:,i).Properties.VariableNames,{'; '});
@@ -697,34 +680,26 @@ classdef ExperimentsData < handle
                 end
                 
             end
-            
-            disp(strcat(class(obj), {' - '},  {'Found the following temperature related columns: '}, colNames));
-		end
-        
-        
-		function dataTable = getAllPressureRelative(obj)
-		% DEPRECATED FUNCTION
-			dataTable = getAllPressure(obj);
-		end
+        end
 		
         function dataTable = getAllPressure(obj)
-        %Returns a timetable containing all pressure data: time, runtime
-        %fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
+        % Returns a timetable containing all pressure data: time, runtime
+        % fluidInPressure, fluidOutPressure, hydrCylinderPressure, confiningPressure
             dataTable = obj.createTable();
-            dataTable = [dataTable obj.filteredData(:,{'fluidInPressure', 'fluidOutPressure', 'fluidPressure', 'hydrCylinderPressure', 'confiningPressure'})];
+            dataTable = [dataTable obj.filteredData(:,{'fluidInPressure', 'fluidOutPressure', 'hydrCylinderPressure', 'confiningPressure'})];
         end
                 
 		
         function dataTable = getDeformationRelative(obj)
-        %Returns a timetable containing deformation data of the specimen: time, runtime
-        %strainSensor1Rel, strainSensor2Rel, strainSensorMean
+        % Returns a timetable containing deformation data of the specimen: time, runtime
+        % strainSensor1Rel, strainSensor2Rel, strainSensorMean
             dataTable = [obj.createTable() obj.filteredData(:,{'strainSensor1Rel','strainSensor2Rel',})];    
 
         end
         
         
         function dataTable = getConfiningPressure(obj)
-        %Returns a timetable containing confing pressure data: time, runtime, confiningPressure
+        % Returns a timetable containing confing pressure data: time, runtime, confiningPressure
             dataTable = obj.createTable();  
             dataTable.confiningPressure = obj.getAllPressureRelative.confiningPressure;
             dataTable.Properties.VariableUnits{'confiningPressure'} = obj.getAllPressureRelative.Properties.VariableUnits{'confiningPressure'};
@@ -733,17 +708,17 @@ classdef ExperimentsData < handle
         
         
         function dataTable = getBassinPumpData(obj)
-        %Returns a timetable containing confing pressure data: time, runtime
-        %pump1Pressure, pump2Pressure, pump3Pressure, pumpPressureMean, pump1Volume, pump2Volume, pump3Volume, pumpVolumeSum
+        % Returns a timetable containing confing pressure data: time, runtime
+        % pump1Pressure, pump2Pressure, pump3Pressure, pumpPressureMean, pump1Volume, pump2Volume, pump3Volume, pumpVolumeSum
         %
-        %IMPORTANT:
-        %The mean pump pressure has to be used with caution. When the
-        %volume of a pump is empty, and it has to be refilled, there will
-        %be a pressure loss!
+        % IMPORTANT:
+        % The mean pump pressure has to be used with caution. When the
+        % volume of a pump is empty, and it has to be refilled, there will
+        % be a pressure loss!
             dataTable = [obj.createTable() obj.filteredData(:,{'pump1Pressure','pump1Volume','pump2Pressure','pump2Volume','pump3Pressure','pump3Volume'})];
             
-            %Calculating the mean pump pressure and volume influenced by
-            %all three pumps. Ignoring NaN entrys.
+            % Calculating the mean pump pressure and volume influenced by
+            % all three pumps. Ignoring NaN entrys.
             dataTable.pumpPressureMean = mean([dataTable.pump1Pressure, dataTable.pump2Pressure, dataTable.pump3Pressure],2,'omitnan');
             dataTable.Properties.VariableUnits{'pumpPressureMean'} = dataTable.Properties.VariableUnits{'pump1Pressure'};
             dataTable.Properties.VariableDescriptions{'pumpPressureMean'} = 'Mean pressure measured internally in all pumps';
@@ -755,8 +730,8 @@ classdef ExperimentsData < handle
            
         
         function dataTable = getFlowData(obj)
-        %Returns a timetable containing all flow data relevant data: time, runtime
-        %flowMass, fluidInPressure, fluidOutPressure, fluidOutTemp,
+        % Returns a timetable containing all flow data relevant data: time, runtime
+        % flowMass, fluidInPressure, fluidOutPressure, fluidOutTemp,
             dataTable = [obj.createTable() obj.filteredData(:,{'flowMass'})];
             
             tempData = obj.getAllTemperatures;
@@ -768,11 +743,7 @@ classdef ExperimentsData < handle
             dataTable.Properties.VariableUnits{'fluidInTemp'} = tempData.Properties.VariableUnits{'fluidInTemp'};
             dataTable.Properties.VariableDescriptions{'fluidInTemp'} = tempData.Properties.VariableDescriptions{'fluidInTemp'};
 			
-            tempData= obj.getAllPressure;
-            dataTable.fluidPressure = tempData.fluidPressure;
-            dataTable.Properties.VariableUnits{'fluidPressure'} = tempData.Properties.VariableUnits{'fluidPressure'};
-            dataTable.Properties.VariableDescriptions{'fluidPressure'} = tempData.Properties.VariableDescriptions{'fluidPressure'};
-			
+            tempData= obj.getAllPressure;			
 			dataTable.fluidInPressure = tempData.fluidInPressure;
             dataTable.Properties.VariableUnits{'fluidInPressure'} = tempData.Properties.VariableUnits{'fluidInPressure'};
             dataTable.Properties.VariableDescriptions{'fluidInPressure'} = tempData.Properties.VariableDescriptions{'fluidInPressure'};
