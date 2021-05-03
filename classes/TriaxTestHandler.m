@@ -341,6 +341,13 @@ classdef TriaxTestHandler < handle
 					result.label = 'fluid outflow pressure \sigma_{u, out}';
 					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
+				case 'fluidPressureAltitude'
+					dataLabel = 'pressureAltitude';
+					dataTable = obj.getPermeability(experimentNo, timestep);
+					result.data = dataTable(:,{'runtime', dataLabel});
+					result.label = 'pressure altitude h';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					
 				case 'confiningPressure'
 					dataLabel = 'confiningPressure';
 					dataTable = obj.getPressureData(experimentNo);
@@ -475,6 +482,7 @@ classdef TriaxTestHandler < handle
 			obj.labelList('hydrCylinderPressureMPa') = 'Hydr. Cylinder Pressure [MPa]';
 			obj.labelList('fluidInPressure') = 'Fluid Inflow Pressure';
 			obj.labelList('fluidOutPressure') = 'Fluid Outflow Pressure';
+			obj.labelList('fluidPressureAltitude') = 'Pressure Altitude [m]';
 			obj.labelList('confiningPressure') = 'Confining Pressure [bar]';
 			obj.labelList('confiningPressureMPa') = 'Confining Pressure [MPa]';
 			obj.labelList('confiningPumpVolume') = 'Volume in Pumps';
@@ -992,7 +1000,7 @@ classdef TriaxTestHandler < handle
             % TODO: TEST AXIAL FORCE
             % distinction: use axial force if meassured, otherwise
             % calculate from axial pressure
-            if sum(isnan(dataTable.axialForce) == size(dataTable.axialForce)
+            if sum(isnan(dataTable.axialForce)) == length(dataTable.axialForce)
                 dataTable.axialForce = axialCylinderKgMax / axialCylinderPMax * dataTable.hydrCylinderPressure ./ 1000;                
                 dataTable.axialPressure = (axialCylinderKgMax * 9.81 / axialCylinderPMax * dataTable.hydrCylinderPressure) ./ A;
             else
@@ -1192,6 +1200,10 @@ classdef TriaxTestHandler < handle
 					permeability.permeability = dataTable.permeability;
 					permeability.Properties.VariableUnits{'permeability'} = 'm²';
 					permeability.Properties.VariableDescriptions{'permeability'} = 'Permeability';
+					
+					permeability.pressureAltitude = dataTable.deltaPressureHeight;
+					permeability.Properties.VariableUnits{'pressureAltitude'} = 'm';
+					permeability.Properties.VariableDescriptions{'pressureAltitude'} = 'Pressure Altitude';
 					
 					permeability.permeabilityCoeff = dataTable.permCoeffAlphaCorr;
 					permeability.Properties.VariableUnits{'permeabilityCoeff'} = 'm/s';
