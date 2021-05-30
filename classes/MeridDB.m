@@ -212,7 +212,7 @@ classdef MeridDB < handle
         
             % Check if table is not empty. Otherwise a recast would fail
             if ~isempty(dataPeekel)
-                dataPeekel.time = datetime(dataPeekel.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSS', 'TimeZone', 'UTC');
+                dataPeekel.time = datetime(dataPeekel.time,'InputFormat','yyyy-MM-dd HH:mm:ss.SSSS', 'TimeZone', 'UTC');
                 dataPeekel = removevars(dataPeekel, 'experiment_no');
                 dataPeekel = table2timetable(dataPeekel);
                 syncable = syncable + 1;
