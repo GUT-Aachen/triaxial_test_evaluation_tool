@@ -276,14 +276,15 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'axialPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
+					result.data.axialPressure = result.data.axialPressure * 10^-2;
 					result.label = 'vertical stress \sigma_1';
-					result.unit = dataTable.Properties.VariableUnits(dataLabel);
+					result.unit = 'kN/m²';
 				
 				case 'axialPressureMPa'
 					dataLabel = 'axialPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.axialPressure = result.data.axialPressure * 10^-6;
+					result.data.axialPressure = result.data.axialPressure * 10^-1;
 					result.label = 'vertical stress \sigma_1';
 					result.unit = 'MPa';
 					
@@ -291,16 +292,16 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'axialPressure';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.axialPressure = result.data.axialPressure * 10^-5;
+					result.data.axialPressure = result.data.axialPressure;
 					result.label = 'vertical stress \sigma_1';
-					result.unit = 'bar';
+					result.unit = dataTable.Properties.VariableUnits(dataLabel);
 					
 					
 				case 'axialForce'
 					dataLabel = 'axialForce';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.axialPressureTonnes = result.data.axialPressureTonnes;
+					result.data.axialForce = result.data.axialForce;
 					result.label = 'compaction force F';
 					result.unit = 't';
 					
@@ -308,7 +309,7 @@ classdef TriaxTestHandler < handle
 					dataLabel = 'deviatoricStress';
 					dataTable = obj.getPressureData(experimentNo);
 					result.data = dataTable(:,{'runtime', dataLabel});
-					result.data.deviatoricStress = result.data.deviatoricStress * 10^-6;
+					result.data.deviatoricStress = result.data.deviatoricStress * 10^-1;
 					result.label = 'deviatoric stress (\sigma_1-\sigma_3)/2';
 					result.unit = 'MPa';
 				
@@ -475,7 +476,7 @@ classdef TriaxTestHandler < handle
 			obj.labelList('strainSensor2') = 'Strain Sensor 2';
 			obj.labelList('deviatoricStressMPa') = 'Deviatoric Stress [MPa]';
 			obj.labelList('axialPressure') = 'Vertical Stress [kN/m^2]';
-			obj.labelList('axialPressureMPa') = 'Vertical Stress [Mpa]';
+			obj.labelList('axialPressureMPa') = 'Vertical Stress [MPa]';
 			obj.labelList('axialPressureBar') = 'Vertical Stress [bar]';
 			obj.labelList('axialForce') = 'Compaction Force [t]';
 			obj.labelList('hydrCylinderPressure') = 'Hydr. Cylinder Pressure [bar]';
@@ -990,34 +991,34 @@ classdef TriaxTestHandler < handle
 			dataTable = obj.experiment(experimentNo).testData.getAllPressure;
 			
 			% Calculate axial pressure and distinct between 250mm and 8mm probe
-			diameter = obj.experiment(experimentNo).specimenData.diameter.value;
-			A = (0.5 * 0.01 * diameter)^2 * pi();
+			diameter = obj.experiment(experimentNo).specimenData.diameter.value;  % in cm
+			A = (0.5 * 0.01 * diameter)^2 * pi();  % in m²
 			
 			axialCylinderKgMax = obj.experiment(experimentNo).metaData.testRigData.axialCylinderKgMax;
 			axialCylinderPMax = obj.experiment(experimentNo).metaData.testRigData.axialCylinderPMax / 100000;
 			
 			
-            % TODO: TEST AXIAL FORCE
             % distinction: use axial force if meassured, otherwise
             % calculate from axial pressure
             if sum(isnan(dataTable.axialForce)) == length(dataTable.axialForce)
-                dataTable.axialForce = axialCylinderKgMax / axialCylinderPMax * dataTable.hydrCylinderPressure ./ 1000;                
-                dataTable.axialPressure = (axialCylinderKgMax * 9.81 / axialCylinderPMax * dataTable.hydrCylinderPressure) ./ A;
+                dataTable.axialForce = (axialCylinderKgMax * 9.81) / axialCylinderPMax * dataTable.hydrCylinderPressure ./ 1000;  % in kN
+                dataTable.axialPressure = dataTable.axialForce ./ A * 1000 * 1e-5;  % in bar
             else
                 % keep axialForce and calculate axialPressure from
                 % axialForce
-                dataTable.axialPressure = axialForce ./ A;
+                dataTable.axialPressure = dataTable.axialForce ./ A * 1000 * 1e-5;  % in bar
+				dataTable.hydrCylinderPressure = (dataTable.axialForce * 1000 * axialCylinderPMax) ./ (axialCylinderKgMax * 9.81);  % in bar              				
             end
 			
-			dataTable.deviatoricStress = max((dataTable.axialPressure - dataTable.confiningPressure .* 0.1 .* 10^6) ./ 2, 0);  % hydrCylinderPressure
+			dataTable.deviatoricStress = max((dataTable.axialPressure - dataTable.confiningPressure) ./ 2, 0);  % hydrCylinderPressure
 			
-			dataTable.Properties.VariableUnits{'axialPressure'} = 'N/m^2';
+			dataTable.Properties.VariableUnits{'axialPressure'} = 'bar';
 			dataTable.Properties.VariableDescriptions{'axialPressure'} = 'Axial pressure on sample';
 			
-			dataTable.Properties.VariableUnits{'axialForce'} = 'N';
+			dataTable.Properties.VariableUnits{'axialForce'} = 'kN';
 			dataTable.Properties.VariableDescriptions{'axialForce'} = 'Axial force on sample in Newton';
 			
-			dataTable.Properties.VariableUnits{'deviatoricStress'} = 'N/m^2';
+			dataTable.Properties.VariableUnits{'deviatoricStress'} = 'kN/m^2';
 			dataTable.Properties.VariableDescriptions{'deviatoricStress'} = 'Deviatoric stress on sample';
 		end
 		
