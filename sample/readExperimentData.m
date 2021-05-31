@@ -9,7 +9,6 @@ import MeridDB.*
 close all
  
 
-
 %Initialize database
 dbConnection = MeridDB('MySQL-User','MySQL-Password','MySQL-IP',MySQL-Port);
 
