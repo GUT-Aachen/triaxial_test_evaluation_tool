@@ -1128,6 +1128,11 @@ classdef TriaxTestHandler < handle
                 flowMassData = obj.getFlowMassData(experimentNo, timestep); % flow mass
 				strainData = obj.getStrain(experimentNo); % probe deformation
 				probeInitHeight = obj.experiment(experimentNo).specimenData.height.value/100; % probe height in m
+				
+				if isnan(probeInitHeight)
+					error('%s: Unknown specimen height', class(obj));
+				end
+				
 				probeDiameter = obj.experiment(experimentNo).specimenData.diameter.value/100; % probe height in m
 				
                 dataTable = synchronize(flowMassData, strainData(:,'strainSensorsMean')); 
