@@ -589,11 +589,11 @@ classdef ExperimentsData < handle
                 
             % Organize all data in the table: adding units and desciptions
             % Convert from table to timetable
-			disp(strcat(class(obj), {' - '},  {'Reorganizing experiments data'}));
+			disp([class(obj), ': ', 'Reorganizing experiments data']);
             dataTable = obj.organizeTableData(dataTable, range);
 			
 			% Filter all data
-			disp(strcat(class(obj), {' - '},  {'Filtering experiments data'}));
+			disp([class(obj), ': ',  'Filtering experiments data']);
             obj.filteredData = obj.filterTableData(dataTable);
 			
 			result = true;
