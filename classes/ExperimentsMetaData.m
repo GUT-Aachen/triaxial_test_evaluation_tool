@@ -72,7 +72,6 @@ classdef ExperimentsMetaData < handle
 					obj.testRigData.Properties.VariableUnits{'axialCylinderKgMax'} = 'kg';
 					obj.testRigData.Properties.VariableUnits{'axialCylinderPMax'} = 'N/m²';
 					obj.testRigData.Properties.VariableUnits{'confiningPMax'} = 'N/m²';
-					obj.testRigData.Properties.VariableUnits{'initPermCoeff'} = 'm/s';
 
                     disp([class(obj), ': ', 'Test rig data set sucessfully']);
 
